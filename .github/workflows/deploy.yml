@@ -1,0 +1,11 @@
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: peaceiris/actions-hugo@v3 # Hugo を自動インストール
+        with: { hugo-version: '0.120.0', extended: true }
+      - run: hugo
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: public }
+      - uses: actions/deploy-pages@v4
