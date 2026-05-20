@@ -1,34 +1,27 @@
-<!DOCTYPE html>
-<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ .Title | default "Static Bluesky Client" }}</title>
+  <title>{{ .Title | default "Static Bluesky" }}</title>
+  
+  <!-- ✅ Google Fonts（必須） -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- ✅ importmap: esm.run 経由で @material/web 全体を解決 -->
   <script type="importmap">
-    {
-      "imports": {
-        "@material/web/": "https://esm.run/@material/web/"
-      }
+  {
+    "imports": {
+      "@material/web/": "https://esm.run/@material/web/"
     }
+  }
   </script>
+  
+  <!-- ✅ 初期化: all.js で全コンポーネントを登録 + タイポグラフィスタイルを適用 -->
   <script type="module">
     import '@material/web/all.js';
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
-
-    document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+    // ✅ 最新のスタイル適用方法（adoptedStyleSheets）
+    if (document.adoptedStyleSheets?.push) {
+      document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+    }
   </script>
 </head>
-<body>
-  <header style="padding:12px 16px; background:#f8f9fa; border-bottom:1px solid #e0e0e0;">
-    <h1 style="margin:0; font-size:1.25rem;">🐦 Static Bluesky</h1>
-  </header>
-
-  <main style="max-width:640px; margin:0 auto; padding:0 16px;">
-    {{ block "main" . }}{{ end }}
-  </main>
-
-  <footer style="padding:16px; text-align:center; color:#888; font-size:0.85rem; margin-top:32px;">
-    <p>© 2026 {{ .Site.Title }} | Built with Hugo & MWC</p>
-  </footer>
-</body>
-</html>
