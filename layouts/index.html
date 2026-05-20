@@ -1,5 +1,13 @@
 {{ define "main" }}
+<!-- ✅ 使うコンポーネントだけを個別にインポート（all.js 読み込み後でも個別指定が必要） -->
+<script type="module">
+  import '@material/web/button/filled-button.js';
+  import '@material/web/textfield/outlined-text-field.js';
+  import '@material/web/card/card.js';
+</script>
+
 <md-card style="padding:16px; margin:16px 0;">
+  <!-- ✅ MWC のコンポーネントはカスタム要素としてそのまま使える -->
   <md-outlined-text-field id="id" label="ハンドル"></md-outlined-text-field>
   <md-outlined-text-field id="pw" label="アプリパスワード" type="password"></md-outlined-text-field>
   <md-filled-button id="loginBtn" style="margin-top:8px;">ログイン</md-filled-button>
@@ -8,11 +16,8 @@
 <div id="timeline"></div>
 
 <script type="module">
-  // Hugo は static/ 以下をルート直下に公開するからパスは絶対参照でOK
   import { createBskyClient } from '/src/bsky-client.js';
-  import '@material/web/button/filled-button.js';
-  import '@material/web/textfield/outlined-text-field.js';
-  import '@material/web/card/card.js';
+  // ↑ 上記で import 済みのコンポーネントは再インポート不要
 
   const client = createBskyClient();
   if (client.isLoggedIn) loadTimeline();
