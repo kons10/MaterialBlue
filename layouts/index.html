@@ -1,41 +1,78 @@
 {{ define "main" }}
-<!-- ✅ 使うコンポーネントだけを個別にインポート（all.js 読み込み後でも個別指定が必要） -->
+<!-- ✅ 使うコンポーネントだけを個別にインポート（all.js 読み込み後でも必要） -->
 <script type="module">
   import '@material/web/button/filled-button.js';
   import '@material/web/textfield/outlined-text-field.js';
   import '@material/web/card/card.js';
 </script>
 
-<md-card style="padding:16px; margin:16px 0;">
-  <!-- ✅ MWC のコンポーネントはカスタム要素としてそのまま使える -->
-  <md-outlined-text-field id="id" label="ハンドル"></md-outlined-text-field>
-  <md-outlined-text-field id="pw" label="アプリパスワード" type="password"></md-outlined-text-field>
-  <md-filled-button id="loginBtn" style="margin-top:8px;">ログイン</md-filled-button>
+<md-card style="padding:16px; margin:16px 0; --md-elevation-level: 1;">
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    <md-outlined-text-field id="id" label="ハンドル (例: user.bsky.social)" fullwidth></md-outlined-text-field>
+    <md-outlined-text-field id="pw" label="アプリパスワード" type="password" fullwidth></md-outlined-text-field>
+    <md-filled-button id="loginBtn" style="align-self:flex-end;">ログイン</md-filled-button>
+  </div>
 </md-card>
 
-<div id="timeline"></div>
+<!-- タイムライン表示エリア -->
+<md-card id="timeline-card" style="padding:16px; display:none;" hidden>
+  <div id="timeline" style="display:flex; flex-direction:column; gap:8px;"></div>
+</md-card>
 
 <script type="module">
+  // static/src/bsky-client.js を読み込み（Hugo は static/ 以下をルートとして配信するよ）
   import { createBskyClient } from '/src/bsky-client.js';
-  // ↑ 上記で import 済みのコンポーネントは再インポート不要
 
   const client = createBskyClient();
-  if (client.isLoggedIn) loadTimeline();
+  const loginBtn = document.getElementById('loginBtn');
+  const timelineCard = document.getElementById('timeline-card');
 
-  document.getElementById('loginBtn').addEventListener('click', async () => {
+  // 自動ログイン済みの場合
+  if (client.isLoggedIn) {
+    showTimeline();
+  }
+
+  loginBtn.addEventListener('click', async () => {
     const id = document.getElementById('id').value.trim();
     const pw = document.getElementById('pw').value.trim();
+    
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'ログイン中...';
+    
     try {
       await client.login(id, pw);
-      loadTimeline();
-    } catch (e) { alert(`エラー: ${e.message}`); }
+      showTimeline();
+    } catch (e) {
+      alert(`エラー: ${e.message}`);
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'ログイン';
+    }
   });
 
+  function showTimeline() {
+    document.querySelector('md-card[style*="padding:16px; margin:16px 0"]').style.display = 'none';
+    timelineCard.hidden = false;
+    timelineCard.style.display = 'block';
+    loadTimeline();
+  }
+
   async function loadTimeline() {
-    const feed = await client.timeline();
-    document.getElementById('timeline').innerHTML = feed.map(p => 
-      `<p><b>@${p.post.author.handle}</b>: ${p.post.record.text}</p><hr>`
-    ).join('');
+    try {
+      const feed = await client.timeline(20);
+      const container = document.getElementById('timeline');
+      container.innerHTML = feed.map(item => {
+        const post = item.post;
+        return `
+          <md-card style="padding:12px; --md-elevation-level: 0; border:1px solid #eee;">
+            <div style="font-weight:500; margin-bottom:4px;">@${post.author.handle}</div>
+            <div style="white-space:pre-wrap; line-height:1.4;">${post.record.text}</div>
+          </md-card>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error('Timeline load error:', e);
+    }
   }
 </script>
 {{ end }}

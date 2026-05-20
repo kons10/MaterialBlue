@@ -1,13 +1,16 @@
 <!DOCTYPE html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ .Title | default "Static Bluesky" }}</title>
+  <title>{{ .Title }}</title>
   
-  <!-- ✅ Google Fonts（必須） -->
+  <!-- ✅ 1. Google Fonts (必須) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   
-  <!-- ✅ importmap: esm.run 経由で @material/web 全体を解決 -->
+  <!-- ✅ 2. importmap (esm.run 経由) -->
   <script type="importmap">
   {
     "imports": {
@@ -16,13 +19,37 @@
   }
   </script>
   
-  <!-- ✅ 初期化: all.js で全コンポーネントを登録 + タイポグラフィスタイルを適用 -->
+  <!-- ✅ 3. MWC 初期化スクリプト -->
   <script type="module">
+    // 全コンポーネントの定義を読み込み
     import '@material/web/all.js';
+    // ✅ 最新のスタイル適用方法：typography を adoptedStyleSheets に注入
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
-    // ✅ 最新のスタイル適用方法（adoptedStyleSheets）
     if (document.adoptedStyleSheets?.push) {
       document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
     }
   </script>
+  
+  <!-- 簡易リセットCSS（オプション） -->
+  <style>
+    body { margin: 0; font-family: Roboto, sans-serif; background: #f8f9fa; color: #1a1a1a; }
+    * { box-sizing: border-box; }
+  </style>
 </head>
+<body>
+  <!-- Header (共通) -->
+  <header style="padding:12px 16px; background:#fff; border-bottom:1px solid #e0e0e0; position:sticky; top:0; z-index:10;">
+    <h1 style="margin:0; font-size:1.25rem; font-weight:500;">🐦 Static Bluesky</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main style="max-width:640px; margin:0 auto; padding:16px; min-height:80vh;">
+    {{ block "main" . }}{{ end }}
+  </main>
+
+  <!-- Footer (共通) -->
+  <footer style="padding:24px 16px; text-align:center; color:#666; font-size:0.85rem;">
+    <p style="margin:0;">© 2026 Built with Hugo & MWC</p>
+  </footer>
+</body>
+</html>

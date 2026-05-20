@@ -1,2 +1,12 @@
-baseURL: '/'
-languageCode: 'ja'
+baseURL: 'https://kons10.github.io/materialblue/'
+languageCode: 'ja-JP'
+title: 'Static Bluesky Client'
+theme: '' # 自作テーマなので不要
+
+# 静的ファイルの配置設定（static/ 以下をルートとして扱う）
+publishDir: 'public'
+
+# minify 設定（オプション）
+minify:
+  disableXML: true
+  minifyOutput: true
