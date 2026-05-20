@@ -4,15 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ .Title | default "Static Bluesky Client" }}</title>
-  <link rel="stylesheet" href="https://esm.run/@material/web/all.css">
   <script type="importmap">
-  {
-    "imports": {
-      "@material/web/button/": "https://esm.run/@material/web/button/",
-      "@material/web/textfield/": "https://esm.run/@material/web/textfield/",
-      "@material/web/card/": "https://esm.run/@material/web/card/"
+    {
+      "imports": {
+        "@material/web/": "https://esm.run/@material/web/"
+      }
     }
-  }
+  </script>
+  <script type="module">
+    import '@material/web/all.js';
+    import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+
+    document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
   </script>
 </head>
 <body>
