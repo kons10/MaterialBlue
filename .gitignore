@@ -1,0 +1,5 @@
+.ipynb_checkpoints/
+*.ipynb
+.DS_Store
+public/
+resources/
