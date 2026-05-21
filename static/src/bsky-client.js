@@ -4,39 +4,40 @@ import { BskyAgent } from 'https://esm.sh/@atproto/api@0.13.6';
 export function createBskyClient() {
   const agent = new BskyAgent({ service: 'https://bsky.social' });
 
-  // 🔹 1. Cookie からセッション復元（初期化時）
+  // 🔹 1. Cookie からセッション情報を読み取る
   const access = getCookie('bsky_access');
   const refresh = getCookie('bsky_refresh');
   const did = getCookie('bsky_did');
 
+  // 🔹 2. セッション情報が揃っていたら復元を試みる
   if (access && refresh && did) {
-    // session オブジェクトを直接復元
-    agent.session = { 
+    const sessionData = { 
       accessJwt: access, 
       refreshJwt: refresh, 
       did: decodeURIComponent(did),
-      handle: '', // handle は後から取得するか、必要なら保存してもOK
+      handle: '', // handle は resumeSession 後に更新されるか、必要なら保存
       email: '',
       emailConfirmed: false
     };
-    
-    // セッションの有効性を確認（失敗したら自動でクリアされるようにする）
-    agent.resumeSession(agent.session).catch((err) => {
-      console.warn('Session resume failed:', err);
-      clearSession();
+
+    // ✅ 正しい復元方法：resumeSession にデータを渡す
+    agent.resumeSession(sessionData).catch((err) => {
+      console.warn('Session resume failed (token expired or invalid):', err);
+      clearSession(); // 失敗したらCookieをクリア
     });
   }
 
   return {
     agent,
+    // ✅ ログイン判定：session プロパティが存在するかで判断
     get isLoggedIn() { 
-      // session が存在し、かつ accessJwt が有効そうかチェック
       return !!agent.session?.accessJwt; 
     },
 
-    // 🔹 2. ログイン処理
+    // 🔹 3. ログイン処理
     async login(identifier, appPassword) {
       try {
+        // login メソッドが成功すると、内部で agent.session が自動更新される
         const session = await agent.login({ identifier, password: appPassword });
         
         // ログイン成功時に Cookie に保存
@@ -47,33 +48,30 @@ export function createBskyClient() {
         }
         return session;
       } catch (e) {
-        // ログイン失敗時は念のためクリア
         clearSession();
         throw e;
       }
     },
 
-    // 🔹 3. ログアウト処理
+    // 🔹 4. ログアウト処理
     async logout() {
       try {
         await agent.logout();
       } finally {
-        // 必ず Cookie を削除
         clearSession();
-        agent.session = undefined;
+        // session は getter なので undefined にする必要はないが、念のため
       }
     },
 
-    // 🔹 4. タイムライン取得
+    // 🔹 5. タイムライン取得
     async timeline(limit = 30) {
-      // 自動リフレッシュは SDK 側でやってくれるよ
       const res = await agent.api.app.bsky.feed.getTimeline({ limit });
       return res.data.feed;
     },
 
-    // 🔹 5. 投稿機能（おまけ）
+    // 🔹 6. 投稿機能
     async post(text) {
-      if (!agent.session) throw new Error('Not logged in');
+      if (!this.isLoggedIn) throw new Error('Not logged in');
       return await agent.post({ text });
     }
   };
@@ -82,7 +80,6 @@ export function createBskyClient() {
 // --- ユーティリティ関数 ---
 
 function setCookie(name, val, maxAge) {
-  // Secure と SameSite は必須！
   document.cookie = `${name}=${encodeURIComponent(val)}; path=/; Secure; SameSite=Lax; max-age=${maxAge}`;
 }
 
