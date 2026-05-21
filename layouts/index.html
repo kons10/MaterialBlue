@@ -28,6 +28,15 @@
     タイムライン
   </div>
   
+  <!-- 投稿エリア -->
+  <md-outlined-text-field id="postText" label="新しい投稿" fullwidth type="text" style="margin-top:16px; min-height:80px;">
+    <md-icon slot="leading-icon">edit_note</md-icon>
+  </md-outlined-text-field>
+  <md-filled-button id="postBtn" style="align-self:flex-end; margin-top:8px;">
+    <md-icon slot="icon">send</md-icon>
+    投稿
+  </md-filled-button>
+  
   <md-list id="timeline" style="margin-top:8px;"></md-list>
   
   <div slot="actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
@@ -54,6 +63,7 @@
   const timelineCard = document.getElementById('timeline-card');
   const refreshBtn = document.getElementById('refreshBtn');
   const logoutBtn = document.getElementById('logoutBtn');
+  const postBtn = document.getElementById('postBtn');
   const loading = document.getElementById('loading');
 
   // 自動ログイン済みの場合
@@ -93,6 +103,28 @@
   logoutBtn.addEventListener('click', async () => {
     await client.logout();
     location.reload();
+  });
+
+  postBtn.addEventListener('click', async () => {
+    const text = document.getElementById('postText').value.trim();
+    
+    if (!text) {
+      alert('投稿内容を入力してください');
+      return;
+    }
+    
+    postBtn.disabled = true;
+    
+    try {
+      await client.post(text);
+      document.getElementById('postText').value = '';
+      alert('投稿しました！');
+      await loadTimeline();
+    } catch (e) {
+      alert(`投稿エラー：${e.message}`);
+    } finally {
+      postBtn.disabled = false;
+    }
   });
 
   function showLoading(show) {
