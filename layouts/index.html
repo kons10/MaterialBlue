@@ -1,17 +1,49 @@
 {{ define "main" }}
 
-<md-card style="padding:16px; margin:16px 0; --md-elevation-level: 1;">
-  <div style="display:flex; flex-direction:column; gap:12px;">
-    <md-outlined-text-field id="id" label="ハンドル (例: user.bsky.social)" fullwidth></md-outlined-text-field>
-    <md-outlined-text-field id="pw" label="アプリパスワード" type="password" fullwidth></md-outlined-text-field>
-    <md-filled-button id="loginBtn" style="align-self:flex-end;">ログイン</md-filled-button>
+<!-- ログインカード -->
+<md-elevated-card style="padding:16px; margin:16px 0;">
+  <div slot="headline" class="md-typescale-title-large">ログイン</div>
+  <div slot="supporting-text" class="md-typescale-body-medium">Bluesky のアカウントでログインしてください</div>
+  
+  <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+    <md-outlined-text-field id="id" label="ハンドル (例：user.bsky.social)" fullwidth type="text">
+      <md-icon slot="leading-icon">person</md-icon>
+    </md-outlined-text-field>
+    
+    <md-outlined-text-field id="pw" label="アプリパスワード" type="password" fullwidth>
+      <md-icon slot="leading-icon">lock</md-icon>
+    </md-outlined-text-field>
+    
+    <md-filled-button id="loginBtn" style="align-self:flex-end;">
+      <md-icon slot="icon">login</md-icon>
+      ログイン
+    </md-filled-button>
   </div>
-</md-card>
+</md-elevated-card>
 
 <!-- タイムライン表示エリア -->
-<md-card id="timeline-card" style="padding:16px; display:none;" hidden>
-  <div id="timeline" style="display:flex; flex-direction:column; gap:8px;"></div>
-</md-card>
+<md-elevated-card id="timeline-card" style="padding:16px; display:none;" hidden>
+  <div slot="headline" class="md-typescale-title-large" style="display:flex; align-items:center; gap:8px;">
+    <md-icon>rss_feed</md-icon>
+    タイムライン
+  </div>
+  
+  <md-list id="timeline" style="margin-top:8px;"></md-list>
+  
+  <div slot="actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+    <md-filled-tonal-button id="refreshBtn">
+      <md-icon slot="icon">refresh</md-icon>
+      更新
+    </md-filled-tonal-button>
+    <md-outlined-button id="logoutBtn">
+      <md-icon slot="icon">logout</md-icon>
+      ログアウト
+    </md-outlined-button>
+  </div>
+</md-elevated-card>
+
+<!-- ローディング表示 -->
+<md-circular-progress id="loading" indeterminate style="display:none; margin:24px auto;"></md-circular-progress>
 
 <script type="module">
   // static/src/bsky-client.js を読み込み（Hugo は static/ 以下をルートとして配信するよ）
@@ -20,6 +52,9 @@
   const client = createBskyClient();
   const loginBtn = document.getElementById('loginBtn');
   const timelineCard = document.getElementById('timeline-card');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const loading = document.getElementById('loading');
 
   // 自動ログイン済みの場合
   if (client.isLoggedIn) {
@@ -30,22 +65,42 @@
     const id = document.getElementById('id').value.trim();
     const pw = document.getElementById('pw').value.trim();
     
+    if (!id || !pw) {
+      alert('ハンドルとアプリパスワードを入力してください');
+      return;
+    }
+    
     loginBtn.disabled = true;
-    loginBtn.textContent = 'ログイン中...';
+    showLoading(true);
     
     try {
       await client.login(id, pw);
       showTimeline();
     } catch (e) {
-      alert(`エラー: ${e.message}`);
+      alert(`エラー：${e.message}`);
     } finally {
       loginBtn.disabled = false;
-      loginBtn.textContent = 'ログイン';
+      showLoading(false);
     }
   });
 
+  refreshBtn.addEventListener('click', async () => {
+    refreshBtn.disabled = true;
+    await loadTimeline();
+    refreshBtn.disabled = false;
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    await client.logout();
+    location.reload();
+  });
+
+  function showLoading(show) {
+    loading.style.display = show ? 'block' : 'none';
+  }
+
   function showTimeline() {
-    document.querySelector('md-card[style*="padding:16px; margin:16px 0"]').style.display = 'none';
+    document.querySelector('md-elevated-card:not(#timeline-card)').style.display = 'none';
     timelineCard.hidden = false;
     timelineCard.style.display = 'block';
     loadTimeline();
@@ -55,17 +110,43 @@
     try {
       const feed = await client.timeline(20);
       const container = document.getElementById('timeline');
-      container.innerHTML = feed.map(item => {
+      
+      // リストアイテムを生成
+      container.innerHTML = '';
+      feed.forEach(item => {
         const post = item.post;
-        return `
-          <md-card style="padding:12px; --md-elevation-level: 0; border:1px solid #eee;">
-            <div style="font-weight:500; margin-bottom:4px;">@${post.author.handle}</div>
-            <div style="white-space:pre-wrap; line-height:1.4;">${post.record.text}</div>
-          </md-card>
-        `;
-      }).join('');
+        const listItem = document.createElement('md-list-item');
+        listItem.type = 'link';
+        
+        // アイコンスロット
+        const avatarIcon = document.createElement('md-icon');
+        avatarIcon.slot = 'start';
+        avatarIcon.textContent = 'account_circle';
+        
+        // ヘッドライン
+        const headline = document.createElement('div');
+        headline.slot = 'headline';
+        headline.textContent = `@${post.author.handle}`;
+        headline.className = 'md-typescale-body-large';
+        
+        // サポーティングテキスト
+        const supporting = document.createElement('div');
+        supporting.slot = 'supporting-text';
+        supporting.textContent = post.record.text;
+        supporting.className = 'md-typescale-body-medium';
+        
+        listItem.appendChild(avatarIcon);
+        listItem.appendChild(headline);
+        listItem.appendChild(supporting);
+        container.appendChild(listItem);
+        
+        // 区切り線
+        const divider = document.createElement('md-divider');
+        container.appendChild(divider);
+      });
     } catch (e) {
       console.error('Timeline load error:', e);
+      alert('タイムラインの取得に失敗しました');
     }
   }
 </script>
