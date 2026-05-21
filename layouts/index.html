@@ -29,26 +29,28 @@
   </div>
   
   <!-- 投稿エリア -->
-  <md-outlined-text-field id="postText" label="新しい投稿" fullwidth style="margin-top:16px; min-height:100px;">
-    <md-icon slot="leading-icon">edit_note</md-icon>
-    <textarea slot="textarea" style="width:100%; min-height:80px; resize:vertical; font-family:inherit; font-size:inherit;"></textarea>
-  </md-outlined-text-field>
-  
-  <!-- 画像添付エリア -->
-  <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-    <md-filled-tonal-button id="imageUploadBtn">
-      <md-icon slot="icon">image</md-icon>
-      画像を追加
-    </md-filled-tonal-button>
-    <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
-    <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
+  <div style="margin-top:16px;">
+    <md-outlined-text-field id="postText" label="新しい投稿" fullwidth style="min-height:100px;">
+      <md-icon slot="leading-icon">edit_note</md-icon>
+      <textarea slot="textarea" style="width:100%; min-height:80px; resize:vertical; font-family:inherit; font-size:inherit;"></textarea>
+    </md-outlined-text-field>
+    
+    <!-- 画像添付エリア -->
+    <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+      <md-filled-tonal-button id="imageUploadBtn">
+        <md-icon slot="icon">image</md-icon>
+        画像を追加
+      </md-filled-tonal-button>
+      <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
+      <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
+    </div>
+    <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+    
+    <md-filled-button id="postBtn" style="align-self:flex-end; margin-top:8px;">
+      <md-icon slot="icon">send</md-icon>
+      投稿
+    </md-filled-button>
   </div>
-  <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
-  
-  <md-filled-button id="postBtn" style="align-self:flex-end; margin-top:8px;">
-    <md-icon slot="icon">send</md-icon>
-    投稿
-  </md-filled-button>
   
   <md-list id="timeline" style="margin-top:8px;"></md-list>
   
