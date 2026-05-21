@@ -29,9 +29,22 @@
   </div>
   
   <!-- 投稿エリア -->
-  <md-outlined-text-field id="postText" label="新しい投稿" fullwidth type="text" style="margin-top:16px; min-height:80px;">
+  <md-outlined-text-field id="postText" label="新しい投稿" fullwidth style="margin-top:16px; min-height:100px;">
     <md-icon slot="leading-icon">edit_note</md-icon>
+    <textarea slot="textarea" style="width:100%; min-height:80px; resize:vertical; font-family:inherit; font-size:inherit;"></textarea>
   </md-outlined-text-field>
+  
+  <!-- 画像添付エリア -->
+  <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+    <md-filled-tonal-button id="imageUploadBtn">
+      <md-icon slot="icon">image</md-icon>
+      画像を追加
+    </md-filled-tonal-button>
+    <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
+    <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
+  </div>
+  <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+  
   <md-filled-button id="postBtn" style="align-self:flex-end; margin-top:8px;">
     <md-icon slot="icon">send</md-icon>
     投稿
@@ -64,7 +77,14 @@
   const refreshBtn = document.getElementById('refreshBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const postBtn = document.getElementById('postBtn');
+  const imageUploadBtn = document.getElementById('imageUploadBtn');
+  const imageInput = document.getElementById('imageInput');
+  const imageCount = document.getElementById('imageCount');
+  const imagePreview = document.getElementById('imagePreview');
   const loading = document.getElementById('loading');
+  
+  // 選択された画像を保持する配列
+  let selectedImages = [];
 
   // 自動ログイン済みの場合
   if (client.isLoggedIn) {
@@ -108,15 +128,23 @@
   postBtn.addEventListener('click', async () => {
     const text = document.getElementById('postText').value.trim();
     
-    if (!text) {
-      alert('投稿内容を入力してください');
+    if (!text && selectedImages.length === 0) {
+      alert('投稿内容または画像を入力してください');
       return;
     }
     
     postBtn.disabled = true;
     
     try {
-      await client.post(text);
+      if (selectedImages.length > 0) {
+        // 画像付き投稿
+        await client.postWithImage(text, selectedImages);
+        selectedImages = [];
+        updateImagePreview();
+      } else {
+        // テキストのみ投稿
+        await client.post(text);
+      }
       document.getElementById('postText').value = '';
       alert('投稿しました！');
       await loadTimeline();
@@ -126,6 +154,72 @@
       postBtn.disabled = false;
     }
   });
+
+  // 画像アップロードボタンクリック
+  imageUploadBtn.addEventListener('click', () => {
+    imageInput.click();
+  });
+
+  // 画像選択時の処理
+  imageInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    // 最大 4 枚まで（Bluesky の制限）
+    const remainingSlots = 4 - selectedImages.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+      alert(`画像は最大 4 枚まで添付できます。残り${remainingSlots}枚です。`);
+    }
+    
+    filesToAdd.forEach(file => {
+      selectedImages.push(file);
+    });
+    
+    updateImagePreview();
+    imageInput.value = ''; // 同じファイルを再度選択できるようにリセット
+  });
+
+  // 画像プレビュー更新関数
+  function updateImagePreview() {
+    imagePreview.innerHTML = '';
+    imageCount.textContent = selectedImages.length > 0 ? `${selectedImages.length}枚選択中` : '';
+    
+    selectedImages.forEach((file, index) => {
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.width = '80px';
+      img.style.height = '80px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '8px';
+      
+      // 削除ボタン
+      const removeBtn = document.createElement('md-icon-button');
+      removeBtn.textContent = 'close';
+      removeBtn.style.position = 'absolute';
+      removeBtn.style.top = '-8px';
+      removeBtn.style.right = '-8px';
+      removeBtn.style.backgroundColor = 'var(--md-sys-color-error)';
+      removeBtn.style.color = 'white';
+      removeBtn.style.borderRadius = '50%';
+      removeBtn.style.width = '24px';
+      removeBtn.style.height = '24px';
+      removeBtn.style.fontSize = '16px';
+      
+      removeBtn.addEventListener('click', () => {
+        selectedImages.splice(index, 1);
+        updateImagePreview();
+      });
+      
+      container.appendChild(img);
+      container.appendChild(removeBtn);
+      imagePreview.appendChild(container);
+    });
+  }
 
   function showLoading(show) {
     loading.style.display = show ? 'block' : 'none';

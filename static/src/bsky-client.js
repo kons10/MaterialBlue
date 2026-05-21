@@ -69,11 +69,54 @@ export function createBskyClient() {
       return res.data.feed;
     },
 
-    // 🔹 6. 投稿機能
-    async post(text) {
-      if (!this.isLoggedIn) throw new Error('Not logged in');
-      return await agent.post({ text });
+  // 🔹 6. 投稿機能（テキストのみ）
+  async post(text) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    return await agent.post({ text });
+  },
+
+  // 🔹 7. 画像付き投稿機能
+  async postWithImage(text, imageFiles) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    
+    const imageEmbeds = [];
+    
+    for (const file of imageFiles) {
+      // ファイルをバイト配列に変換
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // 画像をアップロード
+      const upload = await agent.uploadBlob(uint8Array, {
+        encoding: file.type
+      });
+      
+      // 画像の埋め込み情報を作成
+      imageEmbeds.push({
+        image: upload.data.blob,
+        alt: '' // 代替テキスト（必要に応じて設定可能）
+      });
     }
+    
+    // 画像が 1 枚の場合は Image プレイスメント、複数場合は Gallery として投稿
+    let embed;
+    if (imageEmbeds.length === 1) {
+      embed = {
+        $type: 'app.bsky.embed.images',
+        images: imageEmbeds
+      };
+    } else {
+      embed = {
+        $type: 'app.bsky.embed.images',
+        images: imageEmbeds
+      };
+    }
+    
+    return await agent.post({
+      text,
+      embed
+    });
+  }
   };
 }
 
