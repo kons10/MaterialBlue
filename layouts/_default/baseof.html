@@ -9,9 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- ✅ Material Symbols -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded" rel="stylesheet">
   
-  <!-- ✅ 2. Material Web (esm.run 経由) -->
-
+  <!-- ✅ 2. Material Web (esm.sh 経由) -->
   <script type="importmap">
     {
       "imports": {
@@ -20,22 +21,49 @@
     }
   </script>
   <script type="module">
+    // MWC コンポーネントのインポート
     import '@material/web/all.js';
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
 
     document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
   </script>
   
-  <!-- 簡易リセットCSS（オプション） -->
+  <!-- MWC トークンによるテーマ設定 -->
   <style>
-    body { margin: 0; font-family: Roboto, sans-serif; background: #f8f9fa; color: #1a1a1a; }
+    :root {
+      /* カラーパレット */
+      --md-sys-color-primary: #1976D2;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #BBDEFB;
+      --md-sys-color-on-primary-container: #0D47A1;
+      --md-sys-color-secondary: #424242;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-surface: #FAFAFA;
+      --md-sys-color-on-surface: #212121;
+      --md-sys-color-surface-container: #F5F5F5;
+      --md-sys-color-outline: #E0E0E0;
+      
+      /* フォント */
+      --md-ref-typeface-brand: 'Roboto', sans-serif;
+      --md-ref-typeface-plain: 'Roboto', sans-serif;
+    }
+    
+    body { 
+      margin: 0; 
+      font-family: var(--md-ref-typeface-plain); 
+      background: var(--md-sys-color-surface); 
+      color: var(--md-sys-color-on-surface); 
+    }
     * { box-sizing: border-box; }
   </style>
 </head>
 <body>
   <!-- Header (共通) -->
-  <header style="padding:12px 16px; background:#fff; border-bottom:1px solid #e0e0e0; position:sticky; top:0; z-index:10;">
-    <h1 style="margin:0; font-size:1.25rem; font-weight:500;">🐦 Static Bluesky</h1>
+  <header style="padding:12px 16px; background:var(--md-sys-color-surface); border-bottom:1px solid var(--md-sys-color-outline); position:sticky; top:0; z-index:10;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <md-icon>rss_feed</md-icon>
+      <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
+    </div>
   </header>
 
   <!-- Main Content -->
@@ -45,7 +73,7 @@
 
   <!-- Footer (共通) -->
   <footer style="padding:24px 16px; text-align:center; color:#666; font-size:0.85rem;">
-    <p style="margin:0;">© 2026 Built with Hugo & MWC</p>
+    <p style="margin:0;" class="md-typescale-body-small">© 2026 Built with Hugo & MWC</p>
   </footer>
 </body>
 </html>
