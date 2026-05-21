@@ -1,12 +1,20 @@
-baseURL: 'https://kons10.github.io/materialblue/'
-languageCode: 'ja-JP'
+# hugo.yaml
+baseURL: 'https://your-username.github.io/repo-name/'  # ← 実際のURLに修正してね
+locale: 'ja-JP'                 # ✅ languageCode → locale に変更（v0.158.0以降）
 title: 'Static Bluesky Client'
-theme: '' # 自作テーマなので不要
 
-# 静的ファイルの配置設定（static/ 以下をルートとして扱う）
+# ❌ theme: ''  ← この行を完全に削除！存在しないテーマを探しに行かなくなる
+
 publishDir: 'public'
 
 # minify 設定（オプション）
 minify:
   disableXML: true
   minifyOutput: true
+
+# ✅ 重要：モジュール機能を明示的に無効化（テーマ探索を防ぐおまじない）
+module:
+  hugoVersion:
+    extended: true
+    min: '0.140.0'
+  imports: []  # 空配列を指定して外部モジュール読み込みを無効化
