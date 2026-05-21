@@ -10,24 +10,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   
-  <!-- ✅ 2. importmap (esm.run 経由) -->
+  <!-- ✅ 2. Material Web (esm.run 経由) -->
+
   <script type="importmap">
-  {
-    "imports": {
-      "@material/web/": "https://esm.run/@material/web/"
+    {
+      "imports": {
+        "@material/web/": "https://esm.run/@material/web/"
+      }
     }
-  }
   </script>
-  
-  <!-- ✅ 3. MWC 初期化スクリプト -->
   <script type="module">
-    // 全コンポーネントの定義を読み込み
     import '@material/web/all.js';
-    // ✅ 最新のスタイル適用方法：typography を adoptedStyleSheets に注入
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
-    if (document.adoptedStyleSheets?.push) {
-      document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
-    }
+
+    document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
   </script>
   
   <!-- 簡易リセットCSS（オプション） -->
