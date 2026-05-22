@@ -1,0 +1,19 @@
+<md-elevated-card id="login" style="padding:16px; margin:16px 0;">
+  <div slot="headline" class="md-typescale-title-large">ログイン</div>
+  <div slot="supporting-text" class="md-typescale-body-medium">Bluesky のアカウントでログインしてください</div>
+  
+  <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+    <md-outlined-text-field id="id" label="ハンドル (例：user.bsky.social)" fullwidth type="text">
+      <md-icon slot="leading-icon">person</md-icon>
+    </md-outlined-text-field>
+    
+    <md-outlined-text-field id="pw" label="アプリパスワード" type="password" fullwidth>
+      <md-icon slot="leading-icon">lock</md-icon>
+    </md-outlined-text-field>
+    
+    <md-filled-button id="loginBtn" style="width:100%; justify-content:center;">
+      <md-icon slot="icon">login</md-icon>
+      ログイン
+    </md-filled-button>
+  </div>
+</md-elevated-card>
