@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Web Timeline</title>
+    <!-- Material Web Components の読み込み（CDN例） -->
+    <script type="module" src="https://esm.run/@material/web/all.js"></script>
+    <style>
+        :root {
+            --md-sys-color-surface: #ffffff;
+            --md-sys-color-on-surface: #1a1c1e;
+            --md-sys-color-surface-container: #f0f4f9;
+            --md-sys-color-primary: #0061a4;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--md-sys-color-surface-container);
+            color: var(--md-sys-color-on-surface);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ヘッダーのスタイル */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background-color: var(--md-sys-color-surface);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin-left: 16px;
+            font-weight: 500;
+        }
+
+        /* サイドバー (Aside) のスタイル */
+        aside {
+            /* md-drawer がレイアウトを制御しますが、コンテナとしての役割も持ちます */
+            height: 100vh;
+            z-index: 90;
+        }
+
+        md-drawer {
+            width: 280px;
+            background-color: var(--md-sys-color-surface);
+            border-right: 1px solid #e0e0e0;
+        }
+
+        md-drawer[open] {
+            /* モバイル時はオーバーレイ、デスクトップ場合は押し出しなど必要に応じて調整 */
+        }
+
+        /* ナビゲーションリストのスタイル */
+        md-list {
+            padding: 8px 0;
+        }
+
+        .nav-section-title {
+            padding: 16px 24px 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #5f6368;
+            text-transform: uppercase;
+        }
+
+        /* メインコンテンツ (Main) のスタイル */
+        main {
+            flex: 1;
+            margin-top: 64px; /* ヘッダーの高さ分空ける */
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            box-sizing: border-box;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* デスクトップではサイドバーが開いていてもメインコンテンツは押し出されないようにする場合などの調整用 */
+        @media (min-width: 840px) {
+            /* 必要に応じてレスポンシブ挙動を調整 */
+        }
+
+        /* タイムラインと投稿フォームのコンテナ */
+        .timeline-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 投稿フォームエリア */
+        .post-input-area {
+            background: var(--md-sys-color-surface);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        md-outlined-text-field {
+            width: 100%;
+        }
+
+        /* タイムラインアイテム */
+        .timeline-item {
+            background: var(--md-sys-color-surface);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ddd;
+            flex-shrink: 0;
+        }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .username {
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .post-text {
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .action-row {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ヘッダー -->
+    <header>
+        <div class="header-content">
+            <md-icon-button id="menu-button" aria-label="ナビゲーションメニューを開く">
+                <md-icon>menu</md-icon>
+            </md-icon-button>
+            <h1>Material Web TL</h1>
+        </div>
+    </header>
+
+    <!-- サイドバー (Aside) -->
+    <aside>
+        <md-drawer id="nav-drawer" type="modal">
+            <md-list aria-label="ナビゲーションメニュー">
+                
+                <!-- About セクション -->
+                <div class="nav-section-title">About</div>
+                <md-list-item href="/about/intro/" type="link">
+                    <div slot="headline">Introduction</div>
+                </md-list-item>
+                <md-list-item href="/about/quick-start/" type="link">
+                    <div slot="headline">Quick Start</div>
+                </md-list-item>
+                <md-list-item href="/about/roadmap/" type="link">
+                    <div slot="headline">Roadmap</div>
+                </md-list-item>
+                <md-divider></md-divider>
+
+                <!-- Theming セクション -->
+                <div class="nav-section-title">Theming</div>
+                <md-list-item href="/theming/material-theming/" type="link">
+                    <div slot="headline">Material Theming</div>
+                </md-list-item>
+                <md-list-item href="/theming/color/" type="link">
+                    <div slot="headline">Color</div>
+                </md-list-item>
+                <md-list-item href="/theming/typography/" type="link">
+                    <div slot="headline">Typography</div>
+                </md-list-item>
+                <md-divider></md-divider>
+
+                <!-- Components セクション -->
+                <div class="nav-section-title">Components</div>
+                <md-list-item href="/components/button/" type="link">
+                    <div slot="headline">Buttons</div>
+                </md-list-item>
+                <md-list-item href="/components/checkbox/" type="link">
+                    <div slot="headline">Checkbox</div>
+                </md-list-item>
+                <md-list-item href="/components/dialog/" type="link">
+                    <div slot="headline">Dialogs</div>
+                </md-list-item>
+                <md-list-item href="/components/list/" type="link">
+                    <div slot="headline">Lists</div>
+                </md-list-item>
+                <md-list-item href="/components/text-field/" type="link">
+                    <div slot="headline">Text field</div>
+                </md-list-item>
+            </md-list>
+        </md-drawer>
+    </aside>
+
+    <!-- メインコンテンツ (Main) -->
+    <main id="main-content">
+        <div class="timeline-container">
+            
+            <!-- 投稿入力エリア -->
+            <div class="post-input-area">
+                <md-outlined-text-field 
+                    label="何を考えていますか？" 
+                    type="textarea" 
+                    rows="3"
+                    max-rows="6">
+                </md-outlined-text-field>
+                <div style="text-align: right;">
+                    <md-filled-button>投稿する</md-filled-button>
+                </div>
+            </div>
+
+            <!-- タイムライン -->
+            <div class="timeline-item">
+                <div class="avatar"></div>
+                <div class="post-content">
+                    <div class="post-header">
+                        <span class="username">User A</span>
+                        <span class="timestamp">10 分前</span>
+                    </div>
+                    <div class="post-text">
+                        Material Web Components は本当に使いやすいですね。特にダークモードのサポートが素晴らしいです。
+                    </div>
+                    <div class="action-row">
+                        <md-icon-button><md-icon>favorite_border</md-icon></md-icon-button>
+                        <md-icon-button><md-icon>chat_bubble_outline</md-icon></md-icon-button>
+                        <md-icon-button><md-icon>share</md-icon></md-icon-button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="avatar" style="background-color: #bbdefb;"></div>
+                <div class="post-content">
+                    <div class="post-header">
+                        <span class="username">Dev B</span>
+                        <span class="timestamp">1 時間前</span>
+                    </div>
+                    <div class="post-text">
+                        新しいプロジェクトのセットアップが完了しました。次のステップはデザインシステムの導入です。
+                    </div>
+                    <div class="action-row">
+                        <md-icon-button><md-icon>favorite_border</md-icon></md-icon-button>
+                        <md-icon-button><md-icon>chat_bubble_outline</md-icon></md-icon-button>
+                        <md-icon-button><md-icon>share</md-icon></md-icon-button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="avatar" style="background-color: #c8e6c9;"></div>
+                <div class="post-content">
+                    <div class="post-header">
+                        <span class="username">Designer C</span>
+                        <span class="timestamp">3 時間前</span>
+                    </div>
+                    <div class="post-text">
+                        レスポンシブデザインの確認を行いました。モバイルビューでも問題なく動作しています。
+                    </div>
+                    <div class="action-row">
+                        <md-icon-button><md-icon>favorite_border</md-icon></md-icon-button>
+                        <md-icon-button><md-icon>chat_bubble_outline</md-icon></md-icon-button>
+                        <md-icon-button><md-icon>share</md-icon></md-icon-button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // メニューボタンの制御
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuButton = document.getElementById('menu-button');
+            const drawer = document.getElementById('nav-drawer');
+
+            if (menuButton && drawer) {
+                menuButton.addEventListener('click', () => {
+                    // open 属性をトグル
+                    const isOpen = drawer.hasAttribute('open');
+                    if (isOpen) {
+                        drawer.removeAttribute('open');
+                        menuButton.setAttribute('aria-label', 'ナビゲーションメニューを開く');
+                    } else {
+                        drawer.setAttribute('open', '');
+                        menuButton.setAttribute('aria-label', 'ナビゲーションメニューを閉じる');
+                    }
+                });
+
+                // ドロワーの外側をクリックした時などに閉じる処理などは、
+                // md-drawer[type="modal"] を使用している場合、コンポーネント側で一部処理してくれますが、
+                // 必要に応じてここに追加のリスナーを設定できます。
+                
+                // ドロワーが閉じられたときのイベントリスナー
+                drawer.addEventListener('closed', () => {
+                    menuButton.setAttribute('aria-label', 'ナビゲーションメニューを開く');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
