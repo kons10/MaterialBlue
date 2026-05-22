@@ -68,16 +68,12 @@
 
   // ログインしていない場合、ログイン画面にリダイレクト
   // ただし、セッション復元中は待機してから判断
-  if (!client.isLoggedIn && !client.isRestoringSession) {
-    window.location.href = '/login';
-  } else if (client.isRestoringSession) {
-    // セッション復元中の場合は、復元完了を待ってから再判定
-    client.waitForSessionRestore().then(() => {
-      if (!client.isLoggedIn) {
-        window.location.href = '/login';
-      }
-    });
-  }
+  (async () => {
+    await client.waitForSessionRestore();
+    if (!client.isLoggedIn) {
+      window.location.href = '/login';
+    }
+  })();
 
   refreshBtn.addEventListener('click', async () => {
     refreshBtn.disabled = true;

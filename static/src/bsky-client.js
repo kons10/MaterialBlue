@@ -34,6 +34,9 @@ export function createBskyClient() {
         clearSession(); // 失敗したら Cookie をクリア
         sessionRestoring = false;
       });
+  } else {
+    // セッション情報がない場合は即座に解決する Promise
+    sessionRestorePromise = Promise.resolve();
   }
 
   return {
@@ -50,7 +53,7 @@ export function createBskyClient() {
     
     // ✅ セッション復元完了を待つ Promise を返す
     async waitForSessionRestore() {
-      if (!sessionRestoring || !sessionRestorePromise) return;
+      if (!sessionRestorePromise) return;
       await sessionRestorePromise;
     },
 
