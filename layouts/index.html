@@ -1,5 +1,8 @@
 {{ define "main" }}
 
+<!-- エラーメッセージ表示エリア -->
+<div id="errorMessage" style="display:none; padding:12px 16px; margin:16px 0; background:var(--md-sys-color-error-container, #ffebee); color:var(--md-sys-color-on-error-container, #c62828); border-radius:8px;" class="md-typescale-body-medium"></div>
+
 <!-- ログインカード -->
 <md-elevated-card style="padding:16px; margin:16px 0;">
   <div slot="headline" class="md-typescale-title-large">ログイン</div>
@@ -14,7 +17,7 @@
       <md-icon slot="leading-icon">lock</md-icon>
     </md-outlined-text-field>
     
-    <md-filled-button id="loginBtn" style="align-self:flex-end;">
+    <md-filled-button id="loginBtn" style="width:100%; justify-content:center;">
       <md-icon slot="icon">login</md-icon>
       ログイン
     </md-filled-button>
@@ -36,7 +39,7 @@
     </md-outlined-text-field>
     
     <!-- 画像添付エリア -->
-    <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
       <md-filled-tonal-button id="imageUploadBtn">
         <md-icon slot="icon">image</md-icon>
         画像を追加
@@ -44,17 +47,16 @@
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
       <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
     </div>
-    <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+    <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;"></div>
     
-    <md-filled-button id="postBtn" style="align-self:flex-end; margin-top:8px;">
+    <md-filled-button id="postBtn" style="width:100%; justify-content:center; margin-top:12px;">
       <md-icon slot="icon">send</md-icon>
       投稿
     </md-filled-button>
   </div>
   
-  <md-list id="timeline" style="margin-top:8px;"></md-list>
-  
-  <div slot="actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+  <!-- タイムライン更新・ログアウトボタン -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--md-sys-color-outline);">
     <md-filled-tonal-button id="refreshBtn">
       <md-icon slot="icon">refresh</md-icon>
       更新
@@ -64,6 +66,9 @@
       ログアウト
     </md-outlined-button>
   </div>
+  
+  <!-- タイムラインリスト -->
+  <md-list id="timeline" style="margin-top:16px; border-top:1px solid var(--md-sys-color-outline);"></md-list>
 </md-elevated-card>
 
 <!-- ローディング表示 -->
@@ -84,9 +89,19 @@
   const imageCount = document.getElementById('imageCount');
   const imagePreview = document.getElementById('imagePreview');
   const loading = document.getElementById('loading');
+  const errorMessage = document.getElementById('errorMessage');
   
   // 選択された画像を保持する配列
   let selectedImages = [];
+
+  // エラーメッセージ表示関数
+  function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    setTimeout(() => {
+      errorMessage.style.display = 'none';
+    }, 5000);
+  }
 
   // 自動ログイン済みの場合
   if (client.isLoggedIn) {
@@ -98,7 +113,7 @@
     const pw = document.getElementById('pw').value.trim();
     
     if (!id || !pw) {
-      alert('ハンドルとアプリパスワードを入力してください');
+      showError('ハンドルとアプリパスワードを入力してください');
       return;
     }
     
@@ -109,7 +124,7 @@
       await client.login(id, pw);
       showTimeline();
     } catch (e) {
-      alert(`エラー：${e.message}`);
+      showError(`ログインエラー：${e.message}`);
     } finally {
       loginBtn.disabled = false;
       showLoading(false);
@@ -143,11 +158,12 @@
     }
     
     if (!text && selectedImages.length === 0) {
-      alert('投稿内容または画像を入力してください');
+      showError('投稿内容または画像を入力してください');
       return;
     }
     
     postBtn.disabled = true;
+    postBtn.textContent = '投稿中...';
     
     try {
       console.log('投稿開始:', { text, imageCount: selectedImages.length });
@@ -171,13 +187,20 @@
                          postTextField.shadowRoot?.querySelector('textarea');
         if (textarea) textarea.value = '';
       }
-      alert('投稿しました！');
+      showError('投稿しました！');
+      errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
+      errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
+      setTimeout(() => {
+        errorMessage.style.background = '';
+        errorMessage.style.color = '';
+      }, 3000);
       await loadTimeline();
     } catch (e) {
       console.error('投稿エラー詳細:', e);
-      alert(`投稿エラー：${e.message}`);
+      showError(`投稿エラー：${e.message}`);
     } finally {
       postBtn.disabled = false;
+      postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>投稿';
     }
   });
 
@@ -196,7 +219,7 @@
     const filesToAdd = files.slice(0, remainingSlots);
     
     if (files.length > remainingSlots) {
-      alert(`画像は最大 4 枚まで添付できます。残り${remainingSlots}枚です。`);
+      showError(`画像は最大 4 枚まで添付できます。残り${remainingSlots}枚です。`);
     }
     
     filesToAdd.forEach(file => {
@@ -329,8 +352,21 @@
       });
     } catch (e) {
       console.error('Timeline load error:', e);
-      alert('タイムラインの取得に失敗しました');
+      showError('タイムラインの取得に失敗しました');
     }
+  }
+
+  // エンターキーで投稿（Ctrl+Enter または Cmd+Enter）
+  const postTextarea = document.querySelector('#postText textarea[slot="textarea"]');
+  if (postTextarea) {
+    postTextarea.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!postBtn.disabled) {
+          postBtn.click();
+        }
+      }
+    });
   }
 </script>
 {{ end }}
