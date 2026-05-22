@@ -7,10 +7,11 @@
   // ✅ セッション復元を待ってからリダイレクト
   (async () => {
     await client.waitForSessionRestore();
-    if (client.isLoggedIn) {
-      window.location.href = '/home';
-    } else {
-      window.location.href = '/login';
+    const mainUrl = {{ "main/" | relURL | jsonify }};
+    const loginUrl = {{ "login/" | relURL | jsonify }};
+    const target = client.isLoggedIn ? mainUrl : loginUrl;
+    if (window.location.pathname !== new URL(target, window.location.origin).pathname) {
+      window.location.replace(target);
     }
   })();
 </script>

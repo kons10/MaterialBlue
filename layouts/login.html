@@ -32,11 +32,13 @@
   const loginBtn = document.getElementById('loginBtn');
   const loading = document.getElementById('loading');
   
+  const mainUrl = {{ "main/" | relURL | jsonify }};
+
   // ログイン済みの場合、メイン画面にリダイレクト
   (async () => {
     await client.waitForSessionRestore();
     if (client.isLoggedIn) {
-      window.location.href = '/home';
+      window.location.replace(mainUrl);
     }
   })();
 
@@ -55,7 +57,7 @@
     try {
       await client.login(id, pw);
       // ログイン成功後、メイン画面へ遷移
-      window.location.href = '/home';
+      window.location.replace(mainUrl);
     } catch (e) {
       alert(`エラー：${e.message}`);
     } finally {
