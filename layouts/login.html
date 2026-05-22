@@ -36,7 +36,7 @@
   (async () => {
     await client.waitForSessionRestore();
     if (client.isLoggedIn) {
-      window.location.href = '/home';
+      window.location.href = '/main';
     }
   })();
 
@@ -55,7 +55,7 @@
     try {
       await client.login(id, pw);
       // ログイン成功後、メイン画面へ遷移
-      window.location.href = '/home';
+      window.location.href = '/main';
     } catch (e) {
       alert(`エラー：${e.message}`);
     } finally {
