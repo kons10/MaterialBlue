@@ -55,25 +55,175 @@
       color: var(--md-sys-color-on-surface); 
     }
     * { box-sizing: border-box; }
+    
+    /* Layout styles */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    /* Header styles */
+    .header {
+      padding: 12px 16px;
+      background: var(--md-sys-color-surface);
+      border-bottom: 1px solid var(--md-sys-color-outline);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .menu-button {
+      flex-shrink: 0;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-weight: 500;
+      flex-grow: 1;
+    }
+    
+    /* Main content */
+    .main-content {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 80vh;
+      width: 100%;
+    }
+    
+    /* Footer */
+    .footer {
+      padding: 24px 16px;
+      text-align: center;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    
+    .footer p {
+      margin: 0;
+    }
+    
+    /* Navigation drawer styles */
+    md-drawer {
+      width: 320px;
+      max-width: 85vw;
+    }
+    
+    .nav-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--md-sys-color-outline);
+    }
+    
+    .nav-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+    
+    .nav-section {
+      padding: 8px 0;
+    }
+    
+    .nav-section-title {
+      padding: 12px 16px 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--md-sys-color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .nav-divider {
+      height: 1px;
+      background-color: var(--md-sys-color-outline);
+      margin: 8px 0;
+    }
+    
+    md-list-item {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <!-- Header (共通) -->
-  <header style="padding:12px 16px; background:var(--md-sys-color-surface); border-bottom:1px solid var(--md-sys-color-outline); position:sticky; top:0; z-index:10;">
-    <div style="display:flex; align-items:center; gap:12px;">
+  <div class="app-container">
+    <!-- Drawer (サイドバー) -->
+    <md-drawer id="nav-drawer" type="modal">
+      <div class="nav-header">
+        <h2>Navigation</h2>
+      </div>
+      
+      <md-list aria-label="List of pages and components" role="menubar" class="nav">
+        <!-- About Section -->
+        <div class="nav-section">
+          <div class="nav-section-title">About</div>
+          <md-list-item href="/about/intro/" type="link">Introduction</md-list-item>
+          <md-list-item href="/about/quick-start/" type="link">Quick Start</md-list-item>
+          <md-list-item href="/about/roadmap/" type="link">Roadmap</md-list-item>
+          <md-list-item href="/about/support/" type="link">Support</md-list-item>
+          <md-list-item href="/about/size/" type="link">Bundle Sizes</md-list-item>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Theming Section -->
+        <div class="nav-section">
+          <div class="nav-section-title">Theming</div>
+          <md-list-item type="link" href="/theming/material-theming/">Material Theming</md-list-item>
+          <md-list-item type="link" href="/theming/color/">Color</md-list-item>
+          <md-list-item type="link" href="/theming/typography/">Typography</md-list-item>
+          <md-list-item type="link" href="/theming/shape/">Shape</md-list-item>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Components Section -->
+        <div class="nav-section">
+          <div class="nav-section-title">Components</div>
+          <md-list-item href="/components/button/" type="link">Buttons</md-list-item>
+          <md-list-item href="/components/checkbox/" type="link">Checkbox</md-list-item>
+          <md-list-item href="/components/chip/" type="link">Chips</md-list-item>
+          <md-list-item href="/components/dialog/" type="link">Dialogs</md-list-item>
+          <md-list-item href="/components/fab/" type="link">Floating action button (FAB)</md-list-item>
+          <md-list-item href="/components/icon-button/" type="link">Icon Buttons</md-list-item>
+          <md-list-item href="/components/list/" type="link">Lists</md-list-item>
+          <md-list-item href="/components/menu/" type="link">Menus</md-list-item>
+          <md-list-item href="/components/progress/" type="link">Progress indicators</md-list-item>
+          <md-list-item href="/components/radio/" type="link">Radio</md-list-item>
+          <md-list-item href="/components/ripple/" type="link">Ripple</md-list-item>
+          <md-list-item href="/components/select/" type="link">Select</md-list-item>
+          <md-list-item href="/components/slider/" type="link">Sliders</md-list-item>
+          <md-list-item href="/components/switch/" type="link">Switch</md-list-item>
+          <md-list-item href="/components/tabs/" type="link">Tabs</md-list-item>
+          <md-list-item href="/components/text-field/" type="link">Text field</md-list-item>
+        </div>
+      </md-list>
+    </md-drawer>
+    
+    <!-- Scrim (背景オーバーレイ) -->
+    <md-scrim for="nav-drawer"></md-scrim>
+    
+    <!-- Header (共通) -->
+    <header class="header">
+      <md-icon-button toggle="" class="menu-button" aria-label="Open navigation menu" data-for="nav-drawer">
+        <md-icon>menu</md-icon>
+      </md-icon-button>
       <md-icon>rss_feed</md-icon>
-      <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
-    </div>
-  </header>
+      <h1 class="md-typescale-headline-small">Static Bluesky</h1>
+    </header>
 
-  <!-- Main Content -->
-  <main style="max-width:640px; margin:0 auto; padding:16px; min-height:80vh;">
-    {{ block "main" . }}{{ end }}
-  </main>
+    <!-- Main Content -->
+    <main class="main-content">
+      {{ block "main" . }}{{ end }}
+    </main>
 
-  <!-- Footer (共通) -->
-  <footer style="padding:24px 16px; text-align:center; color:#666; font-size:0.85rem;">
-    <p style="margin:0;" class="md-typescale-body-small">© 2026 Built with Hugo & MWC</p>
-  </footer>
+    <!-- Footer (共通) -->
+    <footer class="footer">
+      <p class="md-typescale-body-small">© 2026 Built with Hugo & MWC</p>
+    </footer>
+  </div>
 </body>
 </html>
