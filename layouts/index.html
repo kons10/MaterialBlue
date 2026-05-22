@@ -319,14 +319,17 @@
         container.appendChild(listItem);
         
         // 画像がある場合は表示
-        if (record.embed && record.embed.images && record.embed.images.length > 0) {
+        // NOTE: Bluesky の TL では画像情報が `post.embed.images` に入る。
+        // 投稿レコード側 (`record.embed.images`) を見ると取得できないことがあるため両方を確認する。
+        const images = post.embed?.images || record.embed?.images || [];
+        if (images.length > 0) {
           const imageContainer = document.createElement('div');
           imageContainer.style.display = 'flex';
           imageContainer.style.gap = '8px';
           imageContainer.style.flexWrap = 'wrap';
           imageContainer.style.margin = '8px 16px';
           
-          record.embed.images.forEach(img => {
+          images.forEach(img => {
             const imgElement = document.createElement('img');
             imgElement.src = img.fullsize || img.thumbnail;
             imgElement.style.width = '120px';
