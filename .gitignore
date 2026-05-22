@@ -1,1 +1,1 @@
-(content/login/_index.md, content/main/_index.md, layouts/login.html, layouts/main.html, layouts/index.html)
+Nothing should be ignored based on the provided file changes, as they only include source files (.html, .js) without any build artifacts, dependencies, or temporary files.

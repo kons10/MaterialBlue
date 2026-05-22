@@ -3,28 +3,37 @@ import { BskyAgent } from 'https://esm.sh/@atproto/api@0.13.6';
 
 export function createBskyClient() {
   const agent = new BskyAgent({ service: 'https://bsky.social' });
-
+  
   // 🔹 1. Cookie からセッション情報を読み取る
   const access = getCookie('bsky_access');
   const refresh = getCookie('bsky_refresh');
   const did = getCookie('bsky_did');
-
+  
   // 🔹 2. セッション情報が揃っていたら復元を試みる
+  let sessionRestoring = false;
+  let sessionRestorePromise = null;
+  
   if (access && refresh && did) {
+    sessionRestoring = true;
     const sessionData = { 
       accessJwt: access, 
       refreshJwt: refresh, 
       did: decodeURIComponent(did),
-      handle: '', // handle は resumeSession 後に更新されるか、必要なら保存
+      handle: '',
       email: '',
       emailConfirmed: false
     };
 
-    // ✅ 正しい復元方法：resumeSession にデータを渡す
-    agent.resumeSession(sessionData).catch((err) => {
-      console.warn('Session resume failed (token expired or invalid):', err);
-      clearSession(); // 失敗したらCookieをクリア
-    });
+    // ✅ セッション復元の Promise を保持
+    sessionRestorePromise = agent.resumeSession(sessionData)
+      .then(() => {
+        sessionRestoring = false;
+      })
+      .catch((err) => {
+        console.warn('Session resume failed (token expired or invalid):', err);
+        clearSession(); // 失敗したら Cookie をクリア
+        sessionRestoring = false;
+      });
   }
 
   return {
@@ -32,6 +41,17 @@ export function createBskyClient() {
     // ✅ ログイン判定：session プロパティが存在するかで判断
     get isLoggedIn() { 
       return !!agent.session?.accessJwt; 
+    },
+    
+    // ✅ セッション復元中かどうかを取得
+    get isRestoringSession() {
+      return sessionRestoring;
+    },
+    
+    // ✅ セッション復元完了を待つ Promise を返す
+    async waitForSessionRestore() {
+      if (!sessionRestoring || !sessionRestorePromise) return;
+      await sessionRestorePromise;
     },
 
     // 🔹 3. ログイン処理
@@ -59,7 +79,6 @@ export function createBskyClient() {
         await agent.logout();
       } finally {
         clearSession();
-        // session は getter なので undefined にする必要はないが、念のため
       }
     },
 
