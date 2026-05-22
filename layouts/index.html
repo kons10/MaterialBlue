@@ -328,22 +328,41 @@
           
           record.embed.images.forEach(img => {
             const imgElement = document.createElement('img');
-            imgElement.src = img.fullsize || img.thumbnail;
+            // 画像 URL を構築（fullsize がなければ thumbnail、どちらもなければスキップ）
+            const imageUrl = img.fullsize || img.thumbnail;
+            
+            if (!imageUrl) {
+              console.warn('Image URL not found:', img);
+              return;
+            }
+            
+            imgElement.src = imageUrl;
+            imgElement.alt = img.alt || '投稿画像';
             imgElement.style.width = '120px';
             imgElement.style.height = '120px';
             imgElement.style.objectFit = 'cover';
             imgElement.style.borderRadius = '8px';
             imgElement.style.cursor = 'pointer';
+            imgElement.style.backgroundColor = 'var(--md-sys-color-surface-container-low, #f5f5f5)';
+            
+            // 画像読み込みエラー時のハンドリング
+            imgElement.onerror = () => {
+              console.error('Failed to load image:', imageUrl);
+              imgElement.style.display = 'none';
+            };
             
             // クリックで拡大表示（シンプル実装）
             imgElement.addEventListener('click', () => {
-              window.open(img.fullsize || img.thumbnail, '_blank');
+              window.open(imageUrl, '_blank');
             });
             
             imageContainer.appendChild(imgElement);
           });
           
-          container.appendChild(imageContainer);
+          // 画像が 1 つも表示されなかった場合はコンテナを追加しない
+          if (imageContainer.children.length > 0) {
+            container.appendChild(imageContainer);
+          }
         }
         
         // 区切り線
