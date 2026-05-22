@@ -267,6 +267,9 @@
       container.innerHTML = '';
       feed.forEach(item => {
         const post = item.post;
+        const record = post.record;
+        
+        // メインのリストアイテム作成
         const listItem = document.createElement('md-list-item');
         listItem.type = 'link';
         
@@ -284,13 +287,41 @@
         // サポーティングテキスト
         const supporting = document.createElement('div');
         supporting.slot = 'supporting-text';
-        supporting.textContent = post.record.text;
+        supporting.textContent = record.text;
         supporting.className = 'md-typescale-body-medium';
         
         listItem.appendChild(avatarIcon);
         listItem.appendChild(headline);
         listItem.appendChild(supporting);
         container.appendChild(listItem);
+        
+        // 画像がある場合は表示
+        if (record.embed && record.embed.images && record.embed.images.length > 0) {
+          const imageContainer = document.createElement('div');
+          imageContainer.style.display = 'flex';
+          imageContainer.style.gap = '8px';
+          imageContainer.style.flexWrap = 'wrap';
+          imageContainer.style.margin = '8px 16px';
+          
+          record.embed.images.forEach(img => {
+            const imgElement = document.createElement('img');
+            imgElement.src = img.fullsize || img.thumbnail;
+            imgElement.style.width = '120px';
+            imgElement.style.height = '120px';
+            imgElement.style.objectFit = 'cover';
+            imgElement.style.borderRadius = '8px';
+            imgElement.style.cursor = 'pointer';
+            
+            // クリックで拡大表示（シンプル実装）
+            imgElement.addEventListener('click', () => {
+              window.open(img.fullsize || img.thumbnail, '_blank');
+            });
+            
+            imageContainer.appendChild(imgElement);
+          });
+          
+          container.appendChild(imageContainer);
+        }
         
         // 区切り線
         const divider = document.createElement('md-divider');
