@@ -68,7 +68,7 @@
 
   // ログインしていない場合、ログイン画面にリダイレクト
   if (!client.isLoggedIn) {
-    window.location.href = '/login/';
+    window.location.href = '/login';
   }
 
   refreshBtn.addEventListener('click', async () => {
@@ -79,7 +79,7 @@
 
   logoutBtn.addEventListener('click', async () => {
     await client.logout();
-    window.location.href = '/login/';
+    window.location.href = '/login';
   });
 
   postBtn.addEventListener('click', async () => {
