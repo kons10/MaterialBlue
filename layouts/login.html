@@ -34,7 +34,7 @@
   
   // ログイン済みの場合、メイン画面にリダイレクト
   if (client.isLoggedIn) {
-    window.location.href = '/main/';
+    window.location.href = '/home';
   }
 
   loginBtn.addEventListener('click', async () => {
@@ -52,7 +52,7 @@
     try {
       await client.login(id, pw);
       // ログイン成功後、メイン画面へ遷移
-      window.location.href = '/main/';
+      window.location.href = '/home';
     } catch (e) {
       alert(`エラー：${e.message}`);
     } finally {
