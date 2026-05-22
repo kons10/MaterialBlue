@@ -1,17 +1,18 @@
 {{ define "main" }}
 <script type="module">
-  // ログイン状態をチェックしてリダイレクト
   import { createBskyClient } from '/src/bsky-client.js';
 
   const client = createBskyClient();
-  
-  // ログインしている場合、メイン画面にリダイレクト
-  if (client.isLoggedIn) {
-    window.location.href = '/home';
-  } else {
-    // ログインしていない場合、ログイン画面にリダイレクト
-    window.location.href = '/login';
-  }
+
+  // ✅ セッション復元を待ってからリダイレクト
+  (async () => {
+    await client.waitForSessionRestore();
+    if (client.isLoggedIn) {
+      window.location.href = '/home';
+    } else {
+      window.location.href = '/login';
+    }
+  })();
 </script>
 
 <div style="text-align:center; padding:48px;">
