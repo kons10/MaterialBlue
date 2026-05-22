@@ -1,0 +1,272 @@
+{{ define "main" }}
+
+<!-- タイムライン表示エリア -->
+<md-elevated-card id="timeline-card" style="padding:16px;">
+  <div slot="headline" class="md-typescale-title-large" style="display:flex; align-items:center; gap:8px;">
+    <md-icon>rss_feed</md-icon>
+    タイムライン
+  </div>
+  
+  <!-- 投稿エリア -->
+  <div style="margin-top:16px;">
+    <md-outlined-text-field id="postText" label="新しい投稿" fullwidth style="min-height:100px;">
+      <md-icon slot="leading-icon">edit_note</md-icon>
+      <textarea slot="textarea" style="width:100%; min-height:80px; resize:vertical; font-family:inherit; font-size:inherit;"></textarea>
+    </md-outlined-text-field>
+    
+    <!-- 画像添付エリア -->
+    <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+      <md-filled-tonal-button id="imageUploadBtn">
+        <md-icon slot="icon">image</md-icon>
+        画像を追加
+      </md-filled-tonal-button>
+      <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
+      <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
+    </div>
+    <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+    
+    <md-filled-button id="postBtn" style="align-self:flex-end; margin-top:8px;">
+      <md-icon slot="icon">send</md-icon>
+      投稿
+    </md-filled-button>
+  </div>
+  
+  <md-list id="timeline" style="margin-top:8px;"></md-list>
+  
+  <div slot="actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+    <md-filled-tonal-button id="refreshBtn">
+      <md-icon slot="icon">refresh</md-icon>
+      更新
+    </md-filled-tonal-button>
+    <md-outlined-button id="logoutBtn">
+      <md-icon slot="icon">logout</md-icon>
+      ログアウト
+    </md-outlined-button>
+  </div>
+</md-elevated-card>
+
+<!-- ローディング表示 -->
+<md-circular-progress id="loading" indeterminate style="display:none; margin:24px auto;"></md-circular-progress>
+
+<script type="module">
+  // static/src/bsky-client.js を読み込み
+  import { createBskyClient } from '/src/bsky-client.js';
+
+  const client = createBskyClient();
+  const timelineCard = document.getElementById('timeline-card');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const postBtn = document.getElementById('postBtn');
+  const imageUploadBtn = document.getElementById('imageUploadBtn');
+  const imageInput = document.getElementById('imageInput');
+  const imageCount = document.getElementById('imageCount');
+  const imagePreview = document.getElementById('imagePreview');
+  const loading = document.getElementById('loading');
+  
+  // 選択された画像を保持する配列
+  let selectedImages = [];
+
+  // ログインしていない場合、ログイン画面にリダイレクト
+  if (!client.isLoggedIn) {
+    window.location.href = '/login/';
+  }
+
+  refreshBtn.addEventListener('click', async () => {
+    refreshBtn.disabled = true;
+    await loadTimeline();
+    refreshBtn.disabled = false;
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    await client.logout();
+    window.location.href = '/login/';
+  });
+
+  postBtn.addEventListener('click', async () => {
+    const postTextField = document.getElementById('postText');
+    let text = '';
+    if (postTextField.value) {
+      text = postTextField.value.trim();
+    } else {
+      const textarea = postTextField.querySelector('textarea') || 
+                       postTextField.shadowRoot?.querySelector('textarea') ||
+                       postTextField.shadowRoot?.querySelector('input');
+      text = textarea ? textarea.value.trim() : '';
+    }
+    
+    if (!text && selectedImages.length === 0) {
+      alert('投稿内容または画像を入力してください');
+      return;
+    }
+    
+    postBtn.disabled = true;
+    
+    try {
+      console.log('投稿開始:', { text, imageCount: selectedImages.length });
+      console.log('client メソッド確認:', typeof client.post, typeof client.postWithImage);
+      
+      if (selectedImages.length > 0) {
+        console.log('画像付き投稿を実行');
+        await client.postWithImage(text, selectedImages);
+        selectedImages = [];
+        updateImagePreview();
+      } else {
+        console.log('テキスト投稿を実行');
+        await client.post(text);
+      }
+      if (postTextField.value) {
+        postTextField.value = '';
+      } else {
+        const textarea = postTextField.querySelector('textarea') || 
+                         postTextField.shadowRoot?.querySelector('textarea');
+        if (textarea) textarea.value = '';
+      }
+      alert('投稿しました！');
+      await loadTimeline();
+    } catch (e) {
+      console.error('投稿エラー詳細:', e);
+      alert(`投稿エラー：${e.message}`);
+    } finally {
+      postBtn.disabled = false;
+    }
+  });
+
+  // 画像アップロードボタンクリック
+  imageUploadBtn.addEventListener('click', () => {
+    imageInput.click();
+  });
+
+  // 画像選択時の処理
+  imageInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    const remainingSlots = 4 - selectedImages.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+      alert(`画像は最大 4 枚まで添付できます。残り${remainingSlots}枚です。`);
+    }
+    
+    filesToAdd.forEach(file => {
+      selectedImages.push(file);
+    });
+    
+    updateImagePreview();
+    imageInput.value = '';
+  });
+
+  // 画像プレビュー更新関数
+  function updateImagePreview() {
+    imagePreview.innerHTML = '';
+    imageCount.textContent = selectedImages.length > 0 ? `${selectedImages.length}枚選択中` : '';
+    
+    selectedImages.forEach((file, index) => {
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.width = '80px';
+      img.style.height = '80px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '8px';
+      
+      const removeBtn = document.createElement('md-icon-button');
+      removeBtn.textContent = 'close';
+      removeBtn.style.position = 'absolute';
+      removeBtn.style.top = '-8px';
+      removeBtn.style.right = '-8px';
+      removeBtn.style.backgroundColor = 'var(--md-sys-color-error)';
+      removeBtn.style.color = 'white';
+      removeBtn.style.borderRadius = '50%';
+      removeBtn.style.width = '24px';
+      removeBtn.style.height = '24px';
+      removeBtn.style.fontSize = '16px';
+      
+      removeBtn.addEventListener('click', () => {
+        selectedImages.splice(index, 1);
+        updateImagePreview();
+      });
+      
+      container.appendChild(img);
+      container.appendChild(removeBtn);
+      imagePreview.appendChild(container);
+    });
+  }
+
+  function showLoading(show) {
+    loading.style.display = show ? 'block' : 'none';
+  }
+
+  async function loadTimeline() {
+    try {
+      const feed = await client.timeline(20);
+      const container = document.getElementById('timeline');
+      
+      container.innerHTML = '';
+      feed.forEach(item => {
+        const post = item.post;
+        const record = post.record;
+        
+        const listItem = document.createElement('md-list-item');
+        listItem.type = 'link';
+        
+        const avatarIcon = document.createElement('md-icon');
+        avatarIcon.slot = 'start';
+        avatarIcon.textContent = 'account_circle';
+        
+        const headline = document.createElement('div');
+        headline.slot = 'headline';
+        headline.textContent = `@${post.author.handle}`;
+        headline.className = 'md-typescale-body-large';
+        
+        const supporting = document.createElement('div');
+        supporting.slot = 'supporting-text';
+        supporting.textContent = record.text;
+        supporting.className = 'md-typescale-body-medium';
+        
+        listItem.appendChild(avatarIcon);
+        listItem.appendChild(headline);
+        listItem.appendChild(supporting);
+        container.appendChild(listItem);
+        
+        if (record.embed && record.embed.images && record.embed.images.length > 0) {
+          const imageContainer = document.createElement('div');
+          imageContainer.style.display = 'flex';
+          imageContainer.style.gap = '8px';
+          imageContainer.style.flexWrap = 'wrap';
+          imageContainer.style.margin = '8px 16px';
+          
+          record.embed.images.forEach(img => {
+            const imgElement = document.createElement('img');
+            imgElement.src = img.fullsize || img.thumbnail;
+            imgElement.style.width = '120px';
+            imgElement.style.height = '120px';
+            imgElement.style.objectFit = 'cover';
+            imgElement.style.borderRadius = '8px';
+            imgElement.style.cursor = 'pointer';
+            
+            imgElement.addEventListener('click', () => {
+              window.open(img.fullsize || img.thumbnail, '_blank');
+            });
+            
+            imageContainer.appendChild(imgElement);
+          });
+          
+          container.appendChild(imageContainer);
+        }
+        
+        const divider = document.createElement('md-divider');
+        container.appendChild(divider);
+      });
+    } catch (e) {
+      console.error('Timeline load error:', e);
+      alert('タイムラインの取得に失敗しました');
+    }
+  }
+  
+  // 初期ロード
+  loadTimeline();
+</script>
+{{ end }}
