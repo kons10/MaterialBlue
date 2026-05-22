@@ -8,7 +8,7 @@
   (async () => {
     await client.waitForSessionRestore();
     if (client.isLoggedIn) {
-      window.location.href = '/home';
+      window.location.href = '/main';
     } else {
       window.location.href = '/login';
     }
