@@ -328,11 +328,23 @@
           
           record.embed.images.forEach(img => {
             const imgElement = document.createElement('img');
-            // 画像 URL を構築（fullsize がなければ thumbnail、どちらもなければスキップ）
-            const imageUrl = img.fullsize || img.thumbnail;
+            
+            // cdn.bsky.app を使用した正しい画像 URL の構築
+            let imageUrl = null;
+            if (img.image && typeof img.image === 'object' && img.image.ref && img.image.ref.$link) {
+              // 画像のリファレンスから CDN URL を構築
+              const imageRef = img.image.ref.$link;
+              const mimeType = img.image.mimeType || 'image/jpeg';
+              imageUrl = `https://cdn.bsky.app/img/feed_fullsize/${post.author.did}/${imageRef}`;
+            } else if (img.fullsize) {
+              // fullsize が既に CDN URL の場合はそのまま使用
+              imageUrl = img.fullsize;
+            } else if (img.thumbnail) {
+              imageUrl = img.thumbnail;
+            }
             
             if (!imageUrl) {
-              console.warn('Image URL not found:', img);
+              console.warn('Image URL could not be constructed:', img);
               return;
             }
             
@@ -345,10 +357,17 @@
             imgElement.style.cursor = 'pointer';
             imgElement.style.backgroundColor = 'var(--md-sys-color-surface-container-low, #f5f5f5)';
             
-            // 画像読み込みエラー時のハンドリング
+            // 画像読み込みエラー時のハンドリング - フォールバック画像を表示しない
             imgElement.onerror = () => {
-              console.error('Failed to load image:', imageUrl);
+              console.error('Failed to load image from cdn.bsky.app:', imageUrl);
               imgElement.style.display = 'none';
+              // エラー時には src を空にしてブラウザのデフォルトフォールバックを防止
+              imgElement.removeAttribute('src');
+            };
+            
+            // 画像読み込み成功時のみ表示を確保
+            imgElement.onload = () => {
+              imgElement.style.display = 'block';
             };
             
             // クリックで拡大表示（シンプル実装）
