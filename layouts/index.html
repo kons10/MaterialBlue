@@ -331,20 +331,48 @@
             
             // cdn.bsky.app を使用した正しい画像 URL の構築
             let imageUrl = null;
-            if (img.image && typeof img.image === 'object' && img.image.ref && img.image.ref.$link) {
-              // 画像のリファレンスから CDN URL を構築
-              const imageRef = img.image.ref.$link;
-              const mimeType = img.image.mimeType || 'image/jpeg';
-              imageUrl = `https://cdn.bsky.app/img/feed_fullsize/${post.author.did}/${imageRef}`;
-            } else if (img.fullsize) {
-              // fullsize が既に CDN URL の場合はそのまま使用
+            
+            // デバッグ用：画像オブジェクトの構造を出力
+            console.log('Image object structure:', JSON.stringify(img, null, 2));
+            
+            if (img.image && typeof img.image === 'object') {
+              // パターン 1: image.ref.$link 形式
+              if (img.image.ref && typeof img.image.ref === 'object' && img.image.ref.$link) {
+                const imageRef = img.image.ref.$link;
+                imageUrl = `https://cdn.bsky.app/img/feed_fullsize/${post.author.did}/${imageRef}`;
+              }
+              // パターン 2: image.ref が文字列（CID）の場合
+              else if (typeof img.image.ref === 'string') {
+                const imageRef = img.image.ref;
+                imageUrl = `https://cdn.bsky.app/img/feed_fullsize/${post.author.did}/${imageRef}`;
+              }
+              // パターン 3: image.$link または image.link がある場合
+              else if (img.image.$link) {
+                imageUrl = `https://cdn.bsky.app/img/feed_fullsize/${post.author.did}/${img.image.$link}`;
+              }
+              else if (img.image.link) {
+                imageUrl = `https://cdn.bsky.app/img/feed_fullsize/${post.author.did}/${img.image.link}`;
+              }
+            }
+            
+            // フォールバック：fullsize プロパティがある場合
+            if (!imageUrl && img.fullsize) {
               imageUrl = img.fullsize;
-            } else if (img.thumbnail) {
+            }
+            
+            // フォールバック：thumbnail プロパティがある場合
+            if (!imageUrl && img.thumbnail) {
               imageUrl = img.thumbnail;
             }
             
+            // フォールバック：images 配列に直接 URL がある場合（旧形式）
+            if (!imageUrl && img.url) {
+              imageUrl = img.url;
+            }
+            
             if (!imageUrl) {
-              console.warn('Image URL could not be constructed:', img);
+              console.warn('Image URL could not be constructed. Available properties:', Object.keys(img));
+              console.log('Full image object:', img);
               return;
             }
             
