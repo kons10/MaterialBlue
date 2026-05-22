@@ -4,7 +4,7 @@
 <div id="errorMessage" style="display:none; padding:12px 16px; margin:16px 0; background:var(--md-sys-color-error-container, #ffebee); color:var(--md-sys-color-on-error-container, #c62828); border-radius:8px;" class="md-typescale-body-medium"></div>
 
 <!-- ログインカード -->
-<md-elevated-card style="padding:16px; margin:16px 0;">
+<md-elevated-card id="login" style="padding:16px; margin:16px 0;">
   <div slot="headline" class="md-typescale-title-large">ログイン</div>
   <div slot="supporting-text" class="md-typescale-body-medium">Bluesky のアカウントでログインしてください</div>
   
@@ -32,7 +32,7 @@
   </div>
   
   <!-- 投稿エリア -->
-  <div style="margin-top:16px;">
+  <div id="composer" style="margin-top:16px;">
     <md-outlined-text-field id="postText" label="新しい投稿" fullwidth style="min-height:100px;">
       <md-icon slot="leading-icon">edit_note</md-icon>
       <textarea slot="textarea" style="width:100%; min-height:80px; resize:vertical; font-family:inherit; font-size:inherit;"></textarea>

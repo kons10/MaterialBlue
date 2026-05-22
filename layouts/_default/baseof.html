@@ -4,15 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ .Title }}</title>
-  
-  <!-- ✅ 1. Google Fonts (必須) -->
+  <meta name="theme-color" content="#251f16">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- ✅ Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
-  
-  <!-- ✅ 2. Material Web (esm.sh 経由) -->
+
   <script type="importmap">
     {
       "imports": {
@@ -21,59 +19,151 @@
     }
   </script>
   <script type="module">
-    // MWC コンポーネントのインポート
     import '@material/web/all.js';
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
-
     document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
   </script>
-  
-  <!-- MWC トークンによるテーマ設定 -->
+
   <style>
     :root {
-      /* カラーパレット */
-      --md-sys-color-primary: #1976D2;
+      --md-ref-typeface-brand: 'Google Sans', 'Roboto', system-ui;
+      --md-ref-typeface-plain: 'Google Sans', 'Roboto', system-ui;
+
+      --md-sys-color-primary: #6750A4;
       --md-sys-color-on-primary: #FFFFFF;
-      --md-sys-color-primary-container: #BBDEFB;
-      --md-sys-color-on-primary-container: #0D47A1;
-      --md-sys-color-secondary: #424242;
+      --md-sys-color-primary-container: #E9DDFF;
+      --md-sys-color-on-primary-container: #22005D;
+      --md-sys-color-secondary: #625B71;
       --md-sys-color-on-secondary: #FFFFFF;
-      --md-sys-color-surface: #FAFAFA;
-      --md-sys-color-on-surface: #212121;
-      --md-sys-color-surface-container: #F5F5F5;
-      --md-sys-color-outline: #E0E0E0;
-      
-      /* フォント */
-      --md-ref-typeface-brand: 'Roboto', sans-serif;
-      --md-ref-typeface-plain: 'Roboto', sans-serif;
+      --md-sys-color-surface: #FCF8F8;
+      --md-sys-color-on-surface: #1D1B20;
+      --md-sys-color-surface-container: #F3EDF7;
+      --md-sys-color-surface-container-high: #ECE6F0;
+      --md-sys-color-surface-container-highest: #E6E0E9;
+      --md-sys-color-outline: #CAC4D0;
+
+      --catalog-spacing-xl: 28px;
+      --catalog-spacing-l: 16px;
+      --catalog-spacing-m: 12px;
+      --catalog-spacing-s: 8px;
+      --catalog-shape-xl: 28px;
+      --catalog-headline-s-font-size: 24px;
     }
-    
-    body { 
-      margin: 0; 
-      font-family: var(--md-ref-typeface-plain); 
-      background: var(--md-sys-color-surface); 
-      color: var(--md-sys-color-on-surface); 
+
+    body {
+      margin: 0;
+      font-family: var(--md-ref-typeface-plain);
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
     }
+
     * { box-sizing: border-box; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: var(--catalog-spacing-l) var(--catalog-spacing-m);
+      border-right: 1px solid var(--md-sys-color-outline);
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 8px 20px;
+    }
+
+    .sidebar-section-title {
+      font-size: var(--catalog-headline-s-font-size);
+      margin: 8px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--catalog-spacing-s);
+    }
+
+    .sidebar-nav a {
+      color: inherit;
+      text-decoration: none;
+      border-radius: var(--catalog-shape-xl);
+      padding: 12px 16px;
+      display: block;
+      font-size: 1rem;
+    }
+
+    .sidebar-nav a:hover,
+    .sidebar-nav a:focus-visible {
+      background: var(--md-sys-color-surface-container-highest);
+      text-decoration: none;
+    }
+
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--md-sys-color-surface);
+      border-bottom: 1px solid var(--md-sys-color-outline);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    main { max-width: 760px; margin: 0 auto; padding: 16px; width: 100%; flex: 1; }
+    footer { padding: 24px 16px; text-align: center; color: #666; font-size: 0.85rem; }
+
+    @media (max-width: 900px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--md-sys-color-outline); }
+      .sidebar-section-title { font-size: 1.125rem; }
+    }
   </style>
 </head>
 <body>
-  <!-- Header (共通) -->
-  <header style="padding:12px 16px; background:var(--md-sys-color-surface); border-bottom:1px solid var(--md-sys-color-outline); position:sticky; top:0; z-index:10;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <md-icon>rss_feed</md-icon>
-      <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="サイドバー">
+      <div class="brand">
+        <md-icon>rss_feed</md-icon>
+        <strong>Material Blue</strong>
+      </div>
+      <div class="sidebar-section-title">Navigation</div>
+      <nav class="sidebar-nav">
+        <a href="#login">ログイン</a>
+        <a href="#composer">投稿</a>
+        <a href="#timeline">タイムライン</a>
+      </nav>
+    </aside>
+
+    <div class="content-area">
+      <header>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <md-icon>dynamic_feed</md-icon>
+          <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
+        </div>
+      </header>
+
+      <main>
+        {{ block "main" . }}{{ end }}
+      </main>
+
+      <footer>
+        <p style="margin:0;" class="md-typescale-body-small">© 2026 Built with Hugo & MWC</p>
+      </footer>
     </div>
-  </header>
-
-  <!-- Main Content -->
-  <main style="max-width:640px; margin:0 auto; padding:16px; min-height:80vh;">
-    {{ block "main" . }}{{ end }}
-  </main>
-
-  <!-- Footer (共通) -->
-  <footer style="padding:24px 16px; text-align:center; color:#666; font-size:0.85rem;">
-    <p style="margin:0;" class="md-typescale-body-small">© 2026 Built with Hugo & MWC</p>
-  </footer>
+  </div>
 </body>
 </html>
