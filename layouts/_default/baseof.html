@@ -26,6 +26,18 @@
     import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
 
     document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+    
+    // Drawer の開閉を制御するスクリプト
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuButton = document.getElementById('menu-button');
+      const drawer = document.getElementById('nav-drawer');
+      
+      if (menuButton && drawer) {
+        menuButton.addEventListener('click', () => {
+          drawer.open = !drawer.open;
+        });
+      }
+    });
   </script>
   
   <!-- MWC トークンによるテーマ設定 -->
@@ -111,6 +123,11 @@
     md-drawer {
       width: 320px;
       max-width: 85vw;
+      z-index: 100;
+    }
+    
+    md-drawer::part(base) {
+      border-inline-end: none;
     }
     
     .nav-header {
@@ -150,13 +167,22 @@
 </head>
 <body>
   <div class="app-container">
+    <!-- Header (共通) -->
+    <header class="header">
+      <md-icon-button id="menu-button" class="menu-button" aria-label="Open navigation menu">
+        <md-icon>menu</md-icon>
+      </md-icon-button>
+      <md-icon>rss_feed</md-icon>
+      <h1 class="md-typescale-headline-small">Static Bluesky</h1>
+    </header>
+    
     <!-- Drawer (サイドバー) -->
-    <md-drawer id="nav-drawer" type="modal">
+    <md-drawer id="nav-drawer" data-open-for="menu-button" data-close-on-scrim-click>
       <div class="nav-header">
         <h2>Navigation</h2>
       </div>
       
-      <md-list aria-label="List of pages and components" role="menubar" class="nav">
+      <md-list aria-label="List of pages and components" role="menu" class="nav">
         <!-- About Section -->
         <div class="nav-section">
           <div class="nav-section-title">About</div>
@@ -167,7 +193,7 @@
           <md-list-item href="/about/size/" type="link">Bundle Sizes</md-list-item>
         </div>
         
-        <div class="nav-divider"></div>
+        <md-divider role="separator"></md-divider>
         
         <!-- Theming Section -->
         <div class="nav-section">
@@ -178,7 +204,7 @@
           <md-list-item type="link" href="/theming/shape/">Shape</md-list-item>
         </div>
         
-        <div class="nav-divider"></div>
+        <md-divider role="separator"></md-divider>
         
         <!-- Components Section -->
         <div class="nav-section">
@@ -205,15 +231,6 @@
     
     <!-- Scrim (背景オーバーレイ) -->
     <md-scrim for="nav-drawer"></md-scrim>
-    
-    <!-- Header (共通) -->
-    <header class="header">
-      <md-icon-button toggle="" class="menu-button" aria-label="Open navigation menu" data-for="nav-drawer">
-        <md-icon>menu</md-icon>
-      </md-icon-button>
-      <md-icon>rss_feed</md-icon>
-      <h1 class="md-typescale-headline-small">Static Bluesky</h1>
-    </header>
 
     <!-- Main Content -->
     <main class="main-content">
