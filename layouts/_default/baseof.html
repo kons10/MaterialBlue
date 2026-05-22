@@ -76,7 +76,7 @@
     }
     
     /* Header styles */
-    .header {
+    header.header {
       padding: 12px 16px;
       background: var(--md-sys-color-surface);
       border-bottom: 1px solid var(--md-sys-color-outline);
@@ -92,14 +92,20 @@
       flex-shrink: 0;
     }
     
-    .header h1 {
+    header.header h1 {
       margin: 0;
       font-weight: 500;
       flex-grow: 1;
     }
     
+    /* Sidebar styles */
+    aside.sidebar {
+      width: 320px;
+      max-width: 85vw;
+    }
+    
     /* Main content */
-    .main-content {
+    main.main-content {
       max-width: 640px;
       margin: 0 auto;
       padding: 16px;
@@ -108,14 +114,14 @@
     }
     
     /* Footer */
-    .footer {
+    footer.footer {
       padding: 24px 16px;
       text-align: center;
       color: #666;
       font-size: 0.85rem;
     }
     
-    .footer p {
+    footer.footer p {
       margin: 0;
     }
     
@@ -178,55 +184,57 @@
     
     <!-- Drawer (サイドバー) -->
     <md-drawer id="nav-drawer" data-open-for="menu-button" data-close-on-scrim-click>
-      <div class="nav-header">
-        <h2>Navigation</h2>
-      </div>
-      
-      <md-list aria-label="List of pages and components" role="menu" class="nav">
-        <!-- About Section -->
-        <div class="nav-section">
-          <div class="nav-section-title">About</div>
-          <md-list-item href="/about/intro/" type="link">Introduction</md-list-item>
-          <md-list-item href="/about/quick-start/" type="link">Quick Start</md-list-item>
-          <md-list-item href="/about/roadmap/" type="link">Roadmap</md-list-item>
-          <md-list-item href="/about/support/" type="link">Support</md-list-item>
-          <md-list-item href="/about/size/" type="link">Bundle Sizes</md-list-item>
+      <aside class="sidebar">
+        <div class="nav-header">
+          <h2>Navigation</h2>
         </div>
         
-        <md-divider role="separator"></md-divider>
-        
-        <!-- Theming Section -->
-        <div class="nav-section">
-          <div class="nav-section-title">Theming</div>
-          <md-list-item type="link" href="/theming/material-theming/">Material Theming</md-list-item>
-          <md-list-item type="link" href="/theming/color/">Color</md-list-item>
-          <md-list-item type="link" href="/theming/typography/">Typography</md-list-item>
-          <md-list-item type="link" href="/theming/shape/">Shape</md-list-item>
-        </div>
-        
-        <md-divider role="separator"></md-divider>
-        
-        <!-- Components Section -->
-        <div class="nav-section">
-          <div class="nav-section-title">Components</div>
-          <md-list-item href="/components/button/" type="link">Buttons</md-list-item>
-          <md-list-item href="/components/checkbox/" type="link">Checkbox</md-list-item>
-          <md-list-item href="/components/chip/" type="link">Chips</md-list-item>
-          <md-list-item href="/components/dialog/" type="link">Dialogs</md-list-item>
-          <md-list-item href="/components/fab/" type="link">Floating action button (FAB)</md-list-item>
-          <md-list-item href="/components/icon-button/" type="link">Icon Buttons</md-list-item>
-          <md-list-item href="/components/list/" type="link">Lists</md-list-item>
-          <md-list-item href="/components/menu/" type="link">Menus</md-list-item>
-          <md-list-item href="/components/progress/" type="link">Progress indicators</md-list-item>
-          <md-list-item href="/components/radio/" type="link">Radio</md-list-item>
-          <md-list-item href="/components/ripple/" type="link">Ripple</md-list-item>
-          <md-list-item href="/components/select/" type="link">Select</md-list-item>
-          <md-list-item href="/components/slider/" type="link">Sliders</md-list-item>
-          <md-list-item href="/components/switch/" type="link">Switch</md-list-item>
-          <md-list-item href="/components/tabs/" type="link">Tabs</md-list-item>
-          <md-list-item href="/components/text-field/" type="link">Text field</md-list-item>
-        </div>
-      </md-list>
+        <md-list aria-label="List of pages and components" role="menu" class="nav">
+          <!-- About Section -->
+          <div class="nav-section">
+            <div class="nav-section-title">About</div>
+            <md-list-item href="/about/intro/" type="link">Introduction</md-list-item>
+            <md-list-item href="/about/quick-start/" type="link">Quick Start</md-list-item>
+            <md-list-item href="/about/roadmap/" type="link">Roadmap</md-list-item>
+            <md-list-item href="/about/support/" type="link">Support</md-list-item>
+            <md-list-item href="/about/size/" type="link">Bundle Sizes</md-list-item>
+          </div>
+          
+          <md-divider role="separator"></md-divider>
+          
+          <!-- Theming Section -->
+          <div class="nav-section">
+            <div class="nav-section-title">Theming</div>
+            <md-list-item type="link" href="/theming/material-theming/">Material Theming</md-list-item>
+            <md-list-item type="link" href="/theming/color/">Color</md-list-item>
+            <md-list-item type="link" href="/theming/typography/">Typography</md-list-item>
+            <md-list-item type="link" href="/theming/shape/">Shape</md-list-item>
+          </div>
+          
+          <md-divider role="separator"></md-divider>
+          
+          <!-- Components Section -->
+          <div class="nav-section">
+            <div class="nav-section-title">Components</div>
+            <md-list-item href="/components/button/" type="link">Buttons</md-list-item>
+            <md-list-item href="/components/checkbox/" type="link">Checkbox</md-list-item>
+            <md-list-item href="/components/chip/" type="link">Chips</md-list-item>
+            <md-list-item href="/components/dialog/" type="link">Dialogs</md-list-item>
+            <md-list-item href="/components/fab/" type="link">Floating action button (FAB)</md-list-item>
+            <md-list-item href="/components/icon-button/" type="link">Icon Buttons</md-list-item>
+            <md-list-item href="/components/list/" type="link">Lists</md-list-item>
+            <md-list-item href="/components/menu/" type="link">Menus</md-list-item>
+            <md-list-item href="/components/progress/" type="link">Progress indicators</md-list-item>
+            <md-list-item href="/components/radio/" type="link">Radio</md-list-item>
+            <md-list-item href="/components/ripple/" type="link">Ripple</md-list-item>
+            <md-list-item href="/components/select/" type="link">Select</md-list-item>
+            <md-list-item href="/components/slider/" type="link">Sliders</md-list-item>
+            <md-list-item href="/components/switch/" type="link">Switch</md-list-item>
+            <md-list-item href="/components/tabs/" type="link">Tabs</md-list-item>
+            <md-list-item href="/components/text-field/" type="link">Text field</md-list-item>
+          </div>
+        </md-list>
+      </aside>
     </md-drawer>
     
     <!-- Scrim (背景オーバーレイ) -->
