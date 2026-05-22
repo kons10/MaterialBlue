@@ -33,7 +33,6 @@
   const loading = document.getElementById('loading');
   
   // ログイン済みの場合、メイン画面にリダイレクト
-  // ただし、セッション復元中は待機してから判断
   (async () => {
     await client.waitForSessionRestore();
     if (client.isLoggedIn) {

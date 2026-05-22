@@ -6,19 +6,15 @@ __pycache__/
 *.obj
 dist/
 build/
-*.class
-*.so
-*.dll
-*.exe
+target/
 
 # Dependencies
 .venv/
 venv/
 node_modules/
-target/
+.julia/
+zig-cache/
 .gradle/
-.mypy_cache/
-.pytest_cache/
 
 # Logs and temp files
 *.log
@@ -34,8 +30,10 @@ target/
 # Editors
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# System files
+# OS
 .DS_Store
 Thumbs.db
 
@@ -44,7 +42,32 @@ coverage/
 htmlcov/
 .coverage
 
-# Compressed files
+# Python specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache/
+.mypy_cache/
+
+# Node specific
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+bundle.js
+bundle.css
+
+# Compression
 *.zip
 *.gz
 *.tar

@@ -10,11 +10,9 @@ export function createBskyClient() {
   const did = getCookie('bsky_did');
   
   // 🔹 2. セッション情報が揃っていたら復元を試みる
-  let sessionRestoring = false;
   let sessionRestorePromise = null;
   
   if (access && refresh && did) {
-    sessionRestoring = true;
     const sessionData = { 
       accessJwt: access, 
       refreshJwt: refresh, 
@@ -26,17 +24,18 @@ export function createBskyClient() {
 
     // ✅ セッション復元の Promise を保持
     sessionRestorePromise = agent.resumeSession(sessionData)
-      .then(() => {
-        sessionRestoring = false;
+      .then((sessionInfo) => {
+        // 成功したら何もしない（agent.session が更新済み）
+        return sessionInfo;
       })
       .catch((err) => {
         console.warn('Session resume failed (token expired or invalid):', err);
         clearSession(); // 失敗したら Cookie をクリア
-        sessionRestoring = false;
+        // エラーをスローしないことで、呼び出し側は「未ログイン」として扱える
       });
   } else {
     // セッション情報がない場合は即座に解決する Promise
-    sessionRestorePromise = Promise.resolve();
+    sessionRestorePromise = Promise.resolve(null);
   }
 
   return {
@@ -46,14 +45,8 @@ export function createBskyClient() {
       return !!agent.session?.accessJwt; 
     },
     
-    // ✅ セッション復元中かどうかを取得
-    get isRestoringSession() {
-      return sessionRestoring;
-    },
-    
     // ✅ セッション復元完了を待つ Promise を返す
     async waitForSessionRestore() {
-      if (!sessionRestorePromise) return;
       await sessionRestorePromise;
     },
 

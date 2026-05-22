@@ -67,7 +67,6 @@
   let selectedImages = [];
 
   // ログインしていない場合、ログイン画面にリダイレクト
-  // ただし、セッション復元中は待機してから判断
   (async () => {
     await client.waitForSessionRestore();
     if (!client.isLoggedIn) {
