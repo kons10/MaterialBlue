@@ -56,7 +56,7 @@
 
   refreshBtn.addEventListener('click', async () => {
     refreshBtn.disabled = true;
-    await loadTimeline();
+    await loadTimeline(true);
     refreshBtn.disabled = false;
   });
 
@@ -117,7 +117,7 @@
         errorMessage.style.background = '';
         errorMessage.style.color = '';
       }, 3000);
-      await loadTimeline();
+      await loadTimeline(true);
     } catch (e) {
       console.error('投稿エラー詳細:', e);
       showError(`投稿エラー：${e.message}`);
@@ -155,6 +155,11 @@
 
   // 画像プレビュー更新関数
   function updateImagePreview() {
+    Array.from(imagePreview.querySelectorAll('img')).forEach((img) => {
+      if (img.dataset.objectUrl) {
+        URL.revokeObjectURL(img.dataset.objectUrl);
+      }
+    });
     imagePreview.innerHTML = '';
     imageCount.textContent = selectedImages.length > 0 ? `${selectedImages.length}枚選択中` : '';
     
@@ -163,7 +168,9 @@
       container.style.position = 'relative';
       
       const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      img.src = objectUrl;
+      img.dataset.objectUrl = objectUrl;
       img.style.width = '80px';
       img.style.height = '80px';
       img.style.objectFit = 'cover';
@@ -204,9 +211,13 @@
     loadTimeline();
   }
 
-  async function loadTimeline() {
+  let timelineLoading = false;
+
+  async function loadTimeline(force = false) {
+    if (timelineLoading) return;
+    timelineLoading = true;
     try {
-      const feed = await client.timeline(20);
+      const feed = await client.timeline(20, { force });
       const container = document.getElementById('timeline');
       
       // リストアイテムを生成
@@ -279,6 +290,8 @@
     } catch (e) {
       console.error('Timeline load error:', e);
       showError('タイムラインの取得に失敗しました');
+    } finally {
+      timelineLoading = false;
     }
   }
 
