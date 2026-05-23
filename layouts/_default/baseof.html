@@ -61,8 +61,10 @@
     .brand { display: flex; align-items: center; gap: 10px; margin: 8px 8px 20px; }
     .sidebar-section-title { font-size: 1.25rem; margin: 8px; }
     .sidebar-nav { display: flex; flex-direction: column; gap: 8px; }
-    .sidebar-nav a { color: inherit; text-decoration: none; border-radius: var(--catalog-shape-xl); padding: 12px 16px; display: block; }
+    .sidebar-nav a { color: inherit; text-decoration: none; border-radius: var(--catalog-shape-xl); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
     .sidebar-nav a:hover, .sidebar-nav a:focus-visible { background: var(--md-sys-color-surface-container-highest); text-decoration: none; }
+    .sidebar-nav a.active { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); font-weight: 500; }
+    .sidebar-nav a[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
 
     .sidebar-actions { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--md-sys-color-outline); }
     #logoutBtn { width: 100%; justify-content: center; }
@@ -97,10 +99,19 @@
         <strong>Material Blue</strong>
       </div>
       <div class="sidebar-section-title">Navigation</div>
-      <nav class="sidebar-nav">
-        <a href="#login">ログイン</a>
-        <a href="#composer">投稿</a>
-        <a href="#timeline">タイムライン</a>
+      <nav class="sidebar-nav" aria-label="ページ内ナビゲーション">
+        <a href="#login" data-nav-item="login">
+          <md-icon aria-hidden="true">login</md-icon>
+          <span>ログイン</span>
+        </a>
+        <a href="#composer" data-nav-item="composer">
+          <md-icon aria-hidden="true">edit_note</md-icon>
+          <span>投稿</span>
+        </a>
+        <a href="#timeline" data-nav-item="timeline">
+          <md-icon aria-hidden="true">rss_feed</md-icon>
+          <span>タイムライン</span>
+        </a>
       </nav>
       <div class="sidebar-actions">
         <md-outlined-button id="logoutBtn">
@@ -140,6 +151,8 @@
       });
       document.querySelectorAll('.sidebar-nav a').forEach((link) => {
         link.addEventListener('click', () => {
+          document.querySelectorAll('.sidebar-nav a').forEach((other) => other.classList.remove('active'));
+          link.classList.add('active');
           if (window.matchMedia('(max-width: 900px)').matches) {
             document.body.classList.add('sidebar-collapsed');
           }

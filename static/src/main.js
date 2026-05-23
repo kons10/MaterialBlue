@@ -42,6 +42,7 @@
     
     try {
       await client.login(id, pw);
+      syncSidebarByAuthState();
       showTimeline();
     } catch (e) {
       showError(`ログインエラー：${e.message}`);
@@ -59,7 +60,8 @@
 
   logoutBtn.addEventListener('click', async () => {
     await client.logout();
-    location.reload();
+    showLogin();
+    syncSidebarByAuthState();
   });
 
   postBtn.addEventListener('click', async () => {
@@ -201,7 +203,34 @@
     loading.style.display = show ? 'block' : 'none';
   }
 
+
+
+  function syncSidebarByAuthState() {
+    const loginNav = document.querySelector('[data-nav-item="login"]');
+    const composerNav = document.querySelector('[data-nav-item="composer"]');
+    const timelineNav = document.querySelector('[data-nav-item="timeline"]');
+
+    const loggedIn = client.isLoggedIn;
+    if (loginNav) {
+      loginNav.style.display = loggedIn ? 'none' : 'flex';
+      loginNav.setAttribute('aria-disabled', loggedIn ? 'true' : 'false');
+    }
+
+    [composerNav, timelineNav].forEach((navItem) => {
+      if (!navItem) return;
+      navItem.style.display = loggedIn ? 'flex' : 'none';
+      navItem.setAttribute('aria-disabled', loggedIn ? 'false' : 'true');
+    });
+  }
+
+  function setActiveSidebarItem(key) {
+    document.querySelectorAll('.sidebar-nav a').forEach((link) => {
+      link.classList.toggle('active', link.dataset.navItem === key);
+    });
+  }
+
   function initializeView() {
+    syncSidebarByAuthState();
     if (client.isLoggedIn) {
       showTimeline();
       return;
@@ -215,6 +244,7 @@
     loginCard.style.display = 'block';
     timelineCard.hidden = true;
     timelineCard.style.display = 'none';
+    setActiveSidebarItem('login');
   }
 
   function showTimeline() {
@@ -223,6 +253,7 @@
     loginCard.style.display = 'none';
     timelineCard.hidden = false;
     timelineCard.style.display = 'block';
+    setActiveSidebarItem('timeline');
     loadTimeline();
   }
 
