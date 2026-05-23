@@ -3,6 +3,10 @@ import { BskyAgent } from 'https://esm.sh/@atproto/api@0.13.6';
 
 export function createBskyClient() {
   const agent = new BskyAgent({ service: 'https://bsky.social' });
+  let timelineCache = null;
+  let timelineCacheLimit = null;
+  let timelineCacheAt = 0;
+  let timelineInFlight = null;
 
   // 🔹 1. Cookie からセッション情報を読み取る
   const access = getCookie('bsky_access');
@@ -59,14 +63,38 @@ export function createBskyClient() {
         await agent.logout();
       } finally {
         clearSession();
+        timelineCache = null;
+        timelineCacheLimit = null;
+        timelineCacheAt = 0;
         // session は getter なので undefined にする必要はないが、念のため
       }
     },
 
     // 🔹 5. タイムライン取得
-    async timeline(limit = 30) {
-      const res = await agent.api.app.bsky.feed.getTimeline({ limit });
-      return res.data.feed;
+    async timeline(limit = 30, options = {}) {
+      const { force = false, ttlMs = 30000 } = options;
+      const now = Date.now();
+
+      if (!force && timelineCache && timelineCacheLimit === limit && now - timelineCacheAt < ttlMs) {
+        return timelineCache;
+      }
+
+      if (!force && timelineInFlight) {
+        return timelineInFlight;
+      }
+
+      timelineInFlight = agent.api.app.bsky.feed.getTimeline({ limit })
+        .then((res) => {
+          timelineCache = res.data.feed;
+          timelineCacheLimit = limit;
+          timelineCacheAt = Date.now();
+          return timelineCache;
+        })
+        .finally(() => {
+          timelineInFlight = null;
+        });
+
+      return timelineInFlight;
     },
 
   // 🔹 6. 投稿機能（テキストのみ）
