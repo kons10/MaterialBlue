@@ -1,5 +1,5 @@
 # hugo.yaml
-baseURL: 'https://your-username.github.io/repo-name/'  # ← 実際のURLに修正してね
+baseURL: 'https://bsky.zyn.f5.si/'  # ← 実際のURLに修正してね
 locale: 'ja-JP'                 # ✅ languageCode → locale に変更（v0.158.0以降）
 title: 'Static Bluesky Client'
 
