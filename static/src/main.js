@@ -26,10 +26,7 @@
     }, 5000);
   }
 
-  // 自動ログイン済みの場合
-  if (client.isLoggedIn) {
-    showTimeline();
-  }
+  initializeView();
 
   loginBtn.addEventListener('click', async () => {
     const id = document.getElementById('id').value.trim();
@@ -204,8 +201,26 @@
     loading.style.display = show ? 'block' : 'none';
   }
 
+  function initializeView() {
+    if (client.isLoggedIn) {
+      showTimeline();
+      return;
+    }
+    showLogin();
+  }
+
+  function showLogin() {
+    const loginCard = document.getElementById('login');
+    loginCard.hidden = false;
+    loginCard.style.display = 'block';
+    timelineCard.hidden = true;
+    timelineCard.style.display = 'none';
+  }
+
   function showTimeline() {
-    document.querySelector('md-elevated-card:not(#timeline-card)').style.display = 'none';
+    const loginCard = document.getElementById('login');
+    loginCard.hidden = true;
+    loginCard.style.display = 'none';
     timelineCard.hidden = false;
     timelineCard.style.display = 'block';
     loadTimeline();
