@@ -224,7 +224,7 @@
   }
 
   function setActiveSidebarItem(key) {
-    document.querySelectorAll('.sidebar-nav a').forEach((link) => {
+    document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
       link.classList.toggle('active', link.dataset.navItem === key);
     });
   }
