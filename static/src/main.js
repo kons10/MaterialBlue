@@ -28,7 +28,7 @@
 
   initializeView();
 
-  loginBtn.addEventListener('click', async () => {
+  if (loginBtn) loginBtn.addEventListener('click', async () => {
     const id = document.getElementById('id').value.trim();
     const pw = document.getElementById('pw').value.trim();
     
@@ -53,20 +53,20 @@
     }
   });
 
-  refreshBtn.addEventListener('click', async () => {
+  if (refreshBtn) refreshBtn.addEventListener('click', async () => {
     refreshBtn.disabled = true;
     await loadTimeline(true);
     refreshBtn.disabled = false;
   });
 
-  logoutBtn.addEventListener('click', async () => {
+  if (logoutBtn) logoutBtn.addEventListener('click', async () => {
     await client.logout();
     navigateTo("/login/");
     showLogin();
     syncSidebarByAuthState();
   });
 
-  postBtn.addEventListener('click', async () => {
+  if (postBtn) postBtn.addEventListener('click', async () => {
     const postTextField = document.getElementById('postText');
     // Material Web Components の text field から値を取得
     // shadow DOM 内の textarea または input から値を取得する必要がある場合がある
@@ -129,12 +129,12 @@
   });
 
   // 画像アップロードボタンクリック
-  imageUploadBtn.addEventListener('click', () => {
+  if (imageUploadBtn) imageUploadBtn.addEventListener('click', () => {
     imageInput.click();
   });
 
   // 画像選択時の処理
-  imageInput.addEventListener('change', (e) => {
+  if (imageInput) imageInput.addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
     
@@ -215,7 +215,7 @@
   function navigateTo(path) {
     const target = normalizePath(path);
     if (normalizePath(window.location.pathname) !== target) {
-      window.history.replaceState({}, '', target);
+      window.location.assign(target);
     }
   }
 
@@ -279,19 +279,27 @@
 
   function showLogin() {
     const loginCard = document.getElementById('login');
-    loginCard.hidden = false;
-    loginCard.style.display = 'block';
-    timelineCard.hidden = true;
-    timelineCard.style.display = 'none';
+    if (loginCard) {
+      loginCard.hidden = false;
+      loginCard.style.display = 'block';
+    }
+    if (timelineCard) {
+      timelineCard.hidden = true;
+      timelineCard.style.display = 'none';
+    }
     setActiveSidebarItem('login');
   }
 
   function showTimeline() {
     const loginCard = document.getElementById('login');
-    loginCard.hidden = true;
-    loginCard.style.display = 'none';
-    timelineCard.hidden = false;
-    timelineCard.style.display = 'block';
+    if (loginCard) {
+      loginCard.hidden = true;
+      loginCard.style.display = 'none';
+    }
+    if (timelineCard) {
+      timelineCard.hidden = false;
+      timelineCard.style.display = 'block';
+    }
     setActiveSidebarItem('timeline');
     loadTimeline();
   }
@@ -304,7 +312,8 @@
     try {
       const feed = await client.timeline(20, { force });
       const container = document.getElementById('timeline');
-      
+      if (!container) return;
+
       // リストアイテムを生成
       container.innerHTML = '';
       feed.forEach(item => {
