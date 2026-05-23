@@ -43,6 +43,7 @@
     try {
       await client.login(id, pw);
       syncSidebarByAuthState();
+      navigateTo("/home/");
       showTimeline();
     } catch (e) {
       showError(`ログインエラー：${e.message}`);
@@ -60,6 +61,7 @@
 
   logoutBtn.addEventListener('click', async () => {
     await client.logout();
+    navigateTo("/login/");
     showLogin();
     syncSidebarByAuthState();
   });
@@ -205,6 +207,18 @@
 
 
 
+
+  function normalizePath(pathname) {
+    return pathname.endsWith('/') ? pathname : `${pathname}/`;
+  }
+
+  function navigateTo(path) {
+    const target = normalizePath(path);
+    if (normalizePath(window.location.pathname) !== target) {
+      window.history.replaceState({}, '', target);
+    }
+  }
+
   function syncSidebarByAuthState() {
     const loginNav = document.querySelector('[data-nav-item="login"]');
     const composerNav = document.querySelector('[data-nav-item="composer"]');
@@ -231,10 +245,35 @@
 
   function initializeView() {
     syncSidebarByAuthState();
+    const path = normalizePath(window.location.pathname);
+
+    if (path === '/home/') {
+      if (client.isLoggedIn) {
+        showTimeline();
+      } else {
+        navigateTo('/login/');
+        showLogin();
+      }
+      return;
+    }
+
+    if (path === '/login/') {
+      if (client.isLoggedIn) {
+        navigateTo('/home/');
+        showTimeline();
+      } else {
+        showLogin();
+      }
+      return;
+    }
+
     if (client.isLoggedIn) {
+      navigateTo('/home/');
       showTimeline();
       return;
     }
+
+    navigateTo('/login/');
     showLogin();
   }
 
