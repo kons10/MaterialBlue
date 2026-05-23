@@ -61,8 +61,10 @@
     .brand { display: flex; align-items: center; gap: 10px; margin: 8px 8px 20px; }
     .sidebar-section-title { font-size: 1.25rem; margin: 8px; }
     .sidebar-nav { display: flex; flex-direction: column; gap: 8px; }
-    .sidebar-nav a { color: inherit; text-decoration: none; border-radius: var(--catalog-shape-xl); padding: 12px 16px; display: block; }
-    .sidebar-nav a:hover, .sidebar-nav a:focus-visible { background: var(--md-sys-color-surface-container-highest); text-decoration: none; }
+    .sidebar-nav md-filled-tonal-button { width: 100%; justify-content: flex-start; --md-filled-tonal-button-container-shape: var(--catalog-shape-xl); }
+    .sidebar-nav md-filled-tonal-button:hover, .sidebar-nav md-filled-tonal-button:focus-visible { --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-highest); }
+    .sidebar-nav md-filled-tonal-button.active { --md-filled-tonal-button-container-color: var(--md-sys-color-primary-container); --md-filled-tonal-button-label-text-color: var(--md-sys-color-on-primary-container); font-weight: 500; }
+    .sidebar-nav md-filled-tonal-button[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
 
     .sidebar-actions { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--md-sys-color-outline); }
     #logoutBtn { width: 100%; justify-content: center; }
@@ -97,10 +99,19 @@
         <strong>Material Blue</strong>
       </div>
       <div class="sidebar-section-title">Navigation</div>
-      <nav class="sidebar-nav">
-        <a href="#login">ログイン</a>
-        <a href="#composer">投稿</a>
-        <a href="#timeline">タイムライン</a>
+      <nav class="sidebar-nav" aria-label="ページ内ナビゲーション">
+        <md-filled-tonal-button href="#login" data-nav-item="login">
+          <md-icon slot="icon" aria-hidden="true">login</md-icon>
+          ログイン
+        </md-filled-tonal-button>
+        <md-filled-tonal-button href="#composer" data-nav-item="composer">
+          <md-icon slot="icon" aria-hidden="true">edit_note</md-icon>
+          投稿
+        </md-filled-tonal-button>
+        <md-filled-tonal-button href="#timeline" data-nav-item="timeline">
+          <md-icon slot="icon" aria-hidden="true">rss_feed</md-icon>
+          タイムライン
+        </md-filled-tonal-button>
       </nav>
       <div class="sidebar-actions">
         <md-outlined-button id="logoutBtn">
@@ -138,8 +149,10 @@
       btn.addEventListener('click', () => {
         document.body.classList.toggle('sidebar-collapsed');
       });
-      document.querySelectorAll('.sidebar-nav a').forEach((link) => {
+      document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
         link.addEventListener('click', () => {
+          document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((other) => other.classList.remove('active'));
+          link.classList.add('active');
           if (window.matchMedia('(max-width: 900px)').matches) {
             document.body.classList.add('sidebar-collapsed');
           }
