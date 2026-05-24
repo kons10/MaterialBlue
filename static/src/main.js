@@ -27,7 +27,12 @@
     }, 5000);
   }
 
-  initializeView();
+  bootstrap();
+
+  async function bootstrap() {
+    await client.ready();
+    initializeView();
+  }
 
   if (loginBtn) loginBtn.addEventListener('click', async () => {
     const id = document.getElementById('id').value.trim();

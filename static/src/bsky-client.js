@@ -14,7 +14,7 @@ export function createBskyClient() {
   const did = getCookie('bsky_did');
 
   // 🔹 2. セッション情報が揃っていたら復元を試みる
-  if (access && refresh && did) {
+  const restoreSessionPromise = (access && refresh && did) ? (() => {
     const sessionData = { 
       accessJwt: access, 
       refreshJwt: refresh, 
@@ -25,17 +25,29 @@ export function createBskyClient() {
     };
 
     // ✅ 正しい復元方法：resumeSession にデータを渡す
-    agent.resumeSession(sessionData).catch((err) => {
-      console.warn('Session resume failed (token expired or invalid):', err);
-      clearSession(); // 失敗したらCookieをクリア
-    });
-  }
+    return agent.resumeSession(sessionData)
+      .then(() => {
+        if (agent.session) {
+          setCookie('bsky_access', agent.session.accessJwt, 86400);
+          setCookie('bsky_refresh', agent.session.refreshJwt, 86400);
+          setCookie('bsky_did', agent.session.did, 86400);
+        }
+      })
+      .catch((err) => {
+        console.warn('Session resume failed (token expired or invalid):', err);
+        clearSession(); // 失敗したらCookieをクリア
+      });
+  })() : Promise.resolve();
 
   return {
     agent,
     // ✅ ログイン判定：session プロパティが存在するかで判断
     get isLoggedIn() { 
       return !!agent.session?.accessJwt; 
+    },
+
+    async ready() {
+      await restoreSessionPromise;
     },
 
     // 🔹 3. ログイン処理
