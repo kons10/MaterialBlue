@@ -13,6 +13,7 @@
   const imagePreview = document.getElementById('imagePreview');
   const loading = document.getElementById('loading');
   const errorMessage = document.getElementById('errorMessage');
+  let timelineLoading = false;
   
   // 選択された画像を保持する配列
   let selectedImages = [];
@@ -303,8 +304,6 @@
     setActiveSidebarItem('timeline');
     loadTimeline();
   }
-
-  let timelineLoading = false;
 
   async function loadTimeline(force = false) {
     if (timelineLoading) return;
