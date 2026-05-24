@@ -335,8 +335,20 @@
         if (isRepost && reposterName) {
           const overline = document.createElement('div');
           overline.slot = 'overline';
-          overline.textContent = `${reposterName}による拡散`;
           overline.className = 'md-typescale-body-small';
+          overline.style.display = 'flex';
+          overline.style.alignItems = 'center';
+          overline.style.gap = '4px';
+
+          const repostIcon = document.createElement('md-icon');
+          repostIcon.textContent = 'repeat';
+          repostIcon.style.fontSize = '16px';
+
+          const repostLabel = document.createElement('span');
+          repostLabel.textContent = `${reposterName}による拡散`;
+
+          overline.appendChild(repostIcon);
+          overline.appendChild(repostLabel);
           listItem.appendChild(overline);
         }
         
