@@ -322,10 +322,23 @@
       feed.forEach(item => {
         const post = item.post;
         const record = post.record;
+        const reason = item.reason;
+        const isRepost = reason?.$type === 'app.bsky.feed.defs#reasonRepost';
+        const reposterHandle = reason?.by?.handle;
+        const reposterName = reason?.by?.displayName || (reposterHandle ? `@${reposterHandle}` : null);
         
         // メインのリストアイテム作成
         const listItem = document.createElement('md-list-item');
         listItem.type = 'link';
+
+        // 「〇〇による拡散」表示
+        if (isRepost && reposterName) {
+          const overline = document.createElement('div');
+          overline.slot = 'overline';
+          overline.textContent = `${reposterName}による拡散`;
+          overline.className = 'md-typescale-body-small';
+          listItem.appendChild(overline);
+        }
         
         // アイコンスロット
         const avatarIcon = document.createElement('md-icon');
