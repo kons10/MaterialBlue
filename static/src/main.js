@@ -315,7 +315,9 @@
       if (!container) return;
 
       // リストアイテムを生成
-      container.innerHTML = '';
+      container.textContent = '';
+      const fragment = document.createDocumentFragment();
+
       feed.forEach(item => {
         const post = item.post;
         const record = post.record;
@@ -344,7 +346,7 @@
         listItem.appendChild(avatarIcon);
         listItem.appendChild(headline);
         listItem.appendChild(supporting);
-        container.appendChild(listItem);
+        fragment.appendChild(listItem);
         
         // 画像がある場合は表示
         // NOTE: Bluesky の TL では画像情報が `post.embed.images` に入る。
@@ -374,13 +376,15 @@
             imageContainer.appendChild(imgElement);
           });
           
-          container.appendChild(imageContainer);
+          fragment.appendChild(imageContainer);
         }
         
         // 区切り線
         const divider = document.createElement('md-divider');
-        container.appendChild(divider);
+        fragment.appendChild(divider);
       });
+
+      container.appendChild(fragment);
     } catch (e) {
       console.error('Timeline load error:', e);
       showError('タイムラインの取得に失敗しました');

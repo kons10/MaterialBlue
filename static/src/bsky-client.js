@@ -126,23 +126,12 @@ export function createBskyClient() {
       });
     }
     
-    // 画像が 1 枚の場合は Image プレイスメント、複数場合は Gallery として投稿
-    let embed;
-    if (imageEmbeds.length === 1) {
-      embed = {
-        $type: 'app.bsky.embed.images',
-        images: imageEmbeds
-      };
-    } else {
-      embed = {
-        $type: 'app.bsky.embed.images',
-        images: imageEmbeds
-      };
-    }
-    
     return await agent.post({
       text,
-      embed
+      embed: {
+        $type: 'app.bsky.embed.images',
+        images: imageEmbeds
+      }
     });
   }
   };
