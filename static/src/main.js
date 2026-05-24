@@ -309,6 +309,7 @@
   async function loadTimeline(force = false) {
     if (timelineLoading) return;
     timelineLoading = true;
+    showLoading(true);
     try {
       const feed = await client.timeline(20, { force });
       const container = document.getElementById('timeline');
@@ -389,6 +390,7 @@
       console.error('Timeline load error:', e);
       showError('タイムラインの取得に失敗しました');
     } finally {
+      showLoading(false);
       timelineLoading = false;
     }
   }
