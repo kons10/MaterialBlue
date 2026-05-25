@@ -16,6 +16,12 @@ export function createBskyClient() {
   const did = getCookie('bsky_did');
 
   // 🔹 2. セッション情報が揃っていたら復元を試みる
+
+
+  function getBookmarkApi() {
+    return agent.api?.app?.bsky?.bookmark;
+  }
+
   const restoreSessionPromise = (access && refresh && did) ? (() => {
     const sessionData = { 
       accessJwt: access, 
@@ -204,14 +210,18 @@ export function createBskyClient() {
 
   async save(uri) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
-    await agent.api.app.bsky.bookmark.createBookmark({ uri });
+    const bookmarkApi = getBookmarkApi();
+    if (!bookmarkApi?.createBookmark) throw new Error('Bookmark API unavailable in current @atproto/api version');
+    await bookmarkApi.createBookmark({ uri });
     bookmarkUris.add(uri);
     return { uri, saved: true };
   },
 
   async unsave(uri) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
-    await agent.api.app.bsky.bookmark.deleteBookmark({ uri });
+    const bookmarkApi = getBookmarkApi();
+    if (!bookmarkApi?.deleteBookmark) throw new Error('Bookmark API unavailable in current @atproto/api version');
+    await bookmarkApi.deleteBookmark({ uri });
     bookmarkUris.delete(uri);
     return { uri, saved: false };
   },
@@ -221,7 +231,12 @@ export function createBskyClient() {
     bookmarkUris.clear();
     let cursor;
     do {
-      const res = await agent.api.app.bsky.bookmark.getBookmarks({ limit, cursor });
+      const bookmarkApi = getBookmarkApi();
+      if (!bookmarkApi?.getBookmarks) {
+        bookmarksLoaded = true;
+        return [];
+      }
+      const res = await bookmarkApi.getBookmarks({ limit, cursor });
       const page = res.data.bookmarks || [];
       page.forEach((b) => {
         if (b?.subject?.uri) bookmarkUris.add(b.subject.uri);
