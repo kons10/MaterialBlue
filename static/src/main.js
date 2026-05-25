@@ -412,15 +412,27 @@
         supporting.appendChild(bodyText);
 
         const actionRow = document.createElement('div');
+
+        const stopListRipple = (el) => {
+          el.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+          });
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+        };
+
         actionRow.style.display = 'flex';
         actionRow.style.gap = '8px';
         actionRow.style.alignItems = 'center';
         actionRow.style.marginTop = '8px';
         actionRow.style.flexWrap = 'wrap';
+        stopListRipple(actionRow);
 
         const createActionButton = (icon, label, iconClass = '') => {
           const btn = document.createElement('md-filled-tonal-button');
           btn.innerHTML = `<md-icon slot="icon" class="${iconClass}">${icon}</md-icon>${label}`;
+          stopListRipple(btn);
           return btn;
         };
 
@@ -565,6 +577,7 @@
           imageContainer.style.gap = '8px';
           imageContainer.style.flexWrap = 'wrap';
           imageContainer.style.marginTop = '8px';
+          stopListRipple(imageContainer);
           
           images.forEach(img => {
             const imgElement = document.createElement('img');
