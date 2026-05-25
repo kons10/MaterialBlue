@@ -29,6 +29,39 @@
 
   bootstrap();
 
+  window.addEventListener('popstate', () => {
+    initializeView();
+  });
+
+  function shouldHandleClientNavigation(event) {
+    return !(event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+  }
+
+  document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
+    link.addEventListener('mouseenter', () => {
+      const href = link.getAttribute('href');
+      if (!href) return;
+      if (document.head.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+      const prefetch = document.createElement('link');
+      prefetch.rel = 'prefetch';
+      prefetch.href = href;
+      prefetch.as = 'document';
+      document.head.appendChild(prefetch);
+    }, { passive: true });
+
+    link.addEventListener('click', (event) => {
+      if (!shouldHandleClientNavigation(event)) return;
+      const href = link.getAttribute('href');
+      if (!href) return;
+      event.preventDefault();
+      navigateTo(href);
+      if (window.matchMedia('(max-width: 900px)').matches) {
+        document.body.classList.add('sidebar-collapsed');
+      }
+    });
+  });
+
+
   async function bootstrap() {
     await client.ready();
     initializeView();
@@ -221,7 +254,8 @@
   function navigateTo(path) {
     const target = normalizePath(path);
     if (normalizePath(window.location.pathname) !== target) {
-      window.location.assign(target);
+      window.history.pushState({}, "", target);
+      initializeView();
     }
   }
 
