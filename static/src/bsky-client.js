@@ -1,5 +1,5 @@
 // static/src/bsky-client.js
-import { BskyAgent } from 'https://esm.sh/@atproto/api@0.13.6';
+import { BskyAgent } from 'https://esm.sh/@atproto/api@0.20.5';
 
 export function createBskyClient() {
   const agent = new BskyAgent({ service: 'https://bsky.social' });
