@@ -349,6 +349,7 @@
     timelineLoading = true;
     showLoading(true);
     try {
+      await client.syncBookmarks();
       const feed = await client.timeline(20, { force });
       const container = document.getElementById('timeline');
       if (!container) return;

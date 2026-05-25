@@ -1,5 +1,5 @@
 // static/src/bsky-client.js
-import { BskyAgent } from 'https://esm.sh/@atproto/api@0.13.6';
+import { BskyAgent } from 'https://esm.sh/@atproto/api@0.20.5?bundle';
 
 export function createBskyClient() {
   const agent = new BskyAgent({ service: 'https://bsky.social' });
@@ -7,6 +7,8 @@ export function createBskyClient() {
   let timelineCacheLimit = null;
   let timelineCacheAt = 0;
   let timelineInFlight = null;
+  const bookmarkUris = new Set();
+  let bookmarksLoaded = false;
 
   // 🔹 1. Cookie からセッション情報を読み取る
   const access = getCookie('bsky_access');
@@ -14,6 +16,12 @@ export function createBskyClient() {
   const did = getCookie('bsky_did');
 
   // 🔹 2. セッション情報が揃っていたら復元を試みる
+
+
+  function getBookmarkApi() {
+    return agent.api?.app?.bsky?.bookmark;
+  }
+
   const restoreSessionPromise = (access && refresh && did) ? (() => {
     const sessionData = { 
       accessJwt: access, 
@@ -48,6 +56,9 @@ export function createBskyClient() {
 
     async ready() {
       await restoreSessionPromise;
+      if (this.isLoggedIn) {
+        await this.syncBookmarks();
+      }
     },
 
     // 🔹 3. ログイン処理
@@ -78,6 +89,8 @@ export function createBskyClient() {
         timelineCache = null;
         timelineCacheLimit = null;
         timelineCacheAt = 0;
+        bookmarkUris.clear();
+        bookmarksLoaded = false;
         // session は getter なので undefined にする必要はないが、念のため
       }
     },
@@ -197,20 +210,47 @@ export function createBskyClient() {
 
   async save(uri) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
-    const key = `saved_posts_${agent.session.did}`;
-    const current = JSON.parse(localStorage.getItem(key) || '[]');
-    if (!current.includes(uri)) {
-      current.push(uri);
-      localStorage.setItem(key, JSON.stringify(current));
-    }
+    const bookmarkApi = getBookmarkApi();
+    if (!bookmarkApi?.createBookmark) throw new Error('Bookmark API unavailable in current @atproto/api version');
+    await bookmarkApi.createBookmark({ uri });
+    bookmarkUris.add(uri);
     return { uri, saved: true };
+  },
+
+  async unsave(uri) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    const bookmarkApi = getBookmarkApi();
+    if (!bookmarkApi?.deleteBookmark) throw new Error('Bookmark API unavailable in current @atproto/api version');
+    await bookmarkApi.deleteBookmark({ uri });
+    bookmarkUris.delete(uri);
+    return { uri, saved: false };
+  },
+
+  async syncBookmarks(limit = 100) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    bookmarkUris.clear();
+    let cursor;
+    do {
+      const bookmarkApi = getBookmarkApi();
+      if (!bookmarkApi?.getBookmarks) {
+        bookmarksLoaded = true;
+        return [];
+      }
+      const res = await bookmarkApi.getBookmarks({ limit, cursor });
+      const page = res.data.bookmarks || [];
+      page.forEach((b) => {
+        if (b?.subject?.uri) bookmarkUris.add(b.subject.uri);
+      });
+      cursor = res.data.cursor;
+    } while (cursor);
+    bookmarksLoaded = true;
+    return Array.from(bookmarkUris);
   },
 
   isSaved(uri) {
     if (!this.isLoggedIn) return false;
-    const key = `saved_posts_${agent.session.did}`;
-    const current = JSON.parse(localStorage.getItem(key) || '[]');
-    return current.includes(uri);
+    if (!bookmarksLoaded) return false;
+    return bookmarkUris.has(uri);
   }
   };
 }
