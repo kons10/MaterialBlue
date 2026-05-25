@@ -129,18 +129,13 @@
     postBtn.textContent = '投稿中...';
     
     try {
-      console.log('投稿開始:', { text, imageCount: selectedImages.length });
-      console.log('client メソッド確認:', typeof client.post, typeof client.postWithImage);
-      
-      if (selectedImages.length > 0) {
+        if (selectedImages.length > 0) {
         // 画像付き投稿
-        console.log('画像付き投稿を実行');
         await client.postWithImage(text, selectedImages);
         selectedImages = [];
         updateImagePreview();
       } else {
         // テキストのみ投稿
-        console.log('テキスト投稿を実行');
         await client.post(text);
       }
       if (postTextField.value) {
@@ -261,7 +256,6 @@
 
   function syncSidebarByAuthState() {
     const loginNav = document.querySelector('[data-nav-item="login"]');
-    const composerNav = document.querySelector('[data-nav-item="composer"]');
     const timelineNav = document.querySelector('[data-nav-item="timeline"]');
 
     const loggedIn = client.isLoggedIn;
@@ -270,7 +264,7 @@
       loginNav.setAttribute('aria-disabled', loggedIn ? 'true' : 'false');
     }
 
-    [composerNav, timelineNav].forEach((navItem) => {
+    [timelineNav].forEach((navItem) => {
       if (!navItem) return;
       navItem.style.display = loggedIn ? 'flex' : 'none';
       navItem.setAttribute('aria-disabled', loggedIn ? 'false' : 'true');

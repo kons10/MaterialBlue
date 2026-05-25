@@ -153,15 +153,6 @@
       btn.addEventListener('click', () => {
         document.body.classList.toggle('sidebar-collapsed');
       });
-      document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
-        link.addEventListener('click', () => {
-          document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((other) => other.classList.remove('active'));
-          link.classList.add('active');
-          if (window.matchMedia('(max-width: 900px)').matches) {
-            document.body.classList.add('sidebar-collapsed');
-          }
-        });
-      });
       if (!window.matchMedia('(max-width: 900px)').matches) {
         document.body.classList.remove('sidebar-collapsed');
       }
