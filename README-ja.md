@@ -1,6 +1,6 @@
 [English](README.md) | [日本語]
 
-# Static Bluesky クライアント
+# Static Bluesky Client
 
 [Hugo](https://gohugo.io/) と [Material Web Components](https://github.com/material-components/material-web) で作った静的 Bluesky クライアントだよ。
 
