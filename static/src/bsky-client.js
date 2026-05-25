@@ -198,7 +198,7 @@ export function createBskyClient() {
   async save(uri) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
     const key = `saved_posts_${agent.session.did}`;
-    const current = JSON.parse(localStorage.getItem(key) || '[]');
+    const current = getSavedUris(key);
     if (!current.includes(uri)) {
       current.push(uri);
       localStorage.setItem(key, JSON.stringify(current));
@@ -209,7 +209,7 @@ export function createBskyClient() {
   isSaved(uri) {
     if (!this.isLoggedIn) return false;
     const key = `saved_posts_${agent.session.did}`;
-    const current = JSON.parse(localStorage.getItem(key) || '[]');
+    const current = getSavedUris(key);
     return current.includes(uri);
   }
   };
@@ -224,6 +224,19 @@ function setCookie(name, val, maxAge) {
 function getCookie(name) {
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
   return match ? decodeURIComponent(match[2]) : null;
+}
+
+
+function getSavedUris(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((uri) => typeof uri === 'string') : [];
+  } catch (err) {
+    console.warn('Failed to read saved posts from localStorage:', err);
+    return [];
+  }
 }
 
 function clearSession() {
