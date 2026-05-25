@@ -540,7 +540,7 @@
           if (saved) return;
           saveBtn.disabled = true;
           try {
-            await client.save(post.uri);
+            await client.save(post.uri, post.cid);
             saved = true;
             saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon is-filled">bookmark</md-icon>保存済み';
             showError('保存しました');

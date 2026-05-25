@@ -208,20 +208,20 @@ export function createBskyClient() {
     });
   },
 
-  async save(uri) {
+  async save(uri, cid) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
     const bookmarkApi = getBookmarkApi();
     if (!bookmarkApi?.createBookmark) throw new Error('Bookmark API unavailable in current @atproto/api version');
-    await bookmarkApi.createBookmark({ uri });
+    await bookmarkApi.createBookmark({ uri, cid });
     bookmarkUris.add(uri);
     return { uri, saved: true };
   },
 
-  async unsave(uri) {
+  async unsave(uri, cid) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
     const bookmarkApi = getBookmarkApi();
     if (!bookmarkApi?.deleteBookmark) throw new Error('Bookmark API unavailable in current @atproto/api version');
-    await bookmarkApi.deleteBookmark({ uri });
+    await bookmarkApi.deleteBookmark({ uri, cid });
     bookmarkUris.delete(uri);
     return { uri, saved: false };
   },
