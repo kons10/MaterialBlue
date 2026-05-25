@@ -7,6 +7,8 @@ export function createBskyClient() {
   let timelineCacheLimit = null;
   let timelineCacheAt = 0;
   let timelineInFlight = null;
+  const bookmarkUris = new Set();
+  let bookmarksLoaded = false;
 
   // 🔹 1. Cookie からセッション情報を読み取る
   const access = getCookie('bsky_access');
@@ -48,6 +50,9 @@ export function createBskyClient() {
 
     async ready() {
       await restoreSessionPromise;
+      if (this.isLoggedIn) {
+        await this.syncBookmarks();
+      }
     },
 
     // 🔹 3. ログイン処理
@@ -78,6 +83,8 @@ export function createBskyClient() {
         timelineCache = null;
         timelineCacheLimit = null;
         timelineCacheAt = 0;
+        bookmarkUris.clear();
+        bookmarksLoaded = false;
         // session は getter なので undefined にする必要はないが、念のため
       }
     },
@@ -197,20 +204,38 @@ export function createBskyClient() {
 
   async save(uri) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
-    const key = `saved_posts_${agent.session.did}`;
-    const current = JSON.parse(localStorage.getItem(key) || '[]');
-    if (!current.includes(uri)) {
-      current.push(uri);
-      localStorage.setItem(key, JSON.stringify(current));
-    }
+    await agent.api.app.bsky.bookmark.createBookmark({ uri });
+    bookmarkUris.add(uri);
     return { uri, saved: true };
+  },
+
+  async unsave(uri) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    await agent.api.app.bsky.bookmark.deleteBookmark({ uri });
+    bookmarkUris.delete(uri);
+    return { uri, saved: false };
+  },
+
+  async syncBookmarks(limit = 100) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    bookmarkUris.clear();
+    let cursor;
+    do {
+      const res = await agent.api.app.bsky.bookmark.getBookmarks({ limit, cursor });
+      const page = res.data.bookmarks || [];
+      page.forEach((b) => {
+        if (b?.subject?.uri) bookmarkUris.add(b.subject.uri);
+      });
+      cursor = res.data.cursor;
+    } while (cursor);
+    bookmarksLoaded = true;
+    return Array.from(bookmarkUris);
   },
 
   isSaved(uri) {
     if (!this.isLoggedIn) return false;
-    const key = `saved_posts_${agent.session.did}`;
-    const current = JSON.parse(localStorage.getItem(key) || '[]');
-    return current.includes(uri);
+    if (!bookmarksLoaded) return false;
+    return bookmarkUris.has(uri);
   }
   };
 }
