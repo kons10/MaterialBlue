@@ -441,9 +441,16 @@
           }
         });
 
+        const viewer = post.viewer || {};
+
         const repostWrap = document.createElement('div');
         repostWrap.style.position = 'relative';
-        const repostBtn = createActionButton('repeat', '再浮');
+        let reposted = Boolean(viewer.repost);
+        const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon');
+        if (reposted) {
+          const repostIcon = repostBtn.querySelector('.repost-icon');
+          if (repostIcon) repostIcon.classList.add('is-filled');
+        }
         const repostMenu = document.createElement('div');
         repostMenu.style.display = 'none';
         repostMenu.style.position = 'absolute';
@@ -464,9 +471,12 @@
         });
 
         doRepostBtn.addEventListener('click', async () => {
+          if (reposted) return;
           doRepostBtn.disabled = true;
           try {
             await client.repost(post.uri, post.cid);
+            reposted = true;
+            repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon is-filled">repeat</md-icon>再浮済み';
             repostMenu.style.display = 'none';
             showError('拡散しました');
             await loadTimeline(true);
@@ -498,16 +508,19 @@
         repostWrap.appendChild(repostBtn);
         repostWrap.appendChild(repostMenu);
 
-        const likeBtn = createActionButton('favorite', 'いいね', 'favorite-icon');
-        let liked = false;
+        let liked = Boolean(viewer.like);
+        const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon');
+        if (liked) {
+          const likeIcon = likeBtn.querySelector('.favorite-icon');
+          if (likeIcon) likeIcon.classList.add('is-filled');
+        }
         likeBtn.addEventListener('click', async () => {
           if (liked) return;
           likeBtn.disabled = true;
           try {
             await client.like(post.uri, post.cid);
             liked = true;
-            const likeIcon = likeBtn.querySelector('.favorite-icon');
-            if (likeIcon) likeIcon.classList.add('is-filled');
+            likeBtn.innerHTML = '<md-icon slot="icon" class="favorite-icon is-filled">favorite</md-icon>いいね済み';
             showError('いいねしました');
           } catch (e) {
             showError(`いいねエラー：${e.message}`);
