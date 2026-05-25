@@ -419,9 +419,9 @@
         actionRow.style.margin = '8px 16px';
         actionRow.style.flexWrap = 'wrap';
 
-        const createActionButton = (icon, label) => {
+        const createActionButton = (icon, label, iconClass = '') => {
           const btn = document.createElement('md-filled-tonal-button');
-          btn.innerHTML = `<md-icon slot="icon">${icon}</md-icon>${label}`;
+          btn.innerHTML = `<md-icon slot="icon" class="${iconClass}">${icon}</md-icon>${label}`;
           return btn;
         };
 
@@ -498,11 +498,16 @@
         repostWrap.appendChild(repostBtn);
         repostWrap.appendChild(repostMenu);
 
-        const likeBtn = createActionButton('favorite', 'いいね');
+        const likeBtn = createActionButton('favorite', 'いいね', 'favorite-icon');
+        let liked = false;
         likeBtn.addEventListener('click', async () => {
+          if (liked) return;
           likeBtn.disabled = true;
           try {
             await client.like(post.uri, post.cid);
+            liked = true;
+            const likeIcon = likeBtn.querySelector('.favorite-icon');
+            if (likeIcon) likeIcon.classList.add('is-filled');
             showError('いいねしました');
           } catch (e) {
             showError(`いいねエラー：${e.message}`);
@@ -511,12 +516,19 @@
           }
         });
 
-        const saveBtn = createActionButton('bookmark', client.isSaved(post.uri) ? '保存済み' : '保存');
+        let saved = client.isSaved(post.uri);
+        const saveBtn = createActionButton('bookmark', saved ? '保存済み' : '保存', 'save-icon');
+        if (saved) {
+          const saveIcon = saveBtn.querySelector('.save-icon');
+          if (saveIcon) saveIcon.classList.add('is-filled');
+        }
         saveBtn.addEventListener('click', async () => {
+          if (saved) return;
           saveBtn.disabled = true;
           try {
             await client.save(post.uri);
-            saveBtn.innerHTML = '<md-icon slot="icon">bookmark</md-icon>保存済み';
+            saved = true;
+            saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon is-filled">bookmark</md-icon>保存済み';
             showError('保存しました');
           } catch (e) {
             showError(`保存エラー：${e.message}`);

@@ -65,6 +65,14 @@
     .sidebar-nav md-filled-tonal-button:hover, .sidebar-nav md-filled-tonal-button:focus-visible { --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-highest); }
     .sidebar-nav md-filled-tonal-button.active { --md-filled-tonal-button-container-color: var(--md-sys-color-primary-container); --md-filled-tonal-button-label-text-color: var(--md-sys-color-on-primary-container); font-weight: 500; }
     .sidebar-nav md-filled-tonal-button[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+    .favorite-icon,
+    .save-icon {
+      font-variation-settings: 'FILL' 0;
+    }
+    .favorite-icon.is-filled,
+    .save-icon.is-filled {
+      font-variation-settings: 'FILL' 1;
+    }
 
     .sidebar-actions { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--md-sys-color-outline); }
     #logoutBtn { width: 100%; justify-content: center; }
