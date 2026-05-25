@@ -369,6 +369,7 @@
         // メインのリストアイテム作成
         const listItem = document.createElement('md-list-item');
         listItem.type = 'link';
+        listItem.style.overflow = 'visible';
 
         // 「〇〇による拡散」表示
         if (isRepost && reposterName) {
@@ -406,6 +407,7 @@
         const supporting = document.createElement('div');
         supporting.slot = 'supporting-text';
         supporting.className = 'md-typescale-body-medium';
+        supporting.style.overflow = 'visible';
 
         const bodyText = document.createElement('div');
         bodyText.textContent = record.text;
@@ -427,6 +429,7 @@
         actionRow.style.alignItems = 'center';
         actionRow.style.marginTop = '8px';
         actionRow.style.flexWrap = 'wrap';
+        actionRow.style.overflow = 'visible';
         stopListRipple(actionRow);
 
         const createActionButton = (icon, label, iconClass = '') => {
@@ -456,6 +459,7 @@
 
         const repostWrap = document.createElement('div');
         repostWrap.style.position = 'relative';
+        repostWrap.style.overflow = 'visible';
         let reposted = Boolean(viewer.repost);
         const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon');
         if (reposted) {
