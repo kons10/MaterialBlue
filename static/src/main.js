@@ -355,6 +355,7 @@
       if (!container) return;
 
       // リストアイテムを生成
+      document.querySelectorAll('.timeline-repost-menu').forEach((el) => el.remove());
       container.textContent = '';
       const fragment = document.createDocumentFragment();
 
@@ -468,9 +469,8 @@
         }
         const repostMenu = document.createElement('div');
         repostMenu.style.display = 'none';
-        repostMenu.style.position = 'absolute';
-        repostMenu.style.top = '100%';
-        repostMenu.style.left = '0';
+        repostMenu.className = 'timeline-repost-menu';
+        repostMenu.style.position = 'fixed';
         repostMenu.style.zIndex = '10';
         repostMenu.style.background = 'var(--md-sys-color-surface)';
         repostMenu.style.border = '1px solid var(--md-sys-color-outline-variant)';
@@ -480,9 +480,17 @@
         const doRepostBtn = createActionButton('repeat', '拡散');
         const quoteBtn = createActionButton('format_quote', '引用');
 
-        repostBtn.addEventListener('click', () => {
-          repostMenu.style.display = repostMenu.style.display === 'none' ? 'flex' : 'none';
-          repostMenu.style.flexDirection = 'column';
+        repostBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (repostMenu.style.display === 'none') {
+            const rect = repostBtn.getBoundingClientRect();
+            repostMenu.style.top = `${rect.bottom + 4}px`;
+            repostMenu.style.left = `${rect.left}px`;
+            repostMenu.style.display = 'flex';
+            repostMenu.style.flexDirection = 'column';
+          } else {
+            repostMenu.style.display = 'none';
+          }
         });
 
         doRepostBtn.addEventListener('click', async () => {
@@ -521,7 +529,11 @@
         repostMenu.appendChild(doRepostBtn);
         repostMenu.appendChild(quoteBtn);
         repostWrap.appendChild(repostBtn);
-        repostWrap.appendChild(repostMenu);
+        document.body.appendChild(repostMenu);
+
+        document.addEventListener('click', () => {
+          repostMenu.style.display = 'none';
+        });
 
         let liked = Boolean(viewer.like);
         const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon');
