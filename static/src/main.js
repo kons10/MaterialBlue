@@ -565,7 +565,6 @@
         actionRow.appendChild(repostWrap);
         actionRow.appendChild(likeBtn);
         actionRow.appendChild(saveBtn);
-        supporting.appendChild(actionRow);
 
         // 画像がある場合は表示
         // NOTE: Bluesky の TL では画像情報が `post.embed.images` に入る。
@@ -598,6 +597,8 @@
           
           supporting.appendChild(imageContainer);
         }
+
+        supporting.appendChild(actionRow);
 
         listItem.appendChild(avatarIcon);
         listItem.appendChild(headline);
