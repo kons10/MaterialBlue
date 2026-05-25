@@ -145,6 +145,72 @@ export function createBskyClient() {
         images: imageEmbeds
       }
     });
+  },
+
+  async like(uri, cid) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    return await agent.api.com.atproto.repo.createRecord({
+      repo: agent.session.did,
+      collection: 'app.bsky.feed.like',
+      record: {
+        $type: 'app.bsky.feed.like',
+        subject: { uri, cid },
+        createdAt: new Date().toISOString()
+      }
+    });
+  },
+
+  async repost(uri, cid) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    return await agent.api.com.atproto.repo.createRecord({
+      repo: agent.session.did,
+      collection: 'app.bsky.feed.repost',
+      record: {
+        $type: 'app.bsky.feed.repost',
+        subject: { uri, cid },
+        createdAt: new Date().toISOString()
+      }
+    });
+  },
+
+  async quote(uri, cid, text) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    return await agent.post({
+      text,
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: { uri, cid }
+      }
+    });
+  },
+
+  async reply(uri, cid, text) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    return await agent.post({
+      text,
+      reply: {
+        root: { uri, cid },
+        parent: { uri, cid }
+      }
+    });
+  },
+
+  async save(uri) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    const key = `saved_posts_${agent.session.did}`;
+    const current = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!current.includes(uri)) {
+      current.push(uri);
+      localStorage.setItem(key, JSON.stringify(current));
+    }
+    return { uri, saved: true };
+  },
+
+  isSaved(uri) {
+    if (!this.isLoggedIn) return false;
+    const key = `saved_posts_${agent.session.did}`;
+    const current = JSON.parse(localStorage.getItem(key) || '[]');
+    return current.includes(uri);
   }
   };
 }

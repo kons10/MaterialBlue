@@ -411,6 +411,137 @@
         listItem.appendChild(headline);
         listItem.appendChild(supporting);
         fragment.appendChild(listItem);
+
+        const actionRow = document.createElement('div');
+        actionRow.style.display = 'flex';
+        actionRow.style.gap = '8px';
+        actionRow.style.alignItems = 'center';
+        actionRow.style.margin = '8px 16px';
+        actionRow.style.flexWrap = 'wrap';
+
+        const createActionButton = (icon, label, iconClass = '') => {
+          const btn = document.createElement('md-filled-tonal-button');
+          btn.innerHTML = `<md-icon slot="icon" class="${iconClass}">${icon}</md-icon>${label}`;
+          return btn;
+        };
+
+        const replyBtn = createActionButton('reply', '返信');
+        replyBtn.addEventListener('click', async () => {
+          const text = window.prompt('返信内容を入力してください');
+          if (!text || !text.trim()) return;
+          replyBtn.disabled = true;
+          try {
+            await client.reply(post.uri, post.cid, text.trim());
+            showError('返信しました');
+            await loadTimeline(true);
+          } catch (e) {
+            showError(`返信エラー：${e.message}`);
+          } finally {
+            replyBtn.disabled = false;
+          }
+        });
+
+        const repostWrap = document.createElement('div');
+        repostWrap.style.position = 'relative';
+        const repostBtn = createActionButton('repeat', '再浮');
+        const repostMenu = document.createElement('div');
+        repostMenu.style.display = 'none';
+        repostMenu.style.position = 'absolute';
+        repostMenu.style.top = '100%';
+        repostMenu.style.left = '0';
+        repostMenu.style.zIndex = '10';
+        repostMenu.style.background = 'var(--md-sys-color-surface)';
+        repostMenu.style.border = '1px solid var(--md-sys-color-outline-variant)';
+        repostMenu.style.borderRadius = '8px';
+        repostMenu.style.padding = '6px';
+
+        const doRepostBtn = createActionButton('repeat', '拡散');
+        const quoteBtn = createActionButton('format_quote', '引用');
+
+        repostBtn.addEventListener('click', () => {
+          repostMenu.style.display = repostMenu.style.display === 'none' ? 'flex' : 'none';
+          repostMenu.style.flexDirection = 'column';
+        });
+
+        doRepostBtn.addEventListener('click', async () => {
+          doRepostBtn.disabled = true;
+          try {
+            await client.repost(post.uri, post.cid);
+            repostMenu.style.display = 'none';
+            showError('拡散しました');
+            await loadTimeline(true);
+          } catch (e) {
+            showError(`拡散エラー：${e.message}`);
+          } finally {
+            doRepostBtn.disabled = false;
+          }
+        });
+
+        quoteBtn.addEventListener('click', async () => {
+          const text = window.prompt('引用文を入力してください');
+          if (!text || !text.trim()) return;
+          quoteBtn.disabled = true;
+          try {
+            await client.quote(post.uri, post.cid, text.trim());
+            repostMenu.style.display = 'none';
+            showError('引用しました');
+            await loadTimeline(true);
+          } catch (e) {
+            showError(`引用エラー：${e.message}`);
+          } finally {
+            quoteBtn.disabled = false;
+          }
+        });
+
+        repostMenu.appendChild(doRepostBtn);
+        repostMenu.appendChild(quoteBtn);
+        repostWrap.appendChild(repostBtn);
+        repostWrap.appendChild(repostMenu);
+
+        const likeBtn = createActionButton('favorite', 'いいね', 'favorite-icon');
+        let liked = false;
+        likeBtn.addEventListener('click', async () => {
+          if (liked) return;
+          likeBtn.disabled = true;
+          try {
+            await client.like(post.uri, post.cid);
+            liked = true;
+            const likeIcon = likeBtn.querySelector('.favorite-icon');
+            if (likeIcon) likeIcon.classList.add('is-filled');
+            showError('いいねしました');
+          } catch (e) {
+            showError(`いいねエラー：${e.message}`);
+          } finally {
+            likeBtn.disabled = false;
+          }
+        });
+
+        let saved = client.isSaved(post.uri);
+        const saveBtn = createActionButton('bookmark', saved ? '保存済み' : '保存', 'save-icon');
+        if (saved) {
+          const saveIcon = saveBtn.querySelector('.save-icon');
+          if (saveIcon) saveIcon.classList.add('is-filled');
+        }
+        saveBtn.addEventListener('click', async () => {
+          if (saved) return;
+          saveBtn.disabled = true;
+          try {
+            await client.save(post.uri);
+            saved = true;
+            saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon is-filled">bookmark</md-icon>保存済み';
+            showError('保存しました');
+          } catch (e) {
+            showError(`保存エラー：${e.message}`);
+          } finally {
+            saveBtn.disabled = false;
+          }
+        });
+
+        actionRow.appendChild(replyBtn);
+        actionRow.appendChild(repostWrap);
+        actionRow.appendChild(likeBtn);
+        actionRow.appendChild(saveBtn);
+        fragment.appendChild(actionRow);
         
         // 画像がある場合は表示
         // NOTE: Bluesky の TL では画像情報が `post.embed.images` に入る。
