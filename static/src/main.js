@@ -405,19 +405,17 @@
         // サポーティングテキスト
         const supporting = document.createElement('div');
         supporting.slot = 'supporting-text';
-        supporting.textContent = record.text;
         supporting.className = 'md-typescale-body-medium';
-        
-        listItem.appendChild(avatarIcon);
-        listItem.appendChild(headline);
-        listItem.appendChild(supporting);
-        fragment.appendChild(listItem);
+
+        const bodyText = document.createElement('div');
+        bodyText.textContent = record.text;
+        supporting.appendChild(bodyText);
 
         const actionRow = document.createElement('div');
         actionRow.style.display = 'flex';
         actionRow.style.gap = '8px';
         actionRow.style.alignItems = 'center';
-        actionRow.style.margin = '8px 16px';
+        actionRow.style.marginTop = '8px';
         actionRow.style.flexWrap = 'wrap';
 
         const createActionButton = (icon, label, iconClass = '') => {
@@ -555,8 +553,8 @@
         actionRow.appendChild(repostWrap);
         actionRow.appendChild(likeBtn);
         actionRow.appendChild(saveBtn);
-        fragment.appendChild(actionRow);
-        
+        supporting.appendChild(actionRow);
+
         // 画像がある場合は表示
         // NOTE: Bluesky の TL では画像情報が `post.embed.images` に入る。
         // 投稿レコード側 (`record.embed.images`) を見ると取得できないことがあるため両方を確認する。
@@ -566,7 +564,7 @@
           imageContainer.style.display = 'flex';
           imageContainer.style.gap = '8px';
           imageContainer.style.flexWrap = 'wrap';
-          imageContainer.style.margin = '8px 16px';
+          imageContainer.style.marginTop = '8px';
           
           images.forEach(img => {
             const imgElement = document.createElement('img');
@@ -585,9 +583,14 @@
             imageContainer.appendChild(imgElement);
           });
           
-          fragment.appendChild(imageContainer);
+          supporting.appendChild(imageContainer);
         }
-        
+
+        listItem.appendChild(avatarIcon);
+        listItem.appendChild(headline);
+        listItem.appendChild(supporting);
+        fragment.appendChild(listItem);
+
         // 区切り線
         const divider = document.createElement('md-divider');
         fragment.appendChild(divider);
