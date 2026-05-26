@@ -456,9 +456,9 @@ async function loadTimeline(force = false) {
 
       // 🔹 リポスト用メニューの作成 (Body直下のオーバーレイコンテナに置くことで、見切れを防ぐよ！)
       const repostMenu = document.createElement('md-menu');
-      repostMenu.anchorElement = repostBtn;
+      // DOMツリーが離れるとanchorElementでの自動配置がバグるので外すよ
       repostMenu.menuCorner = 'start-start';
-      repostMenu.anchorCorner = 'start-end';
+      repostMenu.positioning = 'absolute'; // 絶対配置にする
 
       const doRepostItem = document.createElement('md-menu-item');
       doRepostItem.dataset.action = 'repost';
@@ -475,6 +475,13 @@ async function loadTimeline(force = false) {
       `;
 
       repostBtn.addEventListener('click', () => {
+        // ボタンの画面上の座標を取得して、メニューを正確な位置に移動させる
+        const rect = repostBtn.getBoundingClientRect();
+        repostMenu.style.position = 'absolute';
+        repostMenu.style.top = `${rect.bottom + window.scrollY}px`; // ボタンの下端＋スクロール量
+        repostMenu.style.left = `${rect.left + window.scrollX}px`;  // ボタンの左端＋スクロール量
+        repostMenu.style.zIndex = '9999'; // 最前面に出す
+        
         repostMenu.open = !repostMenu.open;
       });
 
