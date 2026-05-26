@@ -450,60 +450,69 @@
           const repostIcon = repostBtn.querySelector('.repost-icon');
           if (repostIcon) repostIcon.classList.add('is-filled');
         }
-        const repostMenu = document.createElement('div');
-        repostMenu.style.display = 'none';
-        repostMenu.style.position = 'absolute';
-        repostMenu.style.top = '100%';
-        repostMenu.style.left = '0';
-        repostMenu.style.zIndex = '10';
-        repostMenu.style.background = 'var(--md-sys-color-surface)';
-        repostMenu.style.border = '1px solid var(--md-sys-color-outline-variant)';
-        repostMenu.style.borderRadius = '8px';
-        repostMenu.style.padding = '6px';
+        const repostMenu = document.createElement('md-menu');
+        repostMenu.anchorElement = repostBtn;
+        repostMenu.menuCorner = 'start-start';
+        repostMenu.anchorCorner = 'start-end';
 
-        const doRepostBtn = createActionButton('repeat', '拡散');
-        const quoteBtn = createActionButton('format_quote', '引用');
+        const doRepostItem = document.createElement('md-menu-item');
+        doRepostItem.dataset.action = 'repost';
+        doRepostItem.innerHTML = `
+          <md-icon slot="start">repeat</md-icon>
+          <div slot="headline">拡散</div>
+        `;
+
+        const quoteItem = document.createElement('md-menu-item');
+        quoteItem.dataset.action = 'quote';
+        quoteItem.innerHTML = `
+          <md-icon slot="start">format_quote</md-icon>
+          <div slot="headline">引用</div>
+        `;
 
         repostBtn.addEventListener('click', () => {
-          repostMenu.style.display = repostMenu.style.display === 'none' ? 'flex' : 'none';
-          repostMenu.style.flexDirection = 'column';
+          repostMenu.open = !repostMenu.open;
         });
 
-        doRepostBtn.addEventListener('click', async () => {
+        async function handleRepost() {
           if (reposted) return;
-          doRepostBtn.disabled = true;
+          doRepostItem.disabled = true;
           try {
             await client.repost(post.uri, post.cid);
             reposted = true;
             repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon is-filled">repeat</md-icon>再浮済み';
-            repostMenu.style.display = 'none';
+            repostMenu.open = false;
             showError('拡散しました');
             await loadTimeline(true);
           } catch (e) {
             showError(`拡散エラー：${e.message}`);
           } finally {
-            doRepostBtn.disabled = false;
+            doRepostItem.disabled = false;
           }
-        });
+        }
 
-        quoteBtn.addEventListener('click', async () => {
+        async function handleQuote() {
           const text = window.prompt('引用文を入力してください');
           if (!text || !text.trim()) return;
-          quoteBtn.disabled = true;
+          quoteItem.disabled = true;
           try {
             await client.quote(post.uri, post.cid, text.trim());
-            repostMenu.style.display = 'none';
+            repostMenu.open = false;
             showError('引用しました');
             await loadTimeline(true);
           } catch (e) {
             showError(`引用エラー：${e.message}`);
           } finally {
-            quoteBtn.disabled = false;
+            quoteItem.disabled = false;
           }
+        }
+        repostMenu.addEventListener('close-menu', async (event) => {
+          const action = event.detail?.itemPath?.[0]?.dataset?.action;
+          if (action === 'repost') await handleRepost();
+          if (action === 'quote') await handleQuote();
         });
 
-        repostMenu.appendChild(doRepostBtn);
-        repostMenu.appendChild(quoteBtn);
+        repostMenu.appendChild(doRepostItem);
+        repostMenu.appendChild(quoteItem);
         repostWrap.appendChild(repostBtn);
         repostWrap.appendChild(repostMenu);
 
