@@ -173,6 +173,16 @@ export function createBskyClient() {
     });
   },
 
+  async unlike(likeUri) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    if (!likeUri) throw new Error('Like record URI is required');
+    return await agent.api.com.atproto.repo.deleteRecord({
+      repo: agent.session.did,
+      collection: 'app.bsky.feed.like',
+      rkey: likeUri.split('/').pop()
+    });
+  },
+
   async repost(uri, cid) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
     return await agent.api.com.atproto.repo.createRecord({
@@ -183,6 +193,16 @@ export function createBskyClient() {
         subject: { uri, cid },
         createdAt: new Date().toISOString()
       }
+    });
+  },
+
+  async unrepost(repostUri) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    if (!repostUri) throw new Error('Repost record URI is required');
+    return await agent.api.com.atproto.repo.deleteRecord({
+      repo: agent.session.did,
+      collection: 'app.bsky.feed.repost',
+      rkey: repostUri.split('/').pop()
     });
   },
 
