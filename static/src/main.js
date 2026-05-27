@@ -448,10 +448,12 @@ async function loadTimeline(force = false) {
       const repostWrap = document.createElement('div');
       repostWrap.style.position = 'relative';
       let reposted = Boolean(viewer.repost);
+      let repostRecordUri = viewer.repost || null;
       const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon');
       if (reposted) {
         const repostIcon = repostBtn.querySelector('.repost-icon');
         if (repostIcon) repostIcon.classList.add('is-filled');
+        repostIcon.textContent = 'repeat_on';
       }
 
       // 🔹 リポスト用メニューの作成 (Body直下のオーバーレイコンテナに置くことで、見切れを防ぐよ！)
@@ -481,14 +483,22 @@ async function loadTimeline(force = false) {
       });
 
       async function handleRepost() {
-        if (reposted) return;
         doRepostItem.disabled = true;
         try {
-          await client.repost(post.uri, post.cid);
-          reposted = true;
-          repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon is-filled">repeat</md-icon>再浮済み';
+          if (reposted) {
+            await client.unrepost(repostRecordUri);
+            reposted = false;
+            repostRecordUri = null;
+            repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon">repeat</md-icon>再浮';
+            showError('拡散解除しました');
+          } else {
+            const res = await client.repost(post.uri, post.cid);
+            reposted = true;
+            repostRecordUri = res?.data?.uri || null;
+            repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon is-filled">repeat_on</md-icon>再浮済み';
+            showError('拡散しました');
+          }
           repostMenu.open = false;
-          showError('拡散しました');
           await loadTimeline(true);
         } catch (e) {
           showError(`拡散エラー：${e.message}`);
@@ -527,19 +537,28 @@ async function loadTimeline(force = false) {
       menuContainer.appendChild(repostMenu);
 
       let liked = Boolean(viewer.like);
+      let likeRecordUri = viewer.like || null;
       const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon');
       if (liked) {
         const likeIcon = likeBtn.querySelector('.favorite-icon');
         if (likeIcon) likeIcon.classList.add('is-filled');
       }
       likeBtn.addEventListener('click', async () => {
-        if (liked) return;
         likeBtn.disabled = true;
         try {
-          await client.like(post.uri, post.cid);
-          liked = true;
-          likeBtn.innerHTML = '<md-icon slot="icon" class="favorite-icon is-filled">favorite</md-icon>いいね済み';
-          showError('いいねしました');
+          if (liked) {
+            await client.unlike(likeRecordUri);
+            liked = false;
+            likeRecordUri = null;
+            likeBtn.innerHTML = '<md-icon slot="icon" class="favorite-icon">favorite</md-icon>いいね';
+            showError('いいね解除しました');
+          } else {
+            const res = await client.like(post.uri, post.cid);
+            liked = true;
+            likeRecordUri = res?.data?.uri || null;
+            likeBtn.innerHTML = '<md-icon slot="icon" class="favorite-icon is-filled">favorite</md-icon>いいね済み';
+            showError('いいねしました');
+          }
         } catch (e) {
           showError(`いいねエラー：${e.message}`);
         } finally {
@@ -554,13 +573,19 @@ async function loadTimeline(force = false) {
         if (saveIcon) saveIcon.classList.add('is-filled');
       }
       saveBtn.addEventListener('click', async () => {
-        if (saved) return;
         saveBtn.disabled = true;
         try {
-          await client.save(post.uri, post.cid);
-          saved = true;
-          saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon is-filled">bookmark</md-icon>保存済み';
-          showError('保存しました');
+          if (saved) {
+            await client.unsave(post.uri, post.cid);
+            saved = false;
+            saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon">bookmark</md-icon>保存';
+            showError('保存解除しました');
+          } else {
+            await client.save(post.uri, post.cid);
+            saved = true;
+            saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon is-filled">bookmark</md-icon>保存済み';
+            showError('保存しました');
+          }
         } catch (e) {
           showError(`保存エラー：${e.message}`);
         } finally {
