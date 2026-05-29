@@ -22,6 +22,27 @@ export function createBskyClient() {
     return agent.api?.app?.bsky?.bookmark;
   }
 
+  function shouldShowTimelineItem(item) {
+    const reply = item?.reply;
+    if (!reply) return true;
+
+    const postAuthorDid = item?.post?.author?.did;
+    const viewerDid = agent.session?.did;
+    if (viewerDid && postAuthorDid === viewerDid) return true;
+
+    const parent = reply.parent;
+    const parentAuthor = parent?.author;
+    if (!parentAuthor) return false;
+    if (parentAuthor.did === postAuthorDid) return true;
+    if (viewerDid && parentAuthor.did === viewerDid) return true;
+
+    return Boolean(parentAuthor.viewer?.following);
+  }
+
+  function filterRepliesToUnfollowedAccounts(feed) {
+    return (feed || []).filter(shouldShowTimelineItem);
+  }
+
   const restoreSessionPromise = (access && refresh && did) ? (() => {
     const sessionData = { 
       accessJwt: access, 
@@ -110,7 +131,7 @@ export function createBskyClient() {
 
       timelineInFlight = agent.api.app.bsky.feed.getTimeline({ limit })
         .then((res) => {
-          timelineCache = res.data.feed;
+          timelineCache = filterRepliesToUnfollowedAccounts(res.data.feed);
           timelineCacheLimit = limit;
           timelineCacheAt = Date.now();
           return timelineCache;
