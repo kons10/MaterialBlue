@@ -41,6 +41,20 @@
       --catalog-shape-xl: 28px;
     }
 
+    /* ダークモードのカラー変数 */
+    [data-theme="dark"] {
+      --md-sys-color-primary: #D0BCFF;
+      --md-sys-color-on-primary: #381E72;
+      --md-sys-color-primary-container: #4F378B;
+      --md-sys-color-on-primary-container: #EADDFF;
+      --md-sys-color-surface: #141218;
+      --md-sys-color-on-surface: #E6E1E5;
+      --md-sys-color-surface-container: #211F26;
+      --md-sys-color-surface-container-high: #2B2930;
+      --md-sys-color-surface-container-highest: #36343B;
+      --md-sys-color-outline: #938F99;
+    }
+
     body { margin: 0; font-family: var(--md-ref-typeface-plain); background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); }
     * { box-sizing: border-box; }
 
@@ -133,6 +147,9 @@
           </md-icon-button>
           <md-icon>dynamic_feed</md-icon>
           <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
+          <md-icon-button id="themeToggle" aria-label="テーマ切り替え" style="margin-left:auto;">
+            <md-icon id="themeIcon">dark_mode</md-icon>
+          </md-icon-button>
         </div>
       </header>
 
@@ -148,6 +165,39 @@
 
   <script>
     (() => {
+      // テーマ切り替え機能
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      
+      // ローカルストレージからテーマ設定を読み込み
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      
+      function setTheme(theme) {
+        if (theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          themeIcon.textContent = 'light_mode';
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          themeIcon.textContent = 'dark_mode';
+          localStorage.setItem('theme', 'light');
+        }
+      }
+      
+      // 初期テーマを適用
+      setTheme(initialTheme);
+      
+      // テーマ切り替えボタンクリック時の処理
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const currentTheme = document.documentElement.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          setTheme(newTheme);
+        });
+      }
+
       const btn = document.getElementById('sidebarToggle');
       if (!btn) return;
       btn.addEventListener('click', () => {
