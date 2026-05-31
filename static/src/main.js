@@ -11,9 +11,10 @@ const imageUploadBtn = document.getElementById('imageUploadBtn');
 const imageInput = document.getElementById('imageInput');
 const imageCount = document.getElementById('imageCount');
 const imagePreview = document.getElementById('imagePreview');
-const loading = document.getElementById('loading');
+let loading = document.getElementById('loading');
 const errorMessage = document.getElementById('errorMessage');
 let timelineLoading = false;
+let loadingRequests = 0;
 
 // 選択された画像を保持する配列
 let selectedImages = [];
@@ -237,8 +238,33 @@ function updateImagePreview() {
   });
 }
 
+function getLoadingIndicator() {
+  if (loading) return loading;
+
+  loading = document.createElement('md-circular-progress');
+  loading.id = 'loading';
+  loading.indeterminate = true;
+  loading.setAttribute('aria-label', '読み込み中');
+  loading.setAttribute('role', 'progressbar');
+  loading.setAttribute('aria-hidden', 'true');
+  loading.hidden = true;
+  loading.style.display = 'none';
+  loading.style.margin = '24px auto';
+
+  const parent = document.querySelector('main') || document.body;
+  parent.appendChild(loading);
+
+  return loading;
+}
+
 function showLoading(show) {
-  loading.style.display = show ? 'block' : 'none';
+  const indicator = getLoadingIndicator();
+  loadingRequests = show ? loadingRequests + 1 : Math.max(loadingRequests - 1, 0);
+  const isLoading = loadingRequests > 0;
+
+  indicator.style.display = isLoading ? 'block' : 'none';
+  indicator.hidden = !isLoading;
+  indicator.setAttribute('aria-hidden', isLoading ? 'false' : 'true');
 }
 
 function normalizePath(pathname) {
