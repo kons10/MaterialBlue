@@ -110,22 +110,19 @@ export function createBskyClient() {
 
       timelineInFlight = agent.api.app.bsky.feed.getTimeline({ limit })
         .then((res) => {
-          // 🔹 フォロー外のユーザーへの返信をフィルタリング（公式アプリ寄りの挙動）
-          const filteredFeed = res.data.feed.filter(item => {
-            // 返信でない場合は表示
-            if (!item.reply) return true;
-            
-            // 返信先（parent）の著者が自分、または自分がフォローしている人なら表示
-            const parentAuthor = item.reply.parent?.author;
-            if (parentAuthor) {
-              // 自分がフォローしているか、自分自身の投稿への返信なら viewer.following が存在する
-              // または、DID が自分自身の場合も許可
-              const isFollowingParent = !!parentAuthor.viewer?.following || parentAuthor.did === agent.session?.did;
-              if (!isFollowingParent) return false;
-            }
-            
-            return true;
-          });
+      // 🔹 フォロー外のユーザーへの返信をフィルタリング（公式アプリ寄りの挙動）
+      const filteredFeed = res.data.feed.filter(item => {
+        if (!item.reply) return true;
+      
+        const parentAuthor = item.reply.parent?.author;
+        if (parentAuthor) {
+          // 自分がフォロー中、または自分自身の投稿への返信なら表示
+          const isFollowingParent = !!parentAuthor.viewer?.following || parentAuthor.did === agent.session?.did;
+          if (!isFollowingParent) return false;
+      }
+      
+      return true;
+    });
 
           timelineCache = filteredFeed;
           timelineCacheLimit = limit;
