@@ -5,6 +5,8 @@ const client = createBskyClient();
 const loginBtn = document.getElementById('loginBtn');
 const timelineCard = document.getElementById('timeline-card');
 const refreshBtn = document.getElementById('refreshBtn');
+const seeMoreBtn = document.getElementById('seeMoreBtn');
+const timelineBottom = document.getElementById('timelineBottom');
 const logoutBtn = document.getElementById('logoutBtn');
 const postBtn = document.getElementById('postBtn');
 const imageUploadBtn = document.getElementById('imageUploadBtn');
@@ -14,6 +16,8 @@ const imagePreview = document.getElementById('imagePreview');
 const loading = document.getElementById('loading');
 const errorMessage = document.getElementById('errorMessage');
 let timelineLoading = false;
+let timelineCursor = null;
+let timelineHasMore = false;
 
 // 選択された画像を保持する配列
 let selectedImages = [];
@@ -96,6 +100,12 @@ if (refreshBtn) refreshBtn.addEventListener('click', async () => {
   refreshBtn.disabled = true;
   await loadTimeline(true);
   refreshBtn.disabled = false;
+});
+
+if (seeMoreBtn) seeMoreBtn.addEventListener('click', async () => {
+  seeMoreBtn.disabled = true;
+  await loadTimeline(false, true);
+  seeMoreBtn.disabled = false;
 });
 
 if (logoutBtn) logoutBtn.addEventListener('click', async () => {
@@ -338,18 +348,27 @@ function showTimeline() {
   loadTimeline();
 }
 
-async function loadTimeline(force = false) {
+async function loadTimeline(force = false, append = false) {
   if (timelineLoading) return;
+  if (append && !timelineHasMore) return;
+
   timelineLoading = true;
   showLoading(true);
+  updateSeeMoreButton(true);
   try {
     await client.syncBookmarks();
-    const feed = await client.timeline(20, { force });
+    const page = append
+      ? await client.timelinePage(20, { cursor: timelineCursor })
+      : await client.timelinePage(20, { force });
+    const feed = page.feed;
+    timelineCursor = page.cursor;
+    timelineHasMore = Boolean(page.cursor);
+
     const container = document.getElementById('timeline');
     if (!container) return;
 
     // リストアイテムを生成
-    container.textContent = '';
+    if (!append) container.textContent = '';
     const fragment = document.createDocumentFragment();
 
     // 🔹 md-menu用のオーバーレイコンテナの準備・クリーンアップ
@@ -359,7 +378,9 @@ async function loadTimeline(force = false) {
       menuContainer.id = 'menu-overlay-container';
       document.body.appendChild(menuContainer);
     }
-    menuContainer.innerHTML = ''; // 古いポップアップメニューを完全消去してメモリリークを防ぐよ
+    if (!append) {
+      menuContainer.innerHTML = ''; // 古いポップアップメニューを完全消去してメモリリークを防ぐよ
+    }
 
     feed.forEach(item => {
       const post = item.post;
@@ -643,7 +664,17 @@ async function loadTimeline(force = false) {
   } finally {
     showLoading(false);
     timelineLoading = false;
+    updateSeeMoreButton(false);
   }
+}
+
+function updateSeeMoreButton(loadingMore) {
+  if (!timelineBottom || !seeMoreBtn) return;
+  timelineBottom.style.display = timelineHasMore ? 'flex' : 'none';
+  seeMoreBtn.disabled = loadingMore || !timelineHasMore;
+  seeMoreBtn.innerHTML = loadingMore
+    ? '<md-icon slot="icon">hourglass_empty</md-icon>読み込み中...'
+    : '<md-icon slot="icon">expand_more</md-icon>See more';
 }
 
 // エンターキーで投稿（Ctrl+Enter または Cmd+Enter）

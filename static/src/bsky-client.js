@@ -6,6 +6,7 @@ export function createBskyClient() {
   let timelineCache = null;
   let timelineCacheLimit = null;
   let timelineCacheAt = 0;
+  let timelineCursor = null;
   let timelineInFlight = null;
   const bookmarkUris = new Set();
   let bookmarksLoaded = false;
@@ -23,9 +24,9 @@ export function createBskyClient() {
   }
 
   const restoreSessionPromise = (access && refresh && did) ? (() => {
-    const sessionData = { 
-      accessJwt: access, 
-      refreshJwt: refresh, 
+    const sessionData = {
+      accessJwt: access,
+      refreshJwt: refresh,
       did: decodeURIComponent(did),
       handle: '', // handle は resumeSession 後に更新されるか、必要なら保存
       email: '',
@@ -50,8 +51,8 @@ export function createBskyClient() {
   return {
     agent,
     // ✅ ログイン判定：session プロパティが存在するかで判断
-    get isLoggedIn() { 
-      return !!agent.session?.accessJwt; 
+    get isLoggedIn() {
+      return !!agent.session?.accessJwt;
     },
 
     async ready() {
@@ -66,7 +67,7 @@ export function createBskyClient() {
       try {
         // login メソッドが成功すると、内部で agent.session が自動更新される
         const session = await agent.login({ identifier, password: appPassword });
-        
+
         // ログイン成功時に Cookie に保存
         if (agent.session) {
           setCookie('bsky_access', agent.session.accessJwt, 86400);
@@ -89,6 +90,7 @@ export function createBskyClient() {
         timelineCache = null;
         timelineCacheLimit = null;
         timelineCacheAt = 0;
+        timelineCursor = null;
         bookmarkUris.clear();
         bookmarksLoaded = false;
         // session は getter なので undefined にする必要はないが、念のため
@@ -104,36 +106,57 @@ export function createBskyClient() {
         return timelineCache;
       }
 
-      if (!force && timelineInFlight) {
+      const page = await this.timelinePage(limit, { cursor: null, force });
+      timelineCacheAt = Date.now();
+      timelineCacheLimit = limit;
+      return page.feed;
+    },
+
+    async timelinePage(limit = 30, options = {}) {
+      const { cursor = null, force = false } = options;
+
+      if (!force && !cursor && timelineInFlight) {
         return timelineInFlight;
       }
 
-      timelineInFlight = agent.api.app.bsky.feed.getTimeline({ limit })
+      const request = agent.api.app.bsky.feed.getTimeline({ limit, cursor })
         .then((res) => {
-      // 🔹 フォロー外のユーザーへの返信をフィルタリング（公式アプリ寄りの挙動）
-      const filteredFeed = res.data.feed.filter(item => {
-        if (!item.reply) return true;
-      
-        const parentAuthor = item.reply.parent?.author;
-        if (parentAuthor) {
-          // 自分がフォロー中、または自分自身の投稿への返信なら表示
-          const isFollowingParent = !!parentAuthor.viewer?.following || parentAuthor.did === agent.session?.did;
-          if (!isFollowingParent) return false;
-      }
-      
-      return true;
-    });
+          const filteredFeed = res.data.feed.filter(item => {
+            if (!item.reply) return true;
 
-          timelineCache = filteredFeed;
-          timelineCacheLimit = limit;
-          timelineCacheAt = Date.now();
-          return timelineCache;
-        })
-        .finally(() => {
-          timelineInFlight = null;
+            const parentAuthor = item.reply.parent?.author;
+            if (parentAuthor) {
+              // 自分がフォロー中、または自分自身の投稿への返信なら表示
+              const isFollowingParent = !!parentAuthor.viewer?.following || parentAuthor.did === agent.session?.did;
+              if (!isFollowingParent) return false;
+            }
+
+            return true;
+          });
+
+          if (!cursor) {
+            timelineCache = filteredFeed;
+            timelineCursor = res.data.cursor || null;
+          }
+
+          return {
+            feed: filteredFeed,
+            cursor: res.data.cursor || null
+          };
         });
 
-      return timelineInFlight;
+      if (!cursor) {
+        timelineInFlight = request.finally(() => {
+          timelineInFlight = null;
+        });
+        return timelineInFlight;
+      }
+
+      return request;
+    },
+
+    get timelineCursor() {
+      return timelineCursor;
     },
 
   // 🔹 6. 投稿機能（テキストのみ）
@@ -145,26 +168,26 @@ export function createBskyClient() {
   // 🔹 7. 画像付き投稿機能
   async postWithImage(text, imageFiles) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
-    
+
     const imageEmbeds = [];
-    
+
     for (const file of imageFiles) {
       // ファイルをバイト配列に変換
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
-      
+
       // 画像をアップロード
       const upload = await agent.uploadBlob(uint8Array, {
         encoding: file.type
       });
-      
+
       // 画像の埋め込み情報を作成
       imageEmbeds.push({
         image: upload.data.blob,
         alt: '' // 代替テキスト（必要に応じて設定可能）
       });
     }
-    
+
     return await agent.post({
       text,
       embed: {
