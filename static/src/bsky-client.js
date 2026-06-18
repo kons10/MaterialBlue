@@ -119,7 +119,10 @@ export function createBskyClient() {
         return timelineInFlight;
       }
 
-      const request = agent.api.app.bsky.feed.getTimeline({ limit, cursor })
+      const params = { limit };
+      if (cursor) params.cursor = cursor;
+
+      const request = agent.api.app.bsky.feed.getTimeline(params)
         .then((res) => {
           const filteredFeed = res.data.feed.filter(item => {
             if (!item.reply) return true;
