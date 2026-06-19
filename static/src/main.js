@@ -247,6 +247,62 @@ function updateImagePreview() {
   });
 }
 
+
+function getReplyThreadPosts(reply) {
+  if (!reply) return [];
+  const posts = [];
+  const root = reply.root;
+  const parent = reply.parent;
+
+  if (root?.uri && root.uri !== parent?.uri) {
+    posts.push(root);
+  }
+  if (parent?.uri) {
+    posts.push(parent);
+  }
+
+  return posts;
+}
+
+function appendReplyThread(supporting, reply) {
+  const replyPosts = getReplyThreadPosts(reply);
+  if (replyPosts.length === 0) return;
+
+  const threadContainer = document.createElement('div');
+  threadContainer.style.display = 'flex';
+  threadContainer.style.flexDirection = 'column';
+  threadContainer.style.gap = '6px';
+  threadContainer.style.marginBottom = '10px';
+  threadContainer.style.paddingLeft = '10px';
+  threadContainer.style.borderLeft = '3px solid var(--md-sys-color-outline)';
+
+  replyPosts.forEach((replyPost) => {
+    const replyRecord = replyPost.record || {};
+    const replyAuthor = replyPost.author || {};
+
+    const card = document.createElement('div');
+    card.style.padding = '8px';
+    card.style.borderRadius = '12px';
+    card.style.background = 'var(--md-sys-color-surface-container-high)';
+
+    const author = document.createElement('div');
+    author.className = 'md-typescale-body-small';
+    author.style.fontWeight = '500';
+    author.textContent = replyAuthor.handle ? `@${replyAuthor.handle}` : '返信元';
+
+    const text = document.createElement('div');
+    text.className = 'md-typescale-body-small';
+    text.style.whiteSpace = 'pre-wrap';
+    text.textContent = replyRecord.text || '';
+
+    card.appendChild(author);
+    if (text.textContent) card.appendChild(text);
+    threadContainer.appendChild(card);
+  });
+
+  supporting.appendChild(threadContainer);
+}
+
 function showLoading(show) {
   loading.style.display = show ? 'block' : 'none';
 }
@@ -431,7 +487,10 @@ async function loadTimeline(force = false, append = false) {
       supporting.slot = 'supporting-text';
       supporting.className = 'md-typescale-body-medium';
 
+      appendReplyThread(supporting, item.reply);
+
       const bodyText = document.createElement('div');
+      bodyText.style.whiteSpace = 'pre-wrap';
       bodyText.textContent = record.text;
       supporting.appendChild(bodyText);
 
