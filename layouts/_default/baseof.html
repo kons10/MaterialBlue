@@ -11,18 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0" />
 
-  <script type="importmap">
-    {
-      "imports": {
-        "@material/web/": "https://esm.sh/@material/web/"
-      }
-    }
-  </script>
-  <script type="module">
-    import '@material/web/all.js';
-    import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
-    document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
-  </script>
+  <script src="/src/mwc.js" crossorigin="anonymous" defer></script>
 
   <style>
     :root {
