@@ -264,6 +264,25 @@ function getReplyThreadPosts(reply) {
   return posts;
 }
 
+function createAuthorLine(author = {}, fallbackName = '投稿者', nameTypeClass = 'md-typescale-body-large') {
+  const authorLine = document.createElement('div');
+  authorLine.className = 'post-author-line';
+
+  const displayName = document.createElement('span');
+  displayName.className = `post-author-name ${nameTypeClass}`;
+  displayName.textContent = author.displayName || author.handle || fallbackName;
+  authorLine.appendChild(displayName);
+
+  if (author.handle) {
+    const authorId = document.createElement('span');
+    authorId.className = 'post-author-id md-typescale-body-small';
+    authorId.textContent = `@${author.handle}`;
+    authorLine.appendChild(authorId);
+  }
+
+  return authorLine;
+}
+
 function appendReplyThread(supporting, reply) {
   const replyPosts = getReplyThreadPosts(reply);
   if (replyPosts.length === 0) return;
@@ -285,10 +304,7 @@ function appendReplyThread(supporting, reply) {
     card.style.borderRadius = '12px';
     card.style.background = 'var(--md-sys-color-surface-container-high)';
 
-    const author = document.createElement('div');
-    author.className = 'md-typescale-body-small';
-    author.style.fontWeight = '500';
-    author.textContent = replyAuthor.handle ? `@${replyAuthor.handle}` : '返信元';
+    const author = createAuthorLine(replyAuthor, '返信元', 'md-typescale-body-small');
 
     const text = document.createElement('div');
     text.className = 'md-typescale-body-small';
@@ -477,20 +493,8 @@ async function loadTimeline(force = false, append = false) {
       avatarIcon.textContent = 'account_circle';
       
       // ヘッドライン
-      const headline = document.createElement('div');
+      const headline = createAuthorLine(post.author);
       headline.slot = 'headline';
-      headline.className = 'post-author-line';
-
-      const displayName = document.createElement('span');
-      displayName.className = 'post-author-name md-typescale-body-large';
-      displayName.textContent = post.author.displayName || post.author.handle;
-
-      const authorId = document.createElement('span');
-      authorId.className = 'post-author-id md-typescale-body-small';
-      authorId.textContent = `@${post.author.handle}`;
-
-      headline.appendChild(displayName);
-      headline.appendChild(authorId);
       
       // サポーティングテキスト
       const supporting = document.createElement('div');
