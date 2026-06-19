@@ -479,8 +479,18 @@ async function loadTimeline(force = false, append = false) {
       // ヘッドライン
       const headline = document.createElement('div');
       headline.slot = 'headline';
-      headline.textContent = `@${post.author.handle}`;
-      headline.className = 'md-typescale-body-large';
+      headline.className = 'post-author-line';
+
+      const displayName = document.createElement('span');
+      displayName.className = 'post-author-name md-typescale-body-large';
+      displayName.textContent = post.author.displayName || post.author.handle;
+
+      const authorId = document.createElement('span');
+      authorId.className = 'post-author-id md-typescale-body-small';
+      authorId.textContent = `@${post.author.handle}`;
+
+      headline.appendChild(displayName);
+      headline.appendChild(authorId);
       
       // サポーティングテキスト
       const supporting = document.createElement('div');

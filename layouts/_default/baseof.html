@@ -186,6 +186,31 @@
     .sidebar-nav md-filled-tonal-button:hover, .sidebar-nav md-filled-tonal-button:focus-visible { --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-highest); }
     .sidebar-nav md-filled-tonal-button.active { --md-filled-tonal-button-container-color: var(--md-sys-color-primary-container); --md-filled-tonal-button-label-text-color: var(--md-sys-color-on-primary-container); font-weight: 500; }
     .sidebar-nav md-filled-tonal-button[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+    .post-author-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+    .post-author-name {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .post-author-id {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--md-sys-color-on-surface-variant, #49454f);
+      font-size: 0.72rem;
+      line-height: 1rem;
+    }
+
     .favorite-icon,
     .save-icon {
       font-variation-settings: 'FILL' 0;
