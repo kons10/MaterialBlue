@@ -44,6 +44,50 @@
     body { margin: 0; font-family: var(--md-ref-typeface-plain); background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); }
     * { box-sizing: border-box; }
 
+    .startup-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 50% 35%, rgba(103, 80, 164, 0.22), transparent 34%),
+        var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+    .startup-splash.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .startup-splash-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      min-width: min(280px, 100%);
+      padding: 28px;
+      border-radius: var(--catalog-shape-xl);
+      background: var(--md-sys-color-surface);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+      text-align: center;
+    }
+    .startup-splash-logo {
+      display: grid;
+      place-items: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 24px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+    .startup-splash-logo md-icon { font-size: 42px; }
+    .startup-splash-title { margin: 0; font-size: 1.4rem; font-weight: 700; }
+    .startup-splash-text { margin: 0; color: #666; }
+    .startup-splash-progress { width: 180px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .startup-splash { transition: none; }
+    }
+
     .app-shell { min-height: 100vh; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
     .sidebar {
       position: sticky;
@@ -100,6 +144,17 @@
   </style>
 </head>
 <body class="sidebar-collapsed">
+  <div id="startupSplash" class="startup-splash" role="status" aria-live="polite" aria-label="起動中">
+    <div class="startup-splash-card">
+      <div class="startup-splash-logo" aria-hidden="true">
+        <md-icon>dynamic_feed</md-icon>
+      </div>
+      <p class="startup-splash-title">Material Blue</p>
+      <p class="startup-splash-text md-typescale-body-medium">読み込み中</p>
+      <md-linear-progress class="startup-splash-progress" indeterminate></md-linear-progress>
+    </div>
+  </div>
+
   <div class="app-shell">
     <aside class="sidebar" aria-label="サイドバー">
       <div class="brand">
@@ -148,6 +203,29 @@
 
   <script>
     (() => {
+      const splash = document.getElementById('startupSplash');
+      const hideSplash = () => {
+        if (!splash) return;
+        window.setTimeout(() => {
+          splash.classList.add('is-hidden');
+          splash.setAttribute('aria-hidden', 'true');
+        }, 1000);
+      };
+
+      if (document.readyState === 'complete') {
+        hideSplash();
+      } else {
+        window.addEventListener('load', hideSplash, { once: true });
+      }
+
+      splash?.addEventListener('transitionend', () => splash.remove(), { once: true });
+
+      window.setTimeout(() => {
+        if (!splash || splash.classList.contains('is-hidden')) return;
+        hideSplash();
+      }, 10000);
+
+
       const btn = document.getElementById('sidebarToggle');
       if (!btn) return;
       btn.addEventListener('click', () => {
