@@ -154,6 +154,12 @@
       <md-linear-progress class="startup-splash-progress" indeterminate></md-linear-progress>
     </div>
   </div>
+  <!-- Issue 2 fix: Hide splash when JavaScript is disabled -->
+  <noscript>
+    <style>
+      #startupSplash { display: none; }
+    </style>
+  </noscript>
 
   <div class="app-shell">
     <aside class="sidebar" aria-label="サイドバー">
@@ -209,6 +215,7 @@
         window.setTimeout(() => {
           splash.classList.add('is-hidden');
           splash.setAttribute('aria-hidden', 'true');
+          handleReducedMotion();
         }, 1000);
       };
 
@@ -220,9 +227,19 @@
 
       splash?.addEventListener('transitionend', () => splash.remove(), { once: true });
 
+      // Issue 1 fix: Handle reduced motion - remove immediately if transitions are disabled
+      const handleReducedMotion = () => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          splash?.remove();
+        }
+      };
+
+      // Issue 3 fix: Fallback timeout - apply immediately without re-delaying
       window.setTimeout(() => {
         if (!splash || splash.classList.contains('is-hidden')) return;
-        hideSplash();
+        splash.classList.add('is-hidden');
+        splash.setAttribute('aria-hidden', 'true');
+        handleReducedMotion();
       }, 10000);
 
 
