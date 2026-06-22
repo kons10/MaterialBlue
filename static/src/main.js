@@ -35,6 +35,19 @@ function showError(message) {
   }, 5000);
 }
 
+// 成功メッセージ表示関数
+function showSuccess(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = 'block';
+  errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
+  errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
+  setTimeout(() => {
+    errorMessage.style.display = 'none';
+    errorMessage.style.background = '';
+    errorMessage.style.color = '';
+  }, 5000);
+}
+
 bootstrap();
 
 window.addEventListener('popstate', () => {
@@ -114,8 +127,13 @@ if (seeMoreBtn) seeMoreBtn.addEventListener('click', async () => {
 
 if (notificationsRefreshBtn) notificationsRefreshBtn.addEventListener('click', async () => {
   notificationsRefreshBtn.disabled = true;
-  await loadNotifications();
-  notificationsRefreshBtn.disabled = false;
+  try {
+    await loadNotifications();
+  } catch (e) {
+    showError(`通知の更新エラー：${e.message}`);
+  } finally {
+    notificationsRefreshBtn.disabled = false;
+  }
 });
 
 if (notificationsSeenBtn) notificationsSeenBtn.addEventListener('click', async () => {
@@ -123,7 +141,7 @@ if (notificationsSeenBtn) notificationsSeenBtn.addEventListener('click', async (
   try {
     await client.markNotificationsSeen();
     await loadNotifications();
-    showError('通知を既読にしました');
+    showSuccess('通知を既読にしました');
   } catch (e) {
     showError(`通知の既読化エラー：${e.message}`);
   } finally {
