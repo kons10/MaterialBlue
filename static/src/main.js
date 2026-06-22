@@ -432,16 +432,26 @@ async function loadTimeline(force = false, append = false) {
     const page = append
       ? await client.timelinePage(20, { cursor: timelineCursor })
       : await client.timelinePage(20, { force });
-    const feed = page.feed;
+    const feed = page.feed || [];
     timelineCursor = page.cursor;
     timelineHasMore = Boolean(page.cursor);
 
     const container = document.getElementById('timeline');
     if (!container) return;
 
+    const existingPostUris = new Set(
+      Array.from(container.querySelectorAll('md-list-item[data-post-uri]'))
+        .map((item) => item.dataset.postUri)
+    );
+
+    if (feed.length === 0 && container.children.length > 0) {
+      showError(append ? '追加できる投稿はありません' : '新しい投稿はありません');
+      return;
+    }
+
     // リストアイテムを生成
-    if (!append) container.textContent = '';
     const fragment = document.createDocumentFragment();
+    const menuFragment = document.createDocumentFragment();
 
     // 🔹 md-menu用のオーバーレイコンテナの準備・クリーンアップ
     let menuContainer = document.getElementById('menu-overlay-container');
@@ -450,13 +460,11 @@ async function loadTimeline(force = false, append = false) {
       menuContainer.id = 'menu-overlay-container';
       document.body.appendChild(menuContainer);
     }
-    if (!append) {
-      menuContainer.innerHTML = ''; // 古いポップアップメニューを完全消去してメモリリークを防ぐよ
-    }
-
     feed.forEach(item => {
       const post = item.post;
-      const record = post.record;
+      if (!post?.uri || existingPostUris.has(post.uri)) return;
+      existingPostUris.add(post.uri);
+      const record = post.record || {};
       const reason = item.reason;
       const isRepost = reason?.$type === 'app.bsky.feed.defs#reasonRepost';
       const reposterHandle = reason?.by?.handle;
@@ -465,6 +473,7 @@ async function loadTimeline(force = false, append = false) {
       // メインのリストアイテム作成
       const listItem = document.createElement('md-list-item');
       listItem.type = 'link';
+      listItem.dataset.postUri = post.uri;
 
       // 「〇〇による拡散」表示
       if (isRepost && reposterName) {
@@ -628,7 +637,7 @@ async function loadTimeline(force = false, append = false) {
       // ボタンだけをタイムラインの中に配置
       repostWrap.appendChild(repostBtn);
       // メニュー本体はオーバーフローで切られないようにBodyのオーバーレイコンテナに流し込むよ
-      menuContainer.appendChild(repostMenu);
+      menuFragment.appendChild(repostMenu);
 
       let liked = Boolean(viewer.like);
       let likeRecordUri = viewer.like || null;
@@ -730,7 +739,17 @@ async function loadTimeline(force = false, append = false) {
       fragment.appendChild(divider);
     });
 
-    container.appendChild(fragment);
+    if (fragment.childNodes.length === 0) {
+      showError(append ? '追加できる投稿はありません' : '新しい投稿はありません');
+      return;
+    }
+
+    if (append) {
+      container.appendChild(fragment);
+    } else {
+      container.insertBefore(fragment, container.firstChild);
+    }
+    menuContainer.appendChild(menuFragment);
   } catch (e) {
     console.error('Timeline load error:', e);
     showError('タイムラインの取得に失敗しました');
