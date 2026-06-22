@@ -432,16 +432,21 @@ async function loadTimeline(force = false, append = false) {
     const page = append
       ? await client.timelinePage(20, { cursor: timelineCursor })
       : await client.timelinePage(20, { force });
-    const feed = page.feed;
+    const feed = page.feed || [];
     timelineCursor = page.cursor;
     timelineHasMore = Boolean(page.cursor);
 
     const container = document.getElementById('timeline');
     if (!container) return;
 
+    if (!append && feed.length === 0 && container.children.length > 0) {
+      showError('新しい投稿はありません');
+      return;
+    }
+
     // リストアイテムを生成
-    if (!append) container.textContent = '';
     const fragment = document.createDocumentFragment();
+    const menuFragment = document.createDocumentFragment();
 
     // 🔹 md-menu用のオーバーレイコンテナの準備・クリーンアップ
     let menuContainer = document.getElementById('menu-overlay-container');
@@ -450,10 +455,6 @@ async function loadTimeline(force = false, append = false) {
       menuContainer.id = 'menu-overlay-container';
       document.body.appendChild(menuContainer);
     }
-    if (!append) {
-      menuContainer.innerHTML = ''; // 古いポップアップメニューを完全消去してメモリリークを防ぐよ
-    }
-
     feed.forEach(item => {
       const post = item.post;
       const record = post.record;
@@ -628,7 +629,7 @@ async function loadTimeline(force = false, append = false) {
       // ボタンだけをタイムラインの中に配置
       repostWrap.appendChild(repostBtn);
       // メニュー本体はオーバーフローで切られないようにBodyのオーバーレイコンテナに流し込むよ
-      menuContainer.appendChild(repostMenu);
+      menuFragment.appendChild(repostMenu);
 
       let liked = Boolean(viewer.like);
       let likeRecordUri = viewer.like || null;
@@ -730,7 +731,13 @@ async function loadTimeline(force = false, append = false) {
       fragment.appendChild(divider);
     });
 
-    container.appendChild(fragment);
+    if (append) {
+      container.appendChild(fragment);
+      menuContainer.appendChild(menuFragment);
+    } else {
+      container.replaceChildren(fragment);
+      menuContainer.replaceChildren(menuFragment);
+    }
   } catch (e) {
     console.error('Timeline load error:', e);
     showError('タイムラインの取得に失敗しました');
