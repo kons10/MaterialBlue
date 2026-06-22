@@ -439,8 +439,13 @@ async function loadTimeline(force = false, append = false) {
     const container = document.getElementById('timeline');
     if (!container) return;
 
-    if (!append && feed.length === 0 && container.children.length > 0) {
-      showError('新しい投稿はありません');
+    const existingPostUris = new Set(
+      Array.from(container.querySelectorAll('md-list-item[data-post-uri]'))
+        .map((item) => item.dataset.postUri)
+    );
+
+    if (feed.length === 0 && container.children.length > 0) {
+      showError(append ? '追加できる投稿はありません' : '新しい投稿はありません');
       return;
     }
 
@@ -457,7 +462,9 @@ async function loadTimeline(force = false, append = false) {
     }
     feed.forEach(item => {
       const post = item.post;
-      const record = post.record;
+      if (!post?.uri || existingPostUris.has(post.uri)) return;
+      existingPostUris.add(post.uri);
+      const record = post.record || {};
       const reason = item.reason;
       const isRepost = reason?.$type === 'app.bsky.feed.defs#reasonRepost';
       const reposterHandle = reason?.by?.handle;
@@ -466,6 +473,7 @@ async function loadTimeline(force = false, append = false) {
       // メインのリストアイテム作成
       const listItem = document.createElement('md-list-item');
       listItem.type = 'link';
+      listItem.dataset.postUri = post.uri;
 
       // 「〇〇による拡散」表示
       if (isRepost && reposterName) {
@@ -731,13 +739,17 @@ async function loadTimeline(force = false, append = false) {
       fragment.appendChild(divider);
     });
 
+    if (fragment.childNodes.length === 0) {
+      showError(append ? '追加できる投稿はありません' : '新しい投稿はありません');
+      return;
+    }
+
     if (append) {
       container.appendChild(fragment);
-      menuContainer.appendChild(menuFragment);
     } else {
-      container.replaceChildren(fragment);
-      menuContainer.replaceChildren(menuFragment);
+      container.insertBefore(fragment, container.firstChild);
     }
+    menuContainer.appendChild(menuFragment);
   } catch (e) {
     console.error('Timeline load error:', e);
     showError('タイムラインの取得に失敗しました');
