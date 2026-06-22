@@ -4,10 +4,13 @@ import { createBskyClient } from '/src/bsky-client.js';
 const client = createBskyClient();
 const loginBtn = document.getElementById('loginBtn');
 const timelineCard = document.getElementById('timeline-card');
+const notificationsCard = document.getElementById('notifications-card');
 const refreshBtn = document.getElementById('refreshBtn');
 const seeMoreBtn = document.getElementById('seeMoreBtn');
 const timelineBottom = document.getElementById('timelineBottom');
 const logoutBtn = document.getElementById('logoutBtn');
+const notificationsRefreshBtn = document.getElementById('notificationsRefreshBtn');
+const notificationsSeenBtn = document.getElementById('notificationsSeenBtn');
 const postBtn = document.getElementById('postBtn');
 const imageUploadBtn = document.getElementById('imageUploadBtn');
 const imageInput = document.getElementById('imageInput');
@@ -18,6 +21,7 @@ const errorMessage = document.getElementById('errorMessage');
 let timelineLoading = false;
 let timelineCursor = null;
 let timelineHasMore = false;
+let notificationsLoading = false;
 
 // 選択された画像を保持する配列
 let selectedImages = [];
@@ -28,6 +32,19 @@ function showError(message) {
   errorMessage.style.display = 'block';
   setTimeout(() => {
     errorMessage.style.display = 'none';
+  }, 5000);
+}
+
+// 成功メッセージ表示関数
+function showSuccess(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = 'block';
+  errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
+  errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
+  setTimeout(() => {
+    errorMessage.style.display = 'none';
+    errorMessage.style.background = '';
+    errorMessage.style.color = '';
   }, 5000);
 }
 
@@ -106,6 +123,30 @@ if (seeMoreBtn) seeMoreBtn.addEventListener('click', async () => {
   seeMoreBtn.disabled = true;
   await loadTimeline(false, true);
   seeMoreBtn.disabled = false;
+});
+
+if (notificationsRefreshBtn) notificationsRefreshBtn.addEventListener('click', async () => {
+  notificationsRefreshBtn.disabled = true;
+  try {
+    await loadNotifications();
+  } catch (e) {
+    showError(`通知の更新エラー：${e.message}`);
+  } finally {
+    notificationsRefreshBtn.disabled = false;
+  }
+});
+
+if (notificationsSeenBtn) notificationsSeenBtn.addEventListener('click', async () => {
+  notificationsSeenBtn.disabled = true;
+  try {
+    await client.markNotificationsSeen();
+    await loadNotifications();
+    showSuccess('通知を既読にしました');
+  } catch (e) {
+    showError(`通知の既読化エラー：${e.message}`);
+  } finally {
+    notificationsSeenBtn.disabled = false;
+  }
 });
 
 if (logoutBtn) logoutBtn.addEventListener('click', async () => {
@@ -339,6 +380,7 @@ function syncSidebarByAuthState() {
   const loginNav = document.querySelector('[data-nav-item="login"]');
   const composerNav = document.querySelector('[data-nav-item="composer"]');
   const timelineNav = document.querySelector('[data-nav-item="timeline"]');
+  const notificationsNav = document.querySelector('[data-nav-item="notifications"]');
 
   const loggedIn = client.isLoggedIn;
   if (loginNav) {
@@ -346,7 +388,7 @@ function syncSidebarByAuthState() {
     loginNav.setAttribute('aria-disabled', loggedIn ? 'true' : 'false');
   }
 
-  [composerNav, timelineNav].forEach((navItem) => {
+  [composerNav, timelineNav, notificationsNav].forEach((navItem) => {
     if (!navItem) return;
     navItem.style.display = loggedIn ? 'flex' : 'none';
     navItem.setAttribute('aria-disabled', loggedIn ? 'false' : 'true');
@@ -366,6 +408,16 @@ function initializeView() {
   if (path === '/home/') {
     if (client.isLoggedIn) {
       showTimeline();
+    } else {
+      navigateTo('/login/');
+      showLogin();
+    }
+    return;
+  }
+
+  if (path === '/notifications/') {
+    if (client.isLoggedIn) {
+      showNotifications();
     } else {
       navigateTo('/login/');
       showLogin();
@@ -403,6 +455,10 @@ function showLogin() {
     timelineCard.hidden = true;
     timelineCard.style.display = 'none';
   }
+  if (notificationsCard) {
+    notificationsCard.hidden = true;
+    notificationsCard.style.display = 'none';
+  }
   setActiveSidebarItem('login');
 }
 
@@ -416,8 +472,30 @@ function showTimeline() {
     timelineCard.hidden = false;
     timelineCard.style.display = 'block';
   }
+  if (notificationsCard) {
+    notificationsCard.hidden = true;
+    notificationsCard.style.display = 'none';
+  }
   setActiveSidebarItem('timeline');
   loadTimeline();
+}
+
+function showNotifications() {
+  const loginCard = document.getElementById('login');
+  if (loginCard) {
+    loginCard.hidden = true;
+    loginCard.style.display = 'none';
+  }
+  if (timelineCard) {
+    timelineCard.hidden = true;
+    timelineCard.style.display = 'none';
+  }
+  if (notificationsCard) {
+    notificationsCard.hidden = false;
+    notificationsCard.style.display = 'block';
+  }
+  setActiveSidebarItem('notifications');
+  loadNotifications();
 }
 
 async function loadTimeline(force = false, append = false) {
@@ -757,6 +835,93 @@ async function loadTimeline(force = false, append = false) {
     showLoading(false);
     timelineLoading = false;
     updateSeeMoreButton(false);
+  }
+}
+
+
+function getNotificationReasonLabel(reason) {
+  const labels = {
+    like: 'いいね',
+    repost: '拡散',
+    follow: 'フォロー',
+    mention: 'メンション',
+    reply: '返信',
+    quote: '引用'
+  };
+  return labels[reason] || reason || '通知';
+}
+
+function renderNotifications(notifications) {
+  const container = document.getElementById('notifications');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (notifications.length === 0) {
+    const emptyItem = document.createElement('md-list-item');
+    emptyItem.innerHTML = '<div slot="headline">通知なし</div><div slot="supporting-text">新しい通知はありません</div>';
+    container.appendChild(emptyItem);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  notifications.forEach((notification) => {
+    const listItem = document.createElement('md-list-item');
+    listItem.dataset.notificationUri = notification.uri || '';
+
+    const icon = document.createElement('md-icon');
+    icon.slot = 'start';
+    icon.textContent = notification.isRead ? 'notifications' : 'notifications_active';
+
+    const headline = createAuthorLine(notification.author, '通知元');
+    headline.slot = 'headline';
+
+    const supporting = document.createElement('div');
+    supporting.slot = 'supporting-text';
+    supporting.className = 'md-typescale-body-medium';
+
+    const reason = document.createElement('div');
+    reason.textContent = getNotificationReasonLabel(notification.reason);
+    supporting.appendChild(reason);
+
+    const text = notification.record?.text;
+    if (text) {
+      const body = document.createElement('div');
+      body.style.whiteSpace = 'pre-wrap';
+      body.style.marginTop = '6px';
+      body.textContent = text;
+      supporting.appendChild(body);
+    }
+
+    if (notification.indexedAt) {
+      const time = document.createElement('div');
+      time.className = 'md-typescale-body-small';
+      time.style.marginTop = '6px';
+      time.textContent = new Date(notification.indexedAt).toLocaleString();
+      supporting.appendChild(time);
+    }
+
+    listItem.appendChild(icon);
+    listItem.appendChild(headline);
+    listItem.appendChild(supporting);
+    fragment.appendChild(listItem);
+    fragment.appendChild(document.createElement('md-divider'));
+  });
+  container.appendChild(fragment);
+}
+
+async function loadNotifications() {
+  if (notificationsLoading) return;
+  notificationsLoading = true;
+  showLoading(true);
+  try {
+    const notifications = await client.notifications();
+    renderNotifications(notifications);
+  } catch (e) {
+    console.error('Notifications load error:', e);
+    showError(`通知の取得に失敗しました：${e.message}`);
+  } finally {
+    showLoading(false);
+    notificationsLoading = false;
   }
 }
 

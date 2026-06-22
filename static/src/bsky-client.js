@@ -268,6 +268,17 @@ export function createBskyClient() {
     });
   },
 
+  async notifications(limit = 50) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    const res = await agent.api.app.bsky.notification.listNotifications({ limit });
+    return res.data.notifications || [];
+  },
+
+  async markNotificationsSeen(seenAt = new Date().toISOString()) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    return await agent.api.app.bsky.notification.updateSeen({ seenAt });
+  },
+
   async save(uri, cid) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
     const bookmarkApi = getBookmarkApi();
