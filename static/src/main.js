@@ -211,7 +211,7 @@ if (postBtn) postBtn.addEventListener('click', async () => {
     showError(`投稿エラー：${e.message}`);
   } finally {
     postBtn.disabled = false;
-    postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>投稿';
+    postBtn.innerHTML = '<span class="material-symbols-outlined" slot="icon">send</span>投稿';
   }
 });
 
@@ -604,7 +604,7 @@ async function loadTimeline(force = false, append = false) {
 
       const createActionButton = (icon, label, iconClass = '') => {
         const btn = document.createElement('md-filled-tonal-button');
-        btn.innerHTML = `<md-icon slot="icon" class="${iconClass}">${icon}</md-icon>${label}`;
+        btn.innerHTML = `<span class="material-symbols-outlined ${iconClass}" slot="icon">${icon}</span>${label}`;
         return btn;
       };
 
@@ -647,14 +647,14 @@ async function loadTimeline(force = false, append = false) {
       const doRepostItem = document.createElement('md-menu-item');
       doRepostItem.dataset.action = 'repost';
       doRepostItem.innerHTML = `
-        <md-icon slot="start">repeat</md-icon>
+        <span class="material-symbols-outlined" slot="start">repeat</span>
         <div slot="headline">拡散</div>
       `;
 
       const quoteItem = document.createElement('md-menu-item');
       quoteItem.dataset.action = 'quote';
       quoteItem.innerHTML = `
-        <md-icon slot="start">format_quote</md-icon>
+        <span class="material-symbols-outlined" slot="start">format_quote</span>
         <div slot="headline">引用</div>
       `;
 
@@ -670,13 +670,13 @@ async function loadTimeline(force = false, append = false) {
             await client.unrepost(repostRecordUri);
             reposted = false;
             repostRecordUri = null;
-            repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon">repeat</md-icon>再浮';
+            repostBtn.innerHTML = '<span class="material-symbols-outlined repost-icon" slot="icon">repeat</span>再浮';
             showError('拡散解除しました');
           } else {
             const res = await client.repost(post.uri, post.cid);
             reposted = true;
             repostRecordUri = res?.data?.uri || null;
-            repostBtn.innerHTML = '<md-icon slot="icon" class="repost-icon is-filled">repeat_on</md-icon>再浮済み';
+            repostBtn.innerHTML = '<span class="material-symbols-outlined repost-icon is-filled" slot="icon">repeat_on</span>再浮済み';
             showError('拡散しました');
           }
           repostMenu.open = false;
@@ -731,13 +731,13 @@ async function loadTimeline(force = false, append = false) {
             await client.unlike(likeRecordUri);
             liked = false;
             likeRecordUri = null;
-            likeBtn.innerHTML = '<md-icon slot="icon" class="favorite-icon">favorite</md-icon>いいね';
+            likeBtn.innerHTML = '<span class="material-symbols-outlined favorite-icon" slot="icon">favorite</span>いいね';
             showError('いいね解除しました');
           } else {
             const res = await client.like(post.uri, post.cid);
             liked = true;
             likeRecordUri = res?.data?.uri || null;
-            likeBtn.innerHTML = '<md-icon slot="icon" class="favorite-icon is-filled">favorite</md-icon>いいね済み';
+            likeBtn.innerHTML = '<span class="material-symbols-outlined favorite-icon is-filled" slot="icon">favorite</span>いいね済み';
             showError('いいねしました');
           }
         } catch (e) {
@@ -759,12 +759,12 @@ async function loadTimeline(force = false, append = false) {
           if (saved) {
             await client.unsave(post.uri, post.cid);
             saved = false;
-            saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon">bookmark</md-icon>保存';
+            saveBtn.innerHTML = '<span class="material-symbols-outlined save-icon" slot="icon">bookmark</span>保存';
             showError('保存解除しました');
           } else {
             await client.save(post.uri, post.cid);
             saved = true;
-            saveBtn.innerHTML = '<md-icon slot="icon" class="save-icon is-filled">bookmark</md-icon>保存済み';
+            saveBtn.innerHTML = '<span class="material-symbols-outlined save-icon is-filled" slot="icon">bookmark</span>保存済み';
             showError('保存しました');
           }
         } catch (e) {
@@ -930,8 +930,8 @@ function updateSeeMoreButton(loadingMore) {
   timelineBottom.style.display = timelineHasMore ? 'flex' : 'none';
   seeMoreBtn.disabled = loadingMore || !timelineHasMore;
   seeMoreBtn.innerHTML = loadingMore
-    ? '<md-icon slot="icon">hourglass_empty</md-icon>読み込み中...'
-    : '<md-icon slot="icon">expand_more</md-icon>See more';
+    ? '<span class="material-symbols-outlined" slot="icon">hourglass_empty</span>読み込み中...'
+    : '<span class="material-symbols-outlined" slot="icon">expand_more</span>See more';
 }
 
 // エンターキーで投稿（Ctrl+Enter または Cmd+Enter）
