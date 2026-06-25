@@ -2,63 +2,11 @@
 # Dependencies
 node_modules/
 
-# Build artifacts
-dist/
-build/
-target/
-
-# Logs
-*.log
+# Editors
+.vscode/
 
 # Environment
 .env
 .env.local
 *.env.*
-
-# Editor/IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg-info/
-.eggs/
-.pytest_cache/
-.mypy_cache/
-.tox/
-.coverage
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-
-# Java
-*.class
-*.jar
-*.war
-*.ear
-*.nar
-*.hprof
-.hpl
-.jscsrc
-.jshintrc
-.svn/
- CVS/
 ```

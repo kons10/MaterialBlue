@@ -1,45 +1,20 @@
 {{/* layouts/partials/material-symbols.html */}}
-{{/* 1) ヘッダーの mdIcon を収集 */}}
-{{ $navLinks := .Site.Params.navLinks | default (slice) }}
-{{ $headerIcons := slice }}
-{{- range $navLinks }}
-  {{- with .mdIcon }}
-    {{ $headerIcons = $headerIcons | append . }}
-  {{- end }}
-{{- end }}
+{{/* icons.txt からアイコンリストを読み込んで CSS を生成する */}}
 
-{{/* 2) front matter の icons 配列 */}}
-{{ $pageIcons := .Params.icons | default (slice) }}
+{{ $iconFile := "partials/icons.txt" }}
+{{ $all := slice }}
 
-{{/* 3) ページ本文から <span class="material-symbols-outlined">name</span> を抽出 */}}
-{{ $content := .Content | default "" }}
-{{ $spanMatches := findRE "<span[^>]*class=[\"']material-symbols-outlined[\"'][^>]*>\\s*([^<]+?)\\s*</span>" $content }}
-{{ $spanExtracted := slice }}
-{{- range $spanMatches }}
-  {{ $name := replaceRE "^<span[^>]*class=[\"']material-symbols-outlined[\"'][^>]*>\\s*([^<]+?)\\s*</span>$" "$1" . }}
-  {{ $spanExtracted = $spanExtracted | append $name }}
-{{- end }}
-
-{{/* 4) アイコンリストファイルから読み込み */}}
-{{ $iconListPath := "layouts/partials/icons.txt" }}
-{{ $fileIcons := slice }}
-{{ if fileExists $iconListPath }}
-  {{ $raw := readFile $iconListPath }}
-  {{ $lines := split $raw "\n" }}
+{{ if fileExists $iconFile }}
+  {{ $lines := split (readFile $iconFile) "\n" }}
   {{- range $lines }}
     {{ $trimmed := trim . " \t\r" }}
     {{ if ne $trimmed "" }}
-      {{ $fileIcons = $fileIcons | append $trimmed }}
+      {{ $all = $all | append $trimmed }}
     {{ end }}
   {{- end }}
 {{ end }}
 
-{{/* 5) union を 2 引数ずつで適用して全集合を作る */}}
-{{ $all := union $headerIcons $pageIcons }}
-{{ $all = union $all $spanExtracted }}
-{{ $all = union $all $fileIcons }}
-
-{{/* 6) 小文字化・ユニーク化・ソート */}}
+{{/* 小文字化・ユニーク化・ソート */}}
 {{ $lowered := slice }}
 {{- range $all }}
   {{- if ne . "" }}
@@ -47,6 +22,7 @@
   {{ end }}
 {{- end }}
 {{ $unique := uniq $lowered }}
+
 {{ if gt (len $unique) 0 }}
   {{ $sorted := sort $unique }}
   {{ $iconNames := delimit $sorted "," }}
