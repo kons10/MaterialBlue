@@ -1,41 +1,28 @@
 {{/* layouts/partials/material-symbols.html */}}
-{{/* 1) ヘッダーの mdIcon を収集 */}}
-{{ $navLinks := .Site.Params.navLinks | default (slice) }}
-{{ $headerIcons := slice }}
-{{- range $navLinks }}
-  {{- with .mdIcon }}
-    {{ $headerIcons = $headerIcons | append . }}
+{{/* icons.txt からアイコンリストを読み込んで CSS を生成する */}}
+
+{{ $iconFile := "partials/icons.txt" }}
+{{ $all := slice }}
+
+{{ if fileExists $iconFile }}
+  {{ $lines := split (readFile $iconFile) "\n" }}
+  {{- range $lines }}
+    {{ $trimmed := trim . " \t\r" }}
+    {{ if ne $trimmed "" }}
+      {{ $all = $all | append $trimmed }}
+    {{ end }}
   {{- end }}
-{{- end }}
+{{ end }}
 
-{{/* 2) front matter の icons 配列 */}}
-{{ $pageIcons := .Params.icons | default (slice) }}
-
-{{/* 3) ページ本文から <span class="material-symbols-outlined">name</span> を抽出 */}}
-{{ $content := .Content | default "" }}
-{{ $spanMatches := findRE "<span[^>]*class=[\"']material-symbols-outlined[\"'][^>]*>\\s*([^<]+?)\\s*</span>" $content }}
-{{ $spanExtracted := slice }}
-{{- range $spanMatches }}
-  {{ $name := replaceRE "^<span[^>]*class=[\"']material-symbols-outlined[\"'][^>]*>\\s*([^<]+?)\\s*</span>$" "$1" . }}
-  {{ $spanExtracted = $spanExtracted | append $name }}
-{{- end }}
-
-{{/* 4) レイアウトパーシャルにハードコードされたアイコンを追加（既存の問題解決のため追加） */}}
-{{ $hardcodedIcons := slice "rss_feed" "edit_note" "image" "send" "refresh" "expand_more" "person" "lock" "login" "logout" "notifications" "menu" "dynamic_feed" "done_all" "reply" "repeat" "repeat_on" "format_quote" "favorite" "bookmark" "hourglass_empty" }}
-
-{{/* 5) union を 2 引数ずつで適用して全集合を作る */}}
-{{ $all := union $headerIcons $pageIcons }}
-{{ $all = union $all $spanExtracted }}
-{{ $all = union $all $hardcodedIcons }}
-
-{{/* 6) 小文字化・ユニーク化・ソート */}}
+{{/* 小文字化・ユニーク化・ソート */}}
 {{ $lowered := slice }}
 {{- range $all }}
   {{- if ne . "" }}
     {{ $lowered = $lowered | append (lower .) }}
-  {{- end }}
+  {{ end }}
 {{- end }}
 {{ $unique := uniq $lowered }}
+
 {{ if gt (len $unique) 0 }}
   {{ $sorted := sort $unique }}
   {{ $iconNames := delimit $sorted "," }}

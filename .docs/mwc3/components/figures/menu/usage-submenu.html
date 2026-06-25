@@ -11,7 +11,7 @@
           <md-menu-item slot="item">
             <div slot="headline">Fruits with A</div>
             <!-- Arrow icons are helpful affordances -->
-            <span class="material-symbols-outlined" slot="end">arrow_right</span>
+            <md-icon slot="end">arrow_right</md-icon>
           </md-menu-item>
           <!-- Submenu must be slotted into sub-menu's menu slot -->
           <md-menu slot="menu">
@@ -26,7 +26,7 @@
               <md-menu-item slot="item">
                 <div slot="headline">Apples</div>
                 <!-- Arrow icons are helpful affordances -->
-                <span class="material-symbols-outlined" slot="start">arrow_left</span>
+                <md-icon slot="start">arrow_left</md-icon>
               </md-menu-item>
               <md-menu slot="menu">
                 <md-menu-item>
@@ -49,7 +49,6 @@
           <div slot="headline">Cucumber</div>
         </md-menu-item>
       </md-menu>
-    </span>
     <script type="module">
       const anchorEl = document.body.querySelector("#usage-submenu-anchor");
       const menuEl = document.body.querySelector("#usage-submenu");

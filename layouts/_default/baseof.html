@@ -168,7 +168,7 @@ body {
   color: var(--md-sys-color-on-primary-container);
 }
 
-.startup-splash-logo span.material-symbols-outlined {
+.startup-splash-logo md-icon {
   font-size: 42px;
 }
 
@@ -370,7 +370,7 @@ footer {
   }
 }
 
-.material-symbols-outlined {
+md-icon {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
   font-style: normal;
@@ -395,7 +395,7 @@ footer {
   <div id="startupSplash" class="startup-splash" role="status" aria-live="polite" aria-label="起動中">
     <div class="startup-splash-card">
       <div class="startup-splash-logo" aria-hidden="true">
-        <span class="material-symbols-outlined">dynamic_feed</span>
+        <md-icon>dynamic_feed</md-icon>
       </div>
       <p class="startup-splash-title">Material Blue</p>
       <p class="startup-splash-text md-typescale-body-medium">読み込み中</p>
@@ -412,27 +412,27 @@ footer {
   <div class="app-shell">
     <aside class="sidebar" aria-label="サイドバー">
       <div class="brand">
-        <span class="material-symbols-outlined">rss_feed</span>
+        <md-icon>rss_feed</md-icon>
         <strong>Material Blue</strong>
       </div>
       <div class="sidebar-section-title">Navigation</div>
       <nav class="sidebar-nav" aria-label="ページ内ナビゲーション">
         <md-filled-tonal-button href="/login/" data-nav-item="login">
-          <span class="material-symbols-outlined" slot="icon" aria-hidden="true">login</span>
+          <md-icon slot="icon" aria-hidden="true">login</md-icon>
           ログイン
         </md-filled-tonal-button>
         <md-filled-tonal-button href="/home/" data-nav-item="timeline">
-          <span class="material-symbols-outlined" slot="icon" aria-hidden="true">rss_feed</span>
+          <md-icon slot="icon" aria-hidden="true">rss_feed</md-icon>
           主頁
         </md-filled-tonal-button>
         <md-filled-tonal-button href="/notifications/" data-nav-item="notifications">
-          <span class="material-symbols-outlined" slot="icon" aria-hidden="true">notifications</span>
+          <md-icon slot="icon" aria-hidden="true">notifications</md-icon>
           通知
         </md-filled-tonal-button>
       </nav>
       <div class="sidebar-actions">
         <md-outlined-button id="logoutBtn">
-          <span class="material-symbols-outlined" slot="icon">logout</span>
+          <md-icon slot="icon">logout</md-icon>
           ログアウト
         </md-outlined-button>
       </div>
@@ -442,9 +442,9 @@ footer {
       <header>
         <div class="header-inner">
           <md-icon-button id="sidebarToggle" class="menu-btn" aria-label="メニュー切り替え">
-            <span class="material-symbols-outlined">menu</span>
+            <md-icon>menu</md-icon>
           </md-icon-button>
-          <span class="material-symbols-outlined">dynamic_feed</span>
+          <md-icon>dynamic_feed</md-icon>
           <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
         </div>
       </header>
