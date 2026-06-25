@@ -5,10 +5,12 @@ send
 refresh
 expand_more
 person
+account_circle
 lock
 login
 logout
 notifications
+notifications_active
 menu
 dynamic_feed
 done_all
