@@ -20,20 +20,31 @@
   {{ $spanExtracted = $spanExtracted | append $name }}
 {{- end }}
 
-{{/* 4) レイアウトパーシャルにハードコードされたアイコンを追加（既存の問題解決のため追加） */}}
-{{ $hardcodedIcons := slice "rss_feed" "edit_note" "image" "send" "refresh" "expand_more" "person" "lock" "login" "logout" "notifications" "menu" "dynamic_feed" "done_all" "reply" "repeat" "repeat_on" "format_quote" "favorite" "bookmark" "hourglass_empty" }}
+{{/* 4) アイコンリストファイルから読み込み */}}
+{{ $iconListPath := "layouts/partials/icons.txt" }}
+{{ $fileIcons := slice }}
+{{ if fileExists $iconListPath }}
+  {{ $raw := readFile $iconListPath }}
+  {{ $lines := split $raw "\n" }}
+  {{- range $lines }}
+    {{ $trimmed := trim . " \t\r" }}
+    {{ if ne $trimmed "" }}
+      {{ $fileIcons = $fileIcons | append $trimmed }}
+    {{ end }}
+  {{- end }}
+{{ end }}
 
 {{/* 5) union を 2 引数ずつで適用して全集合を作る */}}
 {{ $all := union $headerIcons $pageIcons }}
 {{ $all = union $all $spanExtracted }}
-{{ $all = union $all $hardcodedIcons }}
+{{ $all = union $all $fileIcons }}
 
 {{/* 6) 小文字化・ユニーク化・ソート */}}
 {{ $lowered := slice }}
 {{- range $all }}
   {{- if ne . "" }}
     {{ $lowered = $lowered | append (lower .) }}
-  {{- end }}
+  {{ end }}
 {{- end }}
 {{ $unique := uniq $lowered }}
 {{ if gt (len $unique) 0 }}
