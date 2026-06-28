@@ -56,9 +56,14 @@ export function createBskyClient() {
     },
 
     async ready() {
-      await restoreSessionPromise;
-      if (this.isLoggedIn) {
-        await this.syncBookmarks();
+      try {
+        await restoreSessionPromise;
+        if (this.isLoggedIn) {
+          await this.syncBookmarks();
+        }
+      } catch (e) {
+        console.warn('Client ready failed:', e);
+        throw e;
       }
     },
 
