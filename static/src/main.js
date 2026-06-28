@@ -28,6 +28,7 @@ let selectedImages = [];
 
 // エラーメッセージ表示関数
 function showError(message) {
+  if (!errorMessage) return;
   errorMessage.textContent = message;
   errorMessage.style.display = 'block';
   setTimeout(() => {
@@ -37,6 +38,7 @@ function showError(message) {
 
 // 成功メッセージ表示関数
 function showSuccess(message) {
+  if (!errorMessage) return;
   errorMessage.textContent = message;
   errorMessage.style.display = 'block';
   errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
@@ -46,6 +48,12 @@ function showSuccess(message) {
     errorMessage.style.background = '';
     errorMessage.style.color = '';
   }, 5000);
+}
+
+// ローディング表示関数
+function showLoading(show) {
+  if (!loading) return;
+  loading.style.display = show ? 'block' : 'none';
 }
 
 bootstrap();
@@ -60,14 +68,8 @@ function shouldHandleClientNavigation(event) {
 
 document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
   link.addEventListener('mouseenter', () => {
-    const href = link.getAttribute('href');
-    if (!href) return;
-    if (document.head.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
-    const prefetch = document.createElement('link');
-    prefetch.rel = 'prefetch';
-    prefetch.href = href;
-    prefetch.as = 'document';
-    document.head.appendChild(prefetch);
+    // SPA では HTML ドキュメントの prefetch は不要。ナビゲーションはクライアント側で処理されるため
+    // 代わりに必要に応じてデータのみを事前ロードする
   }, { passive: true });
 
   link.addEventListener('click', (event) => {
@@ -84,7 +86,12 @@ document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) 
 
 
 async function bootstrap() {
-  await client.ready();
+  try {
+    await client.ready();
+  } catch (e) {
+    console.error('Client initialization failed:', e);
+    // セッション復元に失敗してもアプリは続行（未ログイン状態として扱う）
+  }
   initializeView();
 }
 
@@ -358,10 +365,6 @@ function appendReplyThread(supporting, reply) {
   });
 
   supporting.appendChild(threadContainer);
-}
-
-function showLoading(show) {
-  loading.style.display = show ? 'block' : 'none';
 }
 
 function normalizePath(pathname) {
