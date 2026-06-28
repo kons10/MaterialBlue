@@ -89,7 +89,7 @@ async function bootstrap() {
   try {
     await client.ready();
   } catch (e) {
-    console.error('Session restore failed:', e);
+    console.error('Client initialization failed:', e);
     // セッション復元に失敗してもアプリは続行（未ログイン状態として扱う）
   }
   initializeView();
