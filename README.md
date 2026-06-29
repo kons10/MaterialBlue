@@ -1,3 +1,5 @@
+***Be static, and be beautiful.***
+
 [English] | [日本語](README-ja.md)
 
 # Static Bluesky Client
