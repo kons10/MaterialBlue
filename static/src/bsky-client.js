@@ -2,7 +2,17 @@
 import { BskyAgent } from 'https://esm.sh/@atproto/api@0.20.5?bundle';
 
 export function createBskyClient() {
-  const agent = new BskyAgent({ service: 'https://bsky.social' });
+  const agent = new BskyAgent({
+    service: 'https://bsky.social',
+    persistSession: (evt, session) => {
+      if (session) {
+        setCookie('bsky_access', session.accessJwt, 86400);
+        setCookie('bsky_refresh', session.refreshJwt, 86400);
+        setCookie('bsky_did', session.did, 86400);
+        setCookie('bsky_handle', session.handle, 86400);
+      }
+    }
+  });
   let timelineCache = null;
   let timelineCacheLimit = null;
   let timelineCacheAt = 0;
@@ -15,6 +25,7 @@ export function createBskyClient() {
   const access = getCookie('bsky_access');
   const refresh = getCookie('bsky_refresh');
   const did = getCookie('bsky_did');
+  const handle = getCookie('bsky_handle');
 
   // 🔹 2. セッション情報が揃っていたら復元を試みる
 
@@ -28,24 +39,35 @@ export function createBskyClient() {
       accessJwt: access,
       refreshJwt: refresh,
       did: decodeURIComponent(did),
-      handle: '', // handle は resumeSession 後に更新されるか、必要なら保存
+      handle: handle || '',
       email: '',
       emailConfirmed: false
     };
 
     // ✅ 正しい復元方法：resumeSession にデータを渡す
-    return agent.resumeSession(sessionData)
+    const restorePromise = agent.resumeSession(sessionData)
       .then(() => {
         if (agent.session) {
           setCookie('bsky_access', agent.session.accessJwt, 86400);
           setCookie('bsky_refresh', agent.session.refreshJwt, 86400);
           setCookie('bsky_did', agent.session.did, 86400);
+          setCookie('bsky_handle', agent.session.handle, 86400);
         }
       })
       .catch((err) => {
         console.warn('Session resume failed (token expired or invalid):', err);
         clearSession(); // 失敗したらCookieをクリア
       });
+
+    // タイムアウトを設定（3秒）して、セッション復元がハングした場合でも先に進めるようにする
+    const timeoutPromise = new Promise((resolve) => {
+      setTimeout(() => {
+        console.warn('Session resume timed out after 3000ms');
+        resolve();
+      }, 3000);
+    });
+
+    return Promise.race([restorePromise, timeoutPromise]);
   })() : Promise.resolve();
 
   return {
@@ -57,13 +79,24 @@ export function createBskyClient() {
 
     async ready() {
       try {
-        await restoreSessionPromise;
-        if (this.isLoggedIn) {
-          await this.syncBookmarks();
-        }
+        const readyPromise = (async () => {
+          await restoreSessionPromise;
+          if (this.isLoggedIn) {
+            await this.syncBookmarks();
+          }
+        })();
+
+        // タイムアウトを設定（4秒）して、Ready処理がハングした場合でも先に進めるようにする
+        const timeoutPromise = new Promise((resolve) => {
+          setTimeout(() => {
+            console.warn('Client ready timed out after 4000ms');
+            resolve();
+          }, 4000);
+        });
+
+        await Promise.race([readyPromise, timeoutPromise]);
       } catch (e) {
         console.warn('Client ready failed:', e);
-        throw e;
       }
     },
 
@@ -78,6 +111,7 @@ export function createBskyClient() {
           setCookie('bsky_access', agent.session.accessJwt, 86400);
           setCookie('bsky_refresh', agent.session.refreshJwt, 86400);
           setCookie('bsky_did', agent.session.did, 86400);
+          setCookie('bsky_handle', agent.session.handle, 86400);
         }
         return session;
       } catch (e) {
@@ -343,7 +377,7 @@ function getCookie(name) {
 }
 
 function clearSession() {
-  ['bsky_access', 'bsky_refresh', 'bsky_did'].forEach(n => {
+  ['bsky_access', 'bsky_refresh', 'bsky_did', 'bsky_handle'].forEach(n => {
     document.cookie = `${n}=; path=/; Secure; SameSite=Lax; max-age=0`;
   });
 }

@@ -1,0 +1,32 @@
+<md-elevated-card id="settings-card" style="padding:16px; display:none;" hidden>
+  <div slot="headline" class="md-typescale-title-large" style="display:flex; align-items:center; gap:8px;">
+    <md-icon>settings</md-icon>
+    設定
+  </div>
+
+  <div style="margin-top:16px; border-top:1px solid var(--md-sys-color-outline); padding-top:16px;">
+    <md-list style="background:transparent; padding:0;">
+      <md-list-item>
+        <md-icon slot="start">delete_outline</md-icon>
+        <div slot="headline">キャッシュ削除</div>
+        <div slot="supporting-text">ブラウザにキャッシュされたデータをクリアします。</div>
+        <md-filled-tonal-button id="clearCacheBtn" slot="end">
+          <md-icon slot="icon">delete</md-icon>
+          削除
+        </md-filled-tonal-button>
+      </md-list-item>
+      
+      <md-divider style="margin: 8px 0;"></md-divider>
+      
+      <md-list-item>
+        <md-icon slot="start">cookie</md-icon>
+        <div slot="headline">Cookieを全削除</div>
+        <div slot="supporting-text">ログイン情報を含むすべてのCookieを削除し、強制的にログアウトします。</div>
+        <md-filled-button id="clearCookiesBtn" slot="end" style="--md-filled-button-container-color: var(--md-sys-color-error, #ba1a1a); --md-filled-button-label-text-color: var(--md-sys-color-on-error, #ffffff);">
+          <md-icon slot="icon">delete_forever</md-icon>
+          全削除
+        </md-filled-button>
+      </md-list-item>
+    </md-list>
+  </div>
+</md-elevated-card>

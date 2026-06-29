@@ -18,6 +18,9 @@ const imageCount = document.getElementById('imageCount');
 const imagePreview = document.getElementById('imagePreview');
 const loading = document.getElementById('loading');
 const errorMessage = document.getElementById('errorMessage');
+const settingsCard = document.getElementById('settings-card');
+const clearCacheBtn = document.getElementById('clearCacheBtn');
+const clearCookiesBtn = document.getElementById('clearCookiesBtn');
 let timelineLoading = false;
 let timelineCursor = null;
 let timelineHasMore = false;
@@ -161,6 +164,61 @@ if (logoutBtn) logoutBtn.addEventListener('click', async () => {
   navigateTo("/login/");
   showLogin();
   syncSidebarByAuthState();
+});
+
+if (clearCacheBtn) clearCacheBtn.addEventListener('click', async () => {
+  clearCacheBtn.disabled = true;
+  try {
+    let cleared = false;
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      for (const key of keys) {
+        await caches.delete(key);
+      }
+      cleared = true;
+    }
+    
+    if (cleared) {
+      showSuccess('キャッシュを削除しました');
+    } else {
+      showError('キャッシュ機能がブラウザでサポートされていません');
+    }
+  } catch (e) {
+    showError(`キャッシュ削除中にエラーが発生しました: ${e.message}`);
+  } finally {
+    clearCacheBtn.disabled = false;
+  }
+});
+
+if (clearCookiesBtn) clearCookiesBtn.addEventListener('click', async () => {
+  if (!confirm('本当にCookieを全削除しますか？\n（実行するとログアウトされます）')) {
+    return;
+  }
+  clearCookiesBtn.disabled = true;
+  try {
+    if (client.isLoggedIn) {
+      await client.logout();
+    }
+    
+    // 全Cookie削除
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i];
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+      const trimmedName = name.trim();
+      document.cookie = `${trimmedName}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      document.cookie = `${trimmedName}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;Secure;SameSite=Lax`;
+    }
+    
+    showSuccess('Cookieを全削除しました。再読み込みします。');
+    setTimeout(() => {
+      window.location.href = '/login/';
+    }, 1500);
+  } catch (e) {
+    showError(`Cookie削除中にエラーが発生しました: ${e.message}`);
+    clearCookiesBtn.disabled = false;
+  }
 });
 
 if (postBtn) postBtn.addEventListener('click', async () => {
@@ -384,6 +442,7 @@ function syncSidebarByAuthState() {
   const composerNav = document.querySelector('[data-nav-item="composer"]');
   const timelineNav = document.querySelector('[data-nav-item="timeline"]');
   const notificationsNav = document.querySelector('[data-nav-item="notifications"]');
+  const settingsNav = document.querySelector('[data-nav-item="settings"]');
 
   const loggedIn = client.isLoggedIn;
   if (loginNav) {
@@ -396,6 +455,11 @@ function syncSidebarByAuthState() {
     navItem.style.display = loggedIn ? 'flex' : 'none';
     navItem.setAttribute('aria-disabled', loggedIn ? 'false' : 'true');
   });
+
+  if (settingsNav) {
+    settingsNav.style.display = 'flex';
+    settingsNav.setAttribute('aria-disabled', 'false');
+  }
 }
 
 function setActiveSidebarItem(key) {
@@ -407,6 +471,11 @@ function setActiveSidebarItem(key) {
 function initializeView() {
   syncSidebarByAuthState();
   const path = normalizePath(window.location.pathname);
+
+  if (path === '/settings/') {
+    showSettings();
+    return;
+  }
 
   if (path === '/home/') {
     if (client.isLoggedIn) {
@@ -462,6 +531,10 @@ function showLogin() {
     notificationsCard.hidden = true;
     notificationsCard.style.display = 'none';
   }
+  if (settingsCard) {
+    settingsCard.hidden = true;
+    settingsCard.style.display = 'none';
+  }
   setActiveSidebarItem('login');
 }
 
@@ -478,6 +551,10 @@ function showTimeline() {
   if (notificationsCard) {
     notificationsCard.hidden = true;
     notificationsCard.style.display = 'none';
+  }
+  if (settingsCard) {
+    settingsCard.hidden = true;
+    settingsCard.style.display = 'none';
   }
   setActiveSidebarItem('timeline');
   loadTimeline();
@@ -497,8 +574,33 @@ function showNotifications() {
     notificationsCard.hidden = false;
     notificationsCard.style.display = 'block';
   }
+  if (settingsCard) {
+    settingsCard.hidden = true;
+    settingsCard.style.display = 'none';
+  }
   setActiveSidebarItem('notifications');
   loadNotifications();
+}
+
+function showSettings() {
+  const loginCard = document.getElementById('login');
+  if (loginCard) {
+    loginCard.hidden = true;
+    loginCard.style.display = 'none';
+  }
+  if (timelineCard) {
+    timelineCard.hidden = true;
+    timelineCard.style.display = 'none';
+  }
+  if (notificationsCard) {
+    notificationsCard.hidden = true;
+    notificationsCard.style.display = 'none';
+  }
+  if (settingsCard) {
+    settingsCard.hidden = false;
+    settingsCard.style.display = 'block';
+  }
+  setActiveSidebarItem('settings');
 }
 
 async function loadTimeline(force = false, append = false) {
