@@ -707,13 +707,15 @@ async function loadTimeline(force = false, append = false) {
       actionRow.style.marginTop = '8px';
       actionRow.style.flexWrap = 'wrap';
 
-      const createActionButton = (icon, label, iconClass = '') => {
+      const createActionButton = (icon, label, iconClass = '', count = null) => {
         const btn = document.createElement('md-filled-tonal-button');
-        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${label}`;
+        const countStr = (count !== null && count !== undefined && count > 0) ? `<span class="action-count">${count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count}</span>` : '';
+        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${label}${countStr}`;
         return btn;
       };
 
-      const replyBtn = createActionButton('reply', '返信');
+      const replyCount = post.replyCount ?? null;
+      const replyBtn = createActionButton('reply', '返信', '', replyCount);
       replyBtn.addEventListener('click', async () => {
         const text = window.prompt('返信内容を入力してください');
         if (!text || !text.trim()) return;
@@ -735,7 +737,8 @@ async function loadTimeline(force = false, append = false) {
       repostWrap.style.position = 'relative';
       let reposted = Boolean(viewer.repost);
       let repostRecordUri = viewer.repost || null;
-      const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon');
+      const repostCount = post.repostCount ?? null;
+      const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon', repostCount);
       if (reposted) {
         const repostIcon = repostBtn.querySelector('.repost-icon');
         if (repostIcon) repostIcon.classList.add('is-filled');
@@ -824,11 +827,13 @@ async function loadTimeline(force = false, append = false) {
 
       let liked = Boolean(viewer.like);
       let likeRecordUri = viewer.like || null;
-      const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon');
+      const likeCount = post.likeCount ?? null;
+      const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon', likeCount);
       if (liked) {
         const likeIcon = likeBtn.querySelector('.favorite-icon');
         if (likeIcon) likeIcon.classList.add('is-filled');
       }
+      let currentLikeCount = likeCount;
       likeBtn.addEventListener('click', async () => {
         likeBtn.disabled = true;
         try {
@@ -836,13 +841,17 @@ async function loadTimeline(force = false, append = false) {
             await client.unlike(likeRecordUri);
             liked = false;
             likeRecordUri = null;
-            likeBtn.innerHTML = '<md-icon class="favorite-icon" slot="icon">favorite</md-icon>いいね';
+            currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
+            const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
+            likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>いいね${countStr}`;
             showError('いいね解除しました');
           } else {
             const res = await client.like(post.uri, post.cid);
             liked = true;
             likeRecordUri = res?.data?.uri || null;
-            likeBtn.innerHTML = '<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>いいね済み';
+            currentLikeCount = (currentLikeCount ?? 0) + 1;
+            const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
+            likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>いいね済み${countStr}`;
             showError('いいねしました');
           }
         } catch (e) {
@@ -853,7 +862,8 @@ async function loadTimeline(force = false, append = false) {
       });
 
       let saved = client.isSaved(post.uri);
-      const saveBtn = createActionButton('bookmark', saved ? '保存済み' : '保存', 'save-icon');
+      const saveCount = null; // Bluesky APIでは保存数は非公開
+      const saveBtn = createActionButton('bookmark', saved ? '保存済み' : '保存', 'save-icon', saveCount);
       if (saved) {
         const saveIcon = saveBtn.querySelector('.save-icon');
         if (saveIcon) saveIcon.classList.add('is-filled');
@@ -1021,6 +1031,7 @@ async function loadNotifications() {
   try {
     const notifications = await client.notifications();
     renderNotifications(notifications);
+    updateNotificationBadge(notifications);
   } catch (e) {
     console.error('Notifications load error:', e);
     showError(`通知の取得に失敗しました：${e.message}`);
@@ -1028,6 +1039,23 @@ async function loadNotifications() {
     showLoading(false);
     notificationsLoading = false;
   }
+}
+
+function updateNotificationBadge(notifications) {
+  const notificationsNav = document.querySelector('[data-nav-item="notifications"]');
+  if (!notificationsNav) return;
+
+  // 既存バッジを削除
+  const existingBadge = notificationsNav.querySelector('.notification-badge');
+  if (existingBadge) existingBadge.remove();
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  if (unreadCount === 0) return;
+
+  const badge = document.createElement('span');
+  badge.className = 'notification-badge';
+  badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+  notificationsNav.appendChild(badge);
 }
 
 function updateSeeMoreButton(loadingMore) {

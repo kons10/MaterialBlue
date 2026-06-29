@@ -290,6 +290,48 @@ body {
   font-variation-settings: 'FILL'1;
 }
 
+/* アクションボタンのカウント数表示 */
+.action-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--md-sys-color-surface-container-highest);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  margin-left: 4px;
+  line-height: 1;
+}
+
+/* 通知バッジ */
+[data-nav-item="notifications"] {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--md-sys-color-error, #B3261E);
+  color: var(--md-sys-color-on-error, #FFFFFF);
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  line-height: 1;
+}
+
 .sidebar-actions {
   margin-top: auto;
   padding: 12px 8px 0;

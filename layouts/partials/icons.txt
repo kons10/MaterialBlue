@@ -21,3 +21,5 @@ format_quote
 favorite
 bookmark
 hourglass_empty
+settings
+chat_bubble

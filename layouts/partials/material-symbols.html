@@ -26,6 +26,7 @@
 {{ if gt (len $unique) 0 }}
   {{ $sorted := sort $unique }}
   {{ $iconNames := delimit $sorted "," }}
-  {{ $base := "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=" }}
+  {{/* FILL軸(0..1)を含む可変フォント指定。これがないと font-variation-settings:'FILL'1 が効かない */}}
+  {{ $base := "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=" }}
   <link href="{{ printf "%s%s&display=swap" $base (urlquery $iconNames) }}" rel="stylesheet">
 {{ end }}
