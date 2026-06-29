@@ -1,3 +1,5 @@
+***静的な、美しさ***
+
 [English](README.md) | [日本語]
 
 # Static Bluesky Client
