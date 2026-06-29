@@ -384,6 +384,7 @@ function syncSidebarByAuthState() {
   const composerNav = document.querySelector('[data-nav-item="composer"]');
   const timelineNav = document.querySelector('[data-nav-item="timeline"]');
   const notificationsNav = document.querySelector('[data-nav-item="notifications"]');
+  const settingsNav = document.querySelector('[data-nav-item="settings"]');
 
   const loggedIn = client.isLoggedIn;
   if (loginNav) {
@@ -391,7 +392,7 @@ function syncSidebarByAuthState() {
     loginNav.setAttribute('aria-disabled', loggedIn ? 'true' : 'false');
   }
 
-  [composerNav, timelineNav, notificationsNav].forEach((navItem) => {
+  [composerNav, timelineNav, notificationsNav, settingsNav].forEach((navItem) => {
     if (!navItem) return;
     navItem.style.display = loggedIn ? 'flex' : 'none';
     navItem.setAttribute('aria-disabled', loggedIn ? 'false' : 'true');
@@ -421,6 +422,16 @@ function initializeView() {
   if (path === '/notifications/') {
     if (client.isLoggedIn) {
       showNotifications();
+    } else {
+      navigateTo('/login/');
+      showLogin();
+    }
+    return;
+  }
+
+  if (path === '/settings/') {
+    if (client.isLoggedIn) {
+      showSettings();
     } else {
       navigateTo('/login/');
       showLogin();
@@ -499,6 +510,29 @@ function showNotifications() {
   }
   setActiveSidebarItem('notifications');
   loadNotifications();
+}
+
+function showSettings() {
+  const loginCard = document.getElementById('login');
+  if (loginCard) {
+    loginCard.hidden = true;
+    loginCard.style.display = 'none';
+  }
+  if (timelineCard) {
+    timelineCard.hidden = true;
+    timelineCard.style.display = 'none';
+  }
+  if (notificationsCard) {
+    notificationsCard.hidden = true;
+    notificationsCard.style.display = 'none';
+  }
+  const settingsCard = document.getElementById('settings');
+  if (settingsCard) {
+    settingsCard.hidden = false;
+    settingsCard.style.display = 'block';
+  }
+  setActiveSidebarItem('settings');
+  updateAccountInfo();
 }
 
 async function loadTimeline(force = false, append = false) {
@@ -947,5 +981,149 @@ if (postTextarea) {
         postBtn.click();
       }
     }
+  });
+}
+
+// 設定ページ用関数
+function updateAccountInfo() {
+  const currentHandle = document.getElementById('currentHandle');
+  const currentDisplayName = document.getElementById('currentDisplayName');
+  
+  if (client.isLoggedIn && currentHandle && currentDisplayName) {
+    const session = client.getSession();
+    if (session) {
+      currentHandle.textContent = session.handle || '-';
+      currentDisplayName.textContent = session.displayName || '-';
+    }
+  }
+}
+
+// ダークモード切り替え
+const darkModeSwitch = document.getElementById('darkModeSwitch');
+if (darkModeSwitch) {
+  const isDarkMode = localStorage.getItem('darkMode') === 'true';
+  darkModeSwitch.selected = isDarkMode;
+  if (isDarkMode) {
+    document.body.style.background = '#1a1a2e';
+    document.body.style.color = '#ffffff';
+  }
+  
+  darkModeSwitch.addEventListener('change', () => {
+    const isDark = darkModeSwitch.selected;
+    localStorage.setItem('darkMode', isDark.toString());
+    if (isDark) {
+      document.body.style.background = '#1a1a2e';
+      document.body.style.color = '#ffffff';
+    } else {
+      document.body.style.background = '';
+      document.body.style.color = '';
+    }
+  });
+}
+
+// コンパクトモード切り替え
+const compactModeSwitch = document.getElementById('compactModeSwitch');
+if (compactModeSwitch) {
+  const isCompact = localStorage.getItem('compactMode') === 'true';
+  compactModeSwitch.selected = isCompact;
+  if (isCompact) {
+    document.documentElement.style.setProperty('--compact-mode', '1');
+  }
+  
+  compactModeSwitch.addEventListener('change', () => {
+    const isCompact = compactModeSwitch.selected;
+    localStorage.setItem('compactMode', isCompact.toString());
+    if (isCompact) {
+      document.documentElement.style.setProperty('--compact-mode', '1');
+    } else {
+      document.documentElement.style.setProperty('--compact-mode', '0');
+    }
+  });
+}
+
+// キャッシュクリア
+const clearCacheBtn = document.getElementById('clearCacheBtn');
+if (clearCacheBtn) {
+  clearCacheBtn.addEventListener('click', async () => {
+    if (window.confirm('キャッシュをクリアしてもよろしいですか？')) {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        showSuccess('キャッシュをクリアしました');
+        setTimeout(() => location.reload(), 1500);
+      } catch (e) {
+        showError(`キャッシュクリアエラー：${e.message}`);
+      }
+    }
+  });
+}
+
+// データエクスポート
+const exportDataBtn = document.getElementById('exportDataBtn');
+if (exportDataBtn) {
+  exportDataBtn.addEventListener('click', async () => {
+    try {
+      const data = {
+        bookmarks: await client.getBookmarks(),
+        settings: {
+          darkMode: localStorage.getItem('darkMode'),
+          compactMode: localStorage.getItem('compactMode')
+        },
+        exportedAt: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bluesky-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showSuccess('データをエクスポートしました');
+    } catch (e) {
+      showError(`エクスポートエラー：${e.message}`);
+    }
+  });
+}
+
+// データインポート
+const importDataBtn = document.getElementById('importDataBtn');
+const importFileInput = document.getElementById('importFileInput');
+
+if (importDataBtn && importFileInput) {
+  importDataBtn.addEventListener('click', () => {
+    importFileInput.click();
+  });
+  
+  importFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      if (data.bookmarks) {
+        await client.importBookmarks(data.bookmarks);
+      }
+      
+      if (data.settings) {
+        if (data.settings.darkMode) {
+          localStorage.setItem('darkMode', data.settings.darkMode);
+          if (darkModeSwitch) darkModeSwitch.selected = data.settings.darkMode === 'true';
+        }
+        if (data.settings.compactMode) {
+          localStorage.setItem('compactMode', data.settings.compactMode);
+          if (compactModeSwitch) compactModeSwitch.selected = data.settings.compactMode === 'true';
+        }
+      }
+      
+      showSuccess('データをインポートしました');
+      setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+      showError(`インポートエラー：${e.message}`);
+    }
+    
+    importFileInput.value = '';
   });
 }

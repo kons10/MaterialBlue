@@ -1,0 +1,74 @@
+<md-elevated-card id="settings" style="padding:16px; margin:16px 0;" hidden>
+  <div slot="headline" class="md-typescale-title-large">設定</div>
+  <div slot="supporting-text" class="md-typescale-body-medium">アプリの設定を管理します</div>
+  
+  <div style="display:flex; flex-direction:column; gap:16px; margin-top:12px;">
+    <!-- アカウント情報セクション -->
+    <div style="border:1px solid var(--md-sys-color-outline); border-radius:12px; padding:16px;">
+      <div class="md-typescale-title-medium" style="margin-bottom:12px;">アカウント情報</div>
+      <div id="accountInfo" style="display:flex; flex-direction:column; gap:8px;">
+        <div class="md-typescale-body-medium">ログイン中のアカウント:</div>
+        <div id="currentHandle" class="md-typescale-body-large" style="font-weight:500;">-</div>
+        <div id="currentDisplayName" class="md-typescale-body-medium" style="color:#666;">-</div>
+      </div>
+    </div>
+    
+    <!-- 表示設定セクション -->
+    <div style="border:1px solid var(--md-sys-color-outline); border-radius:12px; padding:16px;">
+      <div class="md-typescale-title-medium" style="margin-bottom:12px;">表示設定</div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <div class="md-typescale-body-large">ダークモード</div>
+          <div class="md-typescale-body-small" style="color:#666;">テーマを切り替えます</div>
+        </div>
+        <md-switch id="darkModeSwitch">
+          <md-icon slot="icon">dark_mode</md-icon>
+        </md-switch>
+      </div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="md-typescale-body-large">コンパクトモード</div>
+          <div class="md-typescale-body-small" style="color:#666;">投稿の表示密度を上げます</div>
+        </div>
+        <md-switch id="compactModeSwitch">
+          <md-icon slot="icon">density_medium</md-icon>
+        </md-switch>
+      </div>
+    </div>
+    
+    <!-- データ管理セクション -->
+    <div style="border:1px solid var(--md-sys-color-outline); border-radius:12px; padding:16px;">
+      <div class="md-typescale-title-medium" style="margin-bottom:12px;">データ管理</div>
+      
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <md-outlined-button id="clearCacheBtn" style="justify-content:flex-start;">
+          <md-icon slot="icon">delete_sweep</md-icon>
+          キャッシュをクリア
+        </md-outlined-button>
+        
+        <md-outlined-button id="exportDataBtn" style="justify-content:flex-start;">
+          <md-icon slot="icon">download</md-icon>
+          データをエクスポート
+        </md-outlined-button>
+        
+        <md-outlined-button id="importDataBtn" style="justify-content:flex-start;">
+          <md-icon slot="icon">upload</md-icon>
+          データをインポート
+        </md-outlined-button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;">
+      </div>
+    </div>
+    
+    <!-- アプリ情報セクション -->
+    <div style="border:1px solid var(--md-sys-color-outline); border-radius:12px; padding:16px;">
+      <div class="md-typescale-title-medium" style="margin-bottom:12px;">アプリ情報</div>
+      <div class="md-typescale-body-small" style="color:#666;">
+        <div>Static Bluesky Client</div>
+        <div>バージョン：1.0.0</div>
+        <div>Built with Hugo & Material Web Components</div>
+      </div>
+    </div>
+  </div>
+</md-elevated-card>
