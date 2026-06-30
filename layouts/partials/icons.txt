@@ -1,6 +1,7 @@
 account_circle
 bookmark
 chat_bubble
+cookie
 delete
 delete_forever
 delete_outline
