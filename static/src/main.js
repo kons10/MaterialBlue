@@ -707,9 +707,15 @@ async function loadTimeline(force = false, append = false) {
       actionRow.style.marginTop = '8px';
       actionRow.style.flexWrap = 'wrap';
 
+      const formatCountBadge = (count) => {
+        if (count === null || count === undefined || count <= 0) return '';
+        const formattedCount = count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count;
+        return `<span class="action-count">${formattedCount}</span>`;
+      };
+
       const createActionButton = (icon, iconClass = '', count = null) => {
         const btn = document.createElement('md-filled-tonal-button');
-        const countStr = (count !== null && count !== undefined && count > 0) ? `<span class="action-count">${count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count}</span>` : '';
+        const countStr = formatCountBadge(count);
         btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${countStr}`;
         return btn;
       };
@@ -778,7 +784,7 @@ async function loadTimeline(force = false, append = false) {
             await client.unrepost(repostRecordUri);
             reposted = false;
             repostRecordUri = null;
-            const countStr = (repostCount !== null && repostCount !== undefined && repostCount > 0) ? `<span class="action-count">${repostCount >= 1000 ? (repostCount / 1000).toFixed(1) + 'K' : repostCount}</span>` : '';
+            const countStr = formatCountBadge(repostCount);
             repostBtn.innerHTML = `<md-icon class="repost-icon" slot="icon">repeat</md-icon>${countStr}`;
             showError('拡散解除しました');
           } else {
@@ -786,7 +792,7 @@ async function loadTimeline(force = false, append = false) {
             reposted = true;
             repostRecordUri = res?.data?.uri || null;
             const newCount = (repostCount ?? 0) + 1;
-            const countStr = newCount > 0 ? `<span class="action-count">${newCount >= 1000 ? (newCount / 1000).toFixed(1) + 'K' : newCount}</span>` : '';
+            const countStr = formatCountBadge(newCount);
             repostBtn.innerHTML = `<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>${countStr}`;
             showError('拡散しました');
           }
@@ -845,7 +851,7 @@ async function loadTimeline(force = false, append = false) {
             liked = false;
             likeRecordUri = null;
             currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
-            const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
+            const countStr = formatCountBadge(currentLikeCount);
             likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>${countStr}`;
             showError('いいね解除しました');
           } else {
@@ -853,7 +859,7 @@ async function loadTimeline(force = false, append = false) {
             liked = true;
             likeRecordUri = res?.data?.uri || null;
             currentLikeCount = (currentLikeCount ?? 0) + 1;
-            const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
+            const countStr = formatCountBadge(currentLikeCount);
             likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>${countStr}`;
             showError('いいねしました');
           }
