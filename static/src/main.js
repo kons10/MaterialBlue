@@ -707,15 +707,21 @@ async function loadTimeline(force = false, append = false) {
       actionRow.style.marginTop = '8px';
       actionRow.style.flexWrap = 'wrap';
 
-      const createActionButton = (icon, label, iconClass = '', count = null) => {
+      const formatCountBadge = (count) => {
+        if (count === null || count === undefined || count <= 0) return '';
+        const formattedCount = count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count;
+        return `<span class="action-count">${formattedCount}</span>`;
+      };
+
+      const createActionButton = (icon, iconClass = '', count = null) => {
         const btn = document.createElement('md-filled-tonal-button');
-        const countStr = (count !== null && count !== undefined && count > 0) ? `<span class="action-count">${count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count}</span>` : '';
-        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${label}${countStr}`;
+        const countStr = formatCountBadge(count);
+        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${countStr}`;
         return btn;
       };
 
       const replyCount = post.replyCount ?? null;
-      const replyBtn = createActionButton('reply', '返信', '', replyCount);
+      const replyBtn = createActionButton('reply', '', replyCount);
       replyBtn.addEventListener('click', async () => {
         const text = window.prompt('返信内容を入力してください');
         if (!text || !text.trim()) return;
@@ -738,7 +744,7 @@ async function loadTimeline(force = false, append = false) {
       let reposted = Boolean(viewer.repost);
       let repostRecordUri = viewer.repost || null;
       const repostCount = post.repostCount ?? null;
-      const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon', repostCount);
+      const repostBtn = createActionButton('repeat', 'repost-icon', repostCount);
       if (reposted) {
         const repostIcon = repostBtn.querySelector('.repost-icon');
         if (repostIcon) repostIcon.classList.add('is-filled');
@@ -778,13 +784,16 @@ async function loadTimeline(force = false, append = false) {
             await client.unrepost(repostRecordUri);
             reposted = false;
             repostRecordUri = null;
-            repostBtn.innerHTML = '<md-icon class="repost-icon" slot="icon">repeat</md-icon>再浮';
+            const countStr = formatCountBadge(repostCount);
+            repostBtn.innerHTML = `<md-icon class="repost-icon" slot="icon">repeat</md-icon>${countStr}`;
             showError('拡散解除しました');
           } else {
             const res = await client.repost(post.uri, post.cid);
             reposted = true;
             repostRecordUri = res?.data?.uri || null;
-            repostBtn.innerHTML = '<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>再浮済み';
+            const newCount = (repostCount ?? 0) + 1;
+            const countStr = formatCountBadge(newCount);
+            repostBtn.innerHTML = `<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>${countStr}`;
             showError('拡散しました');
           }
           repostMenu.open = false;
@@ -828,7 +837,7 @@ async function loadTimeline(force = false, append = false) {
       let liked = Boolean(viewer.like);
       let likeRecordUri = viewer.like || null;
       const likeCount = post.likeCount ?? null;
-      const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon', likeCount);
+      const likeBtn = createActionButton('favorite', '', 'favorite-icon', likeCount);
       if (liked) {
         const likeIcon = likeBtn.querySelector('.favorite-icon');
         if (likeIcon) likeIcon.classList.add('is-filled');
@@ -842,16 +851,16 @@ async function loadTimeline(force = false, append = false) {
             liked = false;
             likeRecordUri = null;
             currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
-            const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
-            likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>いいね${countStr}`;
+            const countStr = formatCountBadge(currentLikeCount);
+            likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>${countStr}`;
             showError('いいね解除しました');
           } else {
             const res = await client.like(post.uri, post.cid);
             liked = true;
             likeRecordUri = res?.data?.uri || null;
             currentLikeCount = (currentLikeCount ?? 0) + 1;
-            const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
-            likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>いいね済み${countStr}`;
+            const countStr = formatCountBadge(currentLikeCount);
+            likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>${countStr}`;
             showError('いいねしました');
           }
         } catch (e) {
@@ -863,7 +872,7 @@ async function loadTimeline(force = false, append = false) {
 
       let saved = client.isSaved(post.uri);
       const saveCount = null; // Bluesky APIでは保存数は非公開
-      const saveBtn = createActionButton('bookmark', saved ? '保存済み' : '保存', 'save-icon', saveCount);
+      const saveBtn = createActionButton('bookmark', 'save-icon', saveCount);
       if (saved) {
         const saveIcon = saveBtn.querySelector('.save-icon');
         if (saveIcon) saveIcon.classList.add('is-filled');
@@ -874,12 +883,12 @@ async function loadTimeline(force = false, append = false) {
           if (saved) {
             await client.unsave(post.uri, post.cid);
             saved = false;
-            saveBtn.innerHTML = '<md-icon class="save-icon" slot="icon">bookmark</md-icon>保存';
+            saveBtn.innerHTML = '<md-icon class="save-icon" slot="icon">bookmark</md-icon>';
             showError('保存解除しました');
           } else {
             await client.save(post.uri, post.cid);
             saved = true;
-            saveBtn.innerHTML = '<md-icon class="save-icon is-filled" slot="icon">bookmark</md-icon>保存済み';
+            saveBtn.innerHTML = '<md-icon class="save-icon is-filled" slot="icon">bookmark</md-icon>';
             showError('保存しました');
           }
         } catch (e) {
