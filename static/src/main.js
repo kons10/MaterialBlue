@@ -828,7 +828,7 @@ async function loadTimeline(force = false, append = false) {
       let liked = Boolean(viewer.like);
       let likeRecordUri = viewer.like || null;
       const likeCount = post.likeCount ?? null;
-      const likeBtn = createActionButton('favorite', liked ? 'いいね済み' : 'いいね', 'favorite-icon', likeCount);
+      const likeBtn = createActionButton('favorite', '', 'favorite-icon', likeCount);
       if (liked) {
         const likeIcon = likeBtn.querySelector('.favorite-icon');
         if (likeIcon) likeIcon.classList.add('is-filled');
@@ -843,7 +843,7 @@ async function loadTimeline(force = false, append = false) {
             likeRecordUri = null;
             currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
             const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
-            likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>いいね${countStr}`;
+            likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>${countStr}`;
             showError('いいね解除しました');
           } else {
             const res = await client.like(post.uri, post.cid);
@@ -851,7 +851,7 @@ async function loadTimeline(force = false, append = false) {
             likeRecordUri = res?.data?.uri || null;
             currentLikeCount = (currentLikeCount ?? 0) + 1;
             const countStr = currentLikeCount > 0 ? `<span class="action-count">${currentLikeCount >= 1000 ? (currentLikeCount / 1000).toFixed(1) + 'K' : currentLikeCount}</span>` : '';
-            likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>いいね済み${countStr}`;
+            likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>${countStr}`;
             showError('いいねしました');
           }
         } catch (e) {
