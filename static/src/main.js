@@ -707,15 +707,15 @@ async function loadTimeline(force = false, append = false) {
       actionRow.style.marginTop = '8px';
       actionRow.style.flexWrap = 'wrap';
 
-      const createActionButton = (icon, label, iconClass = '', count = null) => {
+      const createActionButton = (icon, iconClass = '', count = null) => {
         const btn = document.createElement('md-filled-tonal-button');
         const countStr = (count !== null && count !== undefined && count > 0) ? `<span class="action-count">${count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count}</span>` : '';
-        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${label}${countStr}`;
+        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${countStr}`;
         return btn;
       };
 
       const replyCount = post.replyCount ?? null;
-      const replyBtn = createActionButton('reply', '返信', '', replyCount);
+      const replyBtn = createActionButton('reply', '', replyCount);
       replyBtn.addEventListener('click', async () => {
         const text = window.prompt('返信内容を入力してください');
         if (!text || !text.trim()) return;
@@ -738,7 +738,7 @@ async function loadTimeline(force = false, append = false) {
       let reposted = Boolean(viewer.repost);
       let repostRecordUri = viewer.repost || null;
       const repostCount = post.repostCount ?? null;
-      const repostBtn = createActionButton('repeat', reposted ? '再浮済み' : '再浮', 'repost-icon', repostCount);
+      const repostBtn = createActionButton('repeat', 'repost-icon', repostCount);
       if (reposted) {
         const repostIcon = repostBtn.querySelector('.repost-icon');
         if (repostIcon) repostIcon.classList.add('is-filled');
@@ -778,13 +778,16 @@ async function loadTimeline(force = false, append = false) {
             await client.unrepost(repostRecordUri);
             reposted = false;
             repostRecordUri = null;
-            repostBtn.innerHTML = '<md-icon class="repost-icon" slot="icon">repeat</md-icon>再浮';
+            const countStr = (repostCount !== null && repostCount !== undefined && repostCount > 0) ? `<span class="action-count">${repostCount >= 1000 ? (repostCount / 1000).toFixed(1) + 'K' : repostCount}</span>` : '';
+            repostBtn.innerHTML = `<md-icon class="repost-icon" slot="icon">repeat</md-icon>${countStr}`;
             showError('拡散解除しました');
           } else {
             const res = await client.repost(post.uri, post.cid);
             reposted = true;
             repostRecordUri = res?.data?.uri || null;
-            repostBtn.innerHTML = '<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>再浮済み';
+            const newCount = (repostCount ?? 0) + 1;
+            const countStr = newCount > 0 ? `<span class="action-count">${newCount >= 1000 ? (newCount / 1000).toFixed(1) + 'K' : newCount}</span>` : '';
+            repostBtn.innerHTML = `<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>${countStr}`;
             showError('拡散しました');
           }
           repostMenu.open = false;
@@ -863,7 +866,7 @@ async function loadTimeline(force = false, append = false) {
 
       let saved = client.isSaved(post.uri);
       const saveCount = null; // Bluesky APIでは保存数は非公開
-      const saveBtn = createActionButton('bookmark', saved ? '保存済み' : '保存', 'save-icon', saveCount);
+      const saveBtn = createActionButton('bookmark', 'save-icon', saveCount);
       if (saved) {
         const saveIcon = saveBtn.querySelector('.save-icon');
         if (saveIcon) saveIcon.classList.add('is-filled');
@@ -874,12 +877,12 @@ async function loadTimeline(force = false, append = false) {
           if (saved) {
             await client.unsave(post.uri, post.cid);
             saved = false;
-            saveBtn.innerHTML = '<md-icon class="save-icon" slot="icon">bookmark</md-icon>保存';
+            saveBtn.innerHTML = '<md-icon class="save-icon" slot="icon">bookmark</md-icon>';
             showError('保存解除しました');
           } else {
             await client.save(post.uri, post.cid);
             saved = true;
-            saveBtn.innerHTML = '<md-icon class="save-icon is-filled" slot="icon">bookmark</md-icon>保存済み';
+            saveBtn.innerHTML = '<md-icon class="save-icon is-filled" slot="icon">bookmark</md-icon>';
             showError('保存しました');
           }
         } catch (e) {
