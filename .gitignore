@@ -1,1 +1,24 @@
-(static/src/main.js is a source file, and there are no build artifacts, dependencies, or temp files in the changes)
+```
+# Build artifacts
+static/dist/
+static/build/
+*.min.js
+*.min.css
+*.bundle.js
+
+# Dependencies
+node_modules/
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Editors
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+.env.*
+```
