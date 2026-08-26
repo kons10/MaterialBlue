@@ -112,9 +112,8 @@ if (loginBtn) loginBtn.addEventListener('click', async () => {
   
   try {
     await client.login(id, pw);
-    syncSidebarByAuthState();
-    navigateTo("/home/");
-    showTimeline();
+    // Reload and replace the login entry so browser back cannot return to it.
+    window.location.replace('/home/');
   } catch (e) {
     showError(`ログインエラー：${e.message}`);
   } finally {
