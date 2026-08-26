@@ -4,7 +4,7 @@
 
 # Static Bluesky Client
 
-A static Bluesky client built with [Hugo](https://gohugo.io/) and [Material Web Components](https://github.com/material-components/material-web).
+A static Bluesky client built with [Material Design](https://material.io)
 
 ## Features
 
@@ -20,7 +20,7 @@ A static Bluesky client built with [Hugo](https://gohugo.io/) and [Material Web 
 | Layer | Technology |
 |---|---|
 | Static site generator | [Hugo](https://gohugo.io/) v0.140.0+ |
-| UI components | [Material Web Components](https://github.com/material-components/material-web) (via esm.sh) |
+| UI components | [@material/web](https://github.com/material-components/material-web) (via esm.sh) |
 | Bluesky API | [@atproto/api](https://www.npmjs.com/package/@atproto/api) v0.13.6 (via esm.sh) |
 | Fonts | Google Fonts — Roboto, Material Symbols Outlined |
 
@@ -67,28 +67,12 @@ This application must be placed in the `/` directory directly under the domain. 
 ## Usage
 
 1. Open the app in your browser
-2. Enter your Bluesky **handle** (e.g. `user.bsky.social`) and an **app password**
+2. Enter your Bluesky **handle** (e.g. `user.bsky.social`) and an **app password** and your *PDS*
    - App passwords can be created at: **Bluesky Settings → Privacy and Security → App Passwords**
 3. Click **Login**
 4. Your timeline will load automatically
 
-> **Note:** Your credentials are never sent anywhere other than `bsky.social`. Session tokens are stored in browser cookies only.
-
-## Project Structure
-
-```
-.
-├── content/
-│   └── _index.md          # Home page front matter
-├── layouts/
-│   ├── _default/
-│   │   └── baseof.html    # Base HTML template (header, footer, MWC setup)
-│   └── index.html         # Home page template (login + timeline UI)
-├── static/
-│   └── src/
-│       └── bsky-client.js # Bluesky API client wrapper
-└── hugo.yaml              # Hugo configuration
-```
+> **Note:** Your credentials are never sent anywhere other than your server. Session tokens are stored in browser cookies only.
 
 ## License
 
