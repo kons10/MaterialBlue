@@ -2,14 +2,17 @@
 import { BskyAgent } from 'https://esm.sh/@atproto/api@0.20.5?bundle';
 
 export function createBskyClient() {
+  const savedService = getCookie('bsky_service');
+  const initialService = normalizeService(savedService || 'bsky.social');
   const agent = new BskyAgent({
-    service: 'https://bsky.social',
+    service: initialService,
     persistSession: (evt, session) => {
       if (session) {
         setCookie('bsky_access', session.accessJwt, 86400);
         setCookie('bsky_refresh', session.refreshJwt, 86400);
         setCookie('bsky_did', session.did, 86400);
         setCookie('bsky_handle', session.handle, 86400);
+        setCookie('bsky_service', agent.service.toString(), 86400);
       }
     }
   });
@@ -101,8 +104,9 @@ export function createBskyClient() {
     },
 
     // 🔹 3. ログイン処理
-    async login(identifier, appPassword) {
+    async login(identifier, appPassword, service) {
       try {
+        agent.service = normalizeService(service);
         // login メソッドが成功すると、内部で agent.session が自動更新される
         const session = await agent.login({ identifier, password: appPassword });
 
@@ -112,6 +116,7 @@ export function createBskyClient() {
           setCookie('bsky_refresh', agent.session.refreshJwt, 86400);
           setCookie('bsky_did', agent.session.did, 86400);
           setCookie('bsky_handle', agent.session.handle, 86400);
+          setCookie('bsky_service', agent.service.toString(), 86400);
         }
         return session;
       } catch (e) {
@@ -377,7 +382,16 @@ function getCookie(name) {
 }
 
 function clearSession() {
-  ['bsky_access', 'bsky_refresh', 'bsky_did', 'bsky_handle'].forEach(n => {
+  ['bsky_access', 'bsky_refresh', 'bsky_did', 'bsky_handle', 'bsky_service'].forEach(n => {
     document.cookie = `${n}=; path=/; Secure; SameSite=Lax; max-age=0`;
   });
+}
+
+function normalizeService(service) {
+  const value = service.trim();
+  const url = new URL(value.includes('://') ? value : `https://${value}`);
+  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
+    throw new Error('PDSはHTTPまたはHTTPSのURLを入力してください');
+  }
+  return url.toString().replace(/\/$/, '');
 }
