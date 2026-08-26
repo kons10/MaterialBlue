@@ -101,9 +101,10 @@ async function bootstrap() {
 if (loginBtn) loginBtn.addEventListener('click', async () => {
   const id = document.getElementById('id').value.trim();
   const pw = document.getElementById('pw').value.trim();
+  const pds = document.getElementById('pds').value.trim();
   
-  if (!id || !pw) {
-    showError('ハンドルとアプリパスワードを入力してください');
+  if (!id || !pw || !pds) {
+    showError('ハンドル、アプリパスワード、PDSを入力してください');
     return;
   }
   
@@ -111,7 +112,7 @@ if (loginBtn) loginBtn.addEventListener('click', async () => {
   showLoading(true);
   
   try {
-    await client.login(id, pw);
+    await client.login(id, pw, pds);
     syncSidebarByAuthState();
     navigateTo("/home/");
     showTimeline();
