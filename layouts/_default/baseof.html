@@ -16,7 +16,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   {{ partial "material-symbols.html" . }}
-  <script src="/src/mwc.js" crossorigin="anonymous" type="module" defer></script>
+  <!-- 1. Web Componentsのポリフィル（shadydom, custom-elementsなど） -->
+  <script src="https://esm.sh/@webcomponents/webcomponentsjs@2/webcomponents-loader.js"></script>
+
+  <!-- 2. Lit用ポリフィルサポート（これがないとLitのレンダリングが壊れる） -->
+  <script type="module">
+    import 'https://esm.sh/lit@3/polyfill-support.js';
+  </script>
+
+  <!-- 3. @material/web のモジュール読み込み -->
+  <script type="module">
+    import 'https://esm.sh/@material/web@latest/all.js';
+  </script>
 
 <style>@layer {
 
