@@ -6,7 +6,6 @@ delete
 delete_forever
 delete_outline
 done_all
-dns
 dynamic_feed
 edit_note
 expand_more
