@@ -455,13 +455,13 @@ md-icon {
 </style>
 </head>
 <body class="sidebar-collapsed">
-  <div id="startupSplash" class="startup-splash" role="status" aria-live="polite" aria-label="起動中">
+  <div id="startupSplash" class="startup-splash" role="status" aria-live="polite" data-i18n-aria="splash.ariaLabel">
     <div class="startup-splash-card">
       <div class="startup-splash-logo" aria-hidden="true">
         <md-icon>dynamic_feed</md-icon>
       </div>
       <p class="startup-splash-title">Material Blue</p>
-      <p class="startup-splash-text md-typescale-body-medium">読み込み中</p>
+      <p class="startup-splash-text md-typescale-body-medium" data-i18n="splash.loading">読み込み中</p>
       <md-linear-progress class="startup-splash-progress" indeterminate></md-linear-progress>
     </div>
   </div>
@@ -473,34 +473,34 @@ md-icon {
   </noscript>
 
   <div class="app-shell">
-    <aside class="sidebar" aria-label="サイドバー">
+    <aside class="sidebar" aria-label="Sidebar">
       <div class="brand">
         <md-icon>rss_feed</md-icon>
         <strong>Material Blue</strong>
       </div>
-      <div class="sidebar-section-title">Navigation</div>
-      <nav class="sidebar-nav" aria-label="ページ内ナビゲーション">
+      <div class="sidebar-section-title" data-i18n="sidebar.navigation">Navigation</div>
+      <nav class="sidebar-nav" aria-label="Page navigation">
         <md-text-button href="/login/" data-nav-item="login">
           <md-icon slot="icon" aria-hidden="true">login</md-icon>
-          ログイン
+          <span data-i18n="navigation.login">ログイン</span>
         </md-text-button>
         <md-text-button href="/home/" data-nav-item="timeline">
           <md-icon slot="icon" aria-hidden="true">rss_feed</md-icon>
-          主頁
+          <span data-i18n="navigation.home">主頁</span>
         </md-text-button>
         <md-text-button href="/notifications/" data-nav-item="notifications">
           <md-icon slot="icon" aria-hidden="true">notifications</md-icon>
-          通知
+          <span data-i18n="navigation.notifications">通知</span>
         </md-text-button>
         <md-text-button href="/settings/" data-nav-item="settings">
           <md-icon slot="icon" aria-hidden="true">settings</md-icon>
-          設定
+          <span data-i18n="navigation.settings">設定</span>
         </md-text-button>
       </nav>
       <div class="sidebar-actions">
         <md-outlined-button id="logoutBtn">
           <md-icon slot="icon">logout</md-icon>
-          ログアウト
+          <span data-i18n="navigation.logout">ログアウト</span>
         </md-outlined-button>
       </div>
     </aside>
@@ -508,11 +508,11 @@ md-icon {
     <div class="content-area">
       <header>
         <div class="header-inner">
-          <md-icon-button id="sidebarToggle" class="menu-btn" aria-label="メニュー切り替え">
+          <md-icon-button id="sidebarToggle" class="menu-btn" data-i18n-aria="header.menuToggle" aria-label="メニュー切り替え">
             <md-icon>menu</md-icon>
           </md-icon-button>
           <md-icon>dynamic_feed</md-icon>
-          <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;">Static Bluesky</h1>
+          <h1 class="md-typescale-headline-small" style="margin:0; font-weight:500;" data-i18n="header.title">Static Bluesky</h1>
         </div>
       </header>
 
@@ -521,7 +521,7 @@ md-icon {
       </main>
 
       <footer>
-        <p style="margin:0;" class="md-typescale-body-small">© 2026 Built with Hugo & MWC</p>
+        <p style="margin:0;" class="md-typescale-body-small" data-i18n="footer.copyright">© 2026 Built with Hugo & MWC</p>
       </footer>
     </div>
   </div>

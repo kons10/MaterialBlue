@@ -715,7 +715,7 @@ async function loadTimeline(force = false, append = false) {
 
       const formatCountBadge = (count) => {
         if (count === null || count === undefined || count <= 0) return '';
-        const formattedCount = count >= 1000 ? (count / 1000).toFixed(1) + 'K' : count;
+        const formattedCount = formatCompactNumber(count);
         return `<span class="action-count">${formattedCount}</span>`;
       };
 
@@ -1098,7 +1098,7 @@ function renderNotifications(notifications) {
       const time = document.createElement('div');
       time.className = 'md-typescale-body-small';
       time.style.marginTop = '6px';
-      time.textContent = new Date(notification.indexedAt).toLocaleString();
+      time.textContent = formatRelativeTime(new Date(notification.indexedAt));
       supporting.appendChild(time);
     }
 
