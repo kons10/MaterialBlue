@@ -727,7 +727,7 @@ async function loadTimeline(force = false, append = false) {
         if (!text || !text.trim()) return;
         replyBtn.disabled = true;
         try {
-          await client.reply(post.uri, post.cid, text.trim());
+          await client.reply(post.uri, post.cid, text.trim(), record.reply);
           showError('返信しました');
           await loadTimeline(true);
         } catch (e) {
@@ -837,7 +837,7 @@ async function loadTimeline(force = false, append = false) {
       let liked = Boolean(viewer.like);
       let likeRecordUri = viewer.like || null;
       const likeCount = post.likeCount ?? null;
-      const likeBtn = createActionButton('favorite', '', 'favorite-icon', likeCount);
+      const likeBtn = createActionButton('favorite', 'favorite-icon', likeCount);
       if (liked) {
         const likeIcon = likeBtn.querySelector('.favorite-icon');
         if (likeIcon) likeIcon.classList.add('is-filled');
@@ -975,6 +975,76 @@ function getNotificationReasonLabel(reason) {
   return labels[reason] || reason || '通知';
 }
 
+function appendNotificationActions(supporting, notification) {
+  const post = notification.post;
+  if (!post?.uri || !post.cid) return;
+
+  const actionRow = document.createElement('div');
+  actionRow.style.display = 'flex';
+  actionRow.style.gap = '8px';
+  actionRow.style.alignItems = 'center';
+  actionRow.style.marginTop = '10px';
+  actionRow.style.flexWrap = 'wrap';
+
+  const createButton = (icon, count) => {
+    const button = document.createElement('md-filled-tonal-button');
+    button.innerHTML = `<md-icon slot="icon">${icon}</md-icon>${count > 0 ? `<span class="action-count">${count >= 1000 ? `${(count / 1000).toFixed(1)}K` : count}</span>` : ''}`;
+    return button;
+  };
+
+  const replyButton = createButton('reply', post.replyCount ?? 0);
+  replyButton.addEventListener('click', async () => {
+    const text = window.prompt('返信内容を入力してください');
+    if (!text || !text.trim()) return;
+    replyButton.disabled = true;
+    try {
+      await client.reply(post.uri, post.cid, text.trim(), post.record?.reply);
+      showSuccess('返信しました');
+      await loadNotifications();
+    } catch (e) {
+      showError(`返信エラー：${e.message}`);
+    } finally {
+      replyButton.disabled = false;
+    }
+  });
+
+  const viewer = post.viewer || {};
+  let liked = Boolean(viewer.like);
+  let likeRecordUri = viewer.like || null;
+  let likeCount = post.likeCount ?? 0;
+  const likeButton = createButton('favorite', likeCount);
+  const updateLikeButton = () => {
+    likeButton.innerHTML = `<md-icon class="favorite-icon${liked ? ' is-filled' : ''}" slot="icon">favorite</md-icon>${likeCount > 0 ? `<span class="action-count">${likeCount >= 1000 ? `${(likeCount / 1000).toFixed(1)}K` : likeCount}</span>` : ''}`;
+  };
+  updateLikeButton();
+  likeButton.addEventListener('click', async () => {
+    likeButton.disabled = true;
+    try {
+      if (liked) {
+        await client.unlike(likeRecordUri);
+        liked = false;
+        likeRecordUri = null;
+        likeCount = Math.max(0, likeCount - 1);
+        showSuccess('いいね解除しました');
+      } else {
+        const result = await client.like(post.uri, post.cid);
+        liked = true;
+        likeRecordUri = result?.data?.uri || null;
+        likeCount += 1;
+        showSuccess('いいねしました');
+      }
+      updateLikeButton();
+    } catch (e) {
+      showError(`いいねエラー：${e.message}`);
+    } finally {
+      likeButton.disabled = false;
+    }
+  });
+
+  actionRow.append(replyButton, likeButton);
+  supporting.appendChild(actionRow);
+}
+
 function renderNotifications(notifications) {
   const container = document.getElementById('notifications');
   if (!container) return;
@@ -1016,6 +1086,8 @@ function renderNotifications(notifications) {
       supporting.appendChild(body);
     }
 
+    appendNotificationActions(supporting, notification);
+
     if (notification.indexedAt) {
       const time = document.createElement('div');
       time.className = 'md-typescale-body-small';
@@ -1039,6 +1111,14 @@ async function loadNotifications() {
   showLoading(true);
   try {
     const notifications = await client.notifications();
+    const postUris = [...new Set(notifications
+      .filter((notification) => notification.record?.$type === 'app.bsky.feed.post' && notification.uri)
+      .map((notification) => notification.uri))];
+    const posts = await client.posts(postUris);
+    const postsByUri = new Map(posts.map((post) => [post.uri, post]));
+    notifications.forEach((notification) => {
+      notification.post = postsByUri.get(notification.uri) || null;
+    });
     renderNotifications(notifications);
     updateNotificationBadge(notifications);
   } catch (e) {

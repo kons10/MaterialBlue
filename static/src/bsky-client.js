@@ -308,15 +308,27 @@ export function createBskyClient() {
     });
   },
 
-  async reply(uri, cid, text) {
+  async reply(uri, cid, text, replyContext = null) {
     if (!this.isLoggedIn) throw new Error('Not logged in');
     return await agent.post({
       text,
       reply: {
-        root: { uri, cid },
+        root: replyContext?.root || { uri, cid },
         parent: { uri, cid }
       }
     });
+  },
+
+  async posts(uris) {
+    if (!this.isLoggedIn) throw new Error('Not logged in');
+    if (!Array.isArray(uris) || uris.length === 0) return [];
+
+    const posts = [];
+    for (let index = 0; index < uris.length; index += 25) {
+      const res = await agent.api.app.bsky.feed.getPosts({ uris: uris.slice(index, index + 25) });
+      posts.push(...(res.data.posts || []));
+    }
+    return posts;
   },
 
   async notifications(limit = 50) {
