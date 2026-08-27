@@ -251,24 +251,24 @@ body {
   gap: 8px;
 }
 
-.sidebar-nav md-filled-tonal-button {
+.sidebar-nav md-text-button {
   width: 100%;
   justify-content: flex-start;
-  --md-filled-tonal-button-container-shape: var(--catalog-shape-xl);
+  --md-text-button-container-shape: var(--catalog-shape-xl);
 }
 
-.sidebar-nav md-filled-tonal-button:hover,
-.sidebar-nav md-filled-tonal-button:focus-visible {
-  --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-highest);
+.sidebar-nav md-text-button:hover,
+.sidebar-nav md-text-button:focus-visible {
+  --md-text-button-container-color: var(--md-sys-color-surface-container-highest);
 }
 
-.sidebar-nav md-filled-tonal-button.active {
-  --md-filled-tonal-button-container-color: var(--md-sys-color-primary-container);
-  --md-filled-tonal-button-label-text-color: var(--md-sys-color-on-primary-container);
+.sidebar-nav md-text-button.active {
+  --md-text-button-container-color: var(--md-sys-color-primary-container);
+  --md-text-button-label-text-color: var(--md-sys-color-on-primary-container);
   font-weight: 500;
 }
 
-.sidebar-nav md-filled-tonal-button[aria-disabled="true"] {
+.sidebar-nav md-text-button[aria-disabled="true"] {
   opacity: 0.5;
   pointer-events: none;
 }
@@ -480,22 +480,22 @@ md-icon {
       </div>
       <div class="sidebar-section-title">Navigation</div>
       <nav class="sidebar-nav" aria-label="ページ内ナビゲーション">
-        <md-filled-tonal-button href="/login/" data-nav-item="login">
+        <md-text-button href="/login/" data-nav-item="login">
           <md-icon slot="icon" aria-hidden="true">login</md-icon>
           ログイン
-        </md-filled-tonal-button>
-        <md-filled-tonal-button href="/home/" data-nav-item="timeline">
+        </md-text-button>
+        <md-text-button href="/home/" data-nav-item="timeline">
           <md-icon slot="icon" aria-hidden="true">rss_feed</md-icon>
           主頁
-        </md-filled-tonal-button>
-        <md-filled-tonal-button href="/notifications/" data-nav-item="notifications">
+        </md-text-button>
+        <md-text-button href="/notifications/" data-nav-item="notifications">
           <md-icon slot="icon" aria-hidden="true">notifications</md-icon>
           通知
-        </md-filled-tonal-button>
-        <md-filled-tonal-button href="/settings/" data-nav-item="settings">
+        </md-text-button>
+        <md-text-button href="/settings/" data-nav-item="settings">
           <md-icon slot="icon" aria-hidden="true">settings</md-icon>
           設定
-        </md-filled-tonal-button>
+        </md-text-button>
       </nav>
       <div class="sidebar-actions">
         <md-outlined-button id="logoutBtn">
@@ -567,9 +567,9 @@ md-icon {
       btn.addEventListener('click', () => {
         document.body.classList.toggle('sidebar-collapsed');
       });
-      document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
+      document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
         link.addEventListener('click', () => {
-          document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((other) => other.classList.remove('active'));
+          document.querySelectorAll('.sidebar-nav md-text-button').forEach((other) => other.classList.remove('active'));
           link.classList.add('active');
           if (window.matchMedia('(max-width: 900px)').matches) {
             document.body.classList.add('sidebar-collapsed');
