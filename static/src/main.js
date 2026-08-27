@@ -1,5 +1,6 @@
 // static/src/bsky-client.js を読み込み（Hugo は static/ 以下をルートとして配信するよ）
 import { createBskyClient } from '/src/bsky-client.js';
+import { initI18n, t, formatDate, formatRelativeTime, formatCompactNumber, setLocale, getCurrentLocale } from '/src/i18n.js';
 
 const client = createBskyClient();
 const loginBtn = document.getElementById('loginBtn');
@@ -29,9 +30,10 @@ let notificationsLoading = false;
 // 選択された画像を保持する配列
 let selectedImages = [];
 
-// エラーメッセージ表示関数
-function showError(message) {
+// エラーメッセージ表示関数（i18n 対応）
+function showError(messageKey, params = {}) {
   if (!errorMessage) return;
+  const message = t(messageKey, params);
   errorMessage.textContent = message;
   errorMessage.style.display = 'block';
   setTimeout(() => {
@@ -39,9 +41,10 @@ function showError(message) {
   }, 5000);
 }
 
-// 成功メッセージ表示関数
-function showSuccess(message) {
+// 成功メッセージ表示関数（i18n 対応）
+function showSuccess(messageKey, params = {}) {
   if (!errorMessage) return;
+  const message = t(messageKey, params);
   errorMessage.textContent = message;
   errorMessage.style.display = 'block';
   errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
@@ -90,6 +93,9 @@ document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
 
 async function bootstrap() {
   try {
+    // i18n を初期化
+    await initI18n();
+    
     await client.ready();
   } catch (e) {
     console.error('Client initialization failed:', e);
@@ -104,7 +110,7 @@ if (loginBtn) loginBtn.addEventListener('click', async () => {
   const pds = document.getElementById('pds').value.trim();
   
   if (!id || !pw || !pds) {
-    showError('ハンドル、アプリパスワード、PDSを入力してください');
+    showError('login.required');
     return;
   }
   
@@ -116,7 +122,7 @@ if (loginBtn) loginBtn.addEventListener('click', async () => {
     // Reload and replace the login entry so browser back cannot return to it.
     window.location.replace('/home/');
   } catch (e) {
-    showError(`ログインエラー：${e.message}`);
+    showError('errors.loginFailed');
   } finally {
     loginBtn.disabled = false;
     showLoading(false);
@@ -140,7 +146,7 @@ if (notificationsRefreshBtn) notificationsRefreshBtn.addEventListener('click', a
   try {
     await loadNotifications();
   } catch (e) {
-    showError(`通知の更新エラー：${e.message}`);
+    showError('errors.fetchFailed');
   } finally {
     notificationsRefreshBtn.disabled = false;
   }
@@ -151,9 +157,9 @@ if (notificationsSeenBtn) notificationsSeenBtn.addEventListener('click', async (
   try {
     await client.markNotificationsSeen();
     await loadNotifications();
-    showSuccess('通知を既読にしました');
+    showSuccess('notifications.markedAsSeen');
   } catch (e) {
-    showError(`通知の既読化エラー：${e.message}`);
+    showError('errors.notificationFailed');
   } finally {
     notificationsSeenBtn.disabled = false;
   }
@@ -179,12 +185,12 @@ if (clearCacheBtn) clearCacheBtn.addEventListener('click', async () => {
     }
     
     if (cleared) {
-      showSuccess('キャッシュを削除しました');
+      showSuccess('settings.cacheCleared');
     } else {
-      showError('キャッシュ機能がブラウザでサポートされていません');
+    showError('errors.cacheNotSupported');
     }
   } catch (e) {
-    showError(`キャッシュ削除中にエラーが発生しました: ${e.message}`);
+    showError('errors.cacheDeleteError');
   } finally {
     clearCacheBtn.disabled = false;
   }
@@ -211,12 +217,12 @@ if (clearCookiesBtn) clearCookiesBtn.addEventListener('click', async () => {
       document.cookie = `${trimmedName}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;Secure;SameSite=Lax`;
     }
     
-    showSuccess('Cookieを全削除しました。再読み込みします。');
+    showSuccess('settings.cookiesCleared');
     setTimeout(() => {
       window.location.href = '/login/';
     }, 1500);
   } catch (e) {
-    showError(`Cookie削除中にエラーが発生しました: ${e.message}`);
+    showError('errors.cookieDeleteError');
     clearCookiesBtn.disabled = false;
   }
 });
@@ -235,7 +241,7 @@ if (postBtn) postBtn.addEventListener('click', async () => {
   }
   
   if (!text && selectedImages.length === 0) {
-    showError('投稿内容または画像を入力してください');
+    showError('post.required');
     return;
   }
   
@@ -263,7 +269,7 @@ if (postBtn) postBtn.addEventListener('click', async () => {
       if (textarea) textarea.value = '';
     }
     
-    showError('投稿しました！');
+    showError('post.posted');
     errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
     errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
     setTimeout(() => {
@@ -273,7 +279,7 @@ if (postBtn) postBtn.addEventListener('click', async () => {
     await loadTimeline(true);
   } catch (e) {
     console.error('投稿エラー詳細:', e);
-    showError(`投稿エラー：${e.message}`);
+    showError('errors.postFailed');
   } finally {
     postBtn.disabled = false;
     postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>投稿';
@@ -295,7 +301,7 @@ if (imageInput) imageInput.addEventListener('change', (e) => {
   const filesToAdd = files.slice(0, remainingSlots);
   
   if (files.length > remainingSlots) {
-    showError(`画像は最大 4 枚まで添付できます。残り${remainingSlots}枚です。`);
+    showError('post.maxImages', { remaining: remainingSlots });
   }
   
   filesToAdd.forEach(file => {
@@ -628,7 +634,7 @@ async function loadTimeline(force = false, append = false) {
     );
 
     if (feed.length === 0 && container.children.length > 0) {
-      showError(append ? '追加できる投稿はありません' : '新しい投稿はありません');
+      showError(append ? 'notifications.noMorePosts' : 'notifications.noNewPosts');
       return;
     }
 
@@ -728,10 +734,10 @@ async function loadTimeline(force = false, append = false) {
         replyBtn.disabled = true;
         try {
           await client.reply(post.uri, post.cid, text.trim(), record.reply);
-          showError('返信しました');
+          showSuccess('post.replied');
           await loadTimeline(true);
         } catch (e) {
-          showError(`返信エラー：${e.message}`);
+          showError('errors.replyFailed');
         } finally {
           replyBtn.disabled = false;
         }
@@ -786,7 +792,7 @@ async function loadTimeline(force = false, append = false) {
             repostRecordUri = null;
             const countStr = formatCountBadge(repostCount);
             repostBtn.innerHTML = `<md-icon class="repost-icon" slot="icon">repeat</md-icon>${countStr}`;
-            showError('拡散解除しました');
+            showError('post.repostRemoved');
           } else {
             const res = await client.repost(post.uri, post.cid);
             reposted = true;
@@ -794,12 +800,12 @@ async function loadTimeline(force = false, append = false) {
             const newCount = (repostCount ?? 0) + 1;
             const countStr = formatCountBadge(newCount);
             repostBtn.innerHTML = `<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>${countStr}`;
-            showError('拡散しました');
+            showError('post.reposted');
           }
           repostMenu.open = false;
           await loadTimeline(true);
         } catch (e) {
-          showError(`拡散エラー：${e.message}`);
+          showError('errors.repostFailed');
         } finally {
           doRepostItem.disabled = false;
         }
@@ -812,10 +818,10 @@ async function loadTimeline(force = false, append = false) {
         try {
           await client.quote(post.uri, post.cid, text.trim());
           repostMenu.open = false;
-          showError('引用しました');
+          showError('post.quoted');
           await loadTimeline(true);
         } catch (e) {
-          showError(`引用エラー：${e.message}`);
+          showError('errors.quoteFailed');
         } finally {
           quoteItem.disabled = false;
         }
@@ -853,7 +859,7 @@ async function loadTimeline(force = false, append = false) {
             currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
             const countStr = formatCountBadge(currentLikeCount);
             likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>${countStr}`;
-            showError('いいね解除しました');
+            showError('post.likeRemoved');
           } else {
             const res = await client.like(post.uri, post.cid);
             liked = true;
@@ -861,10 +867,10 @@ async function loadTimeline(force = false, append = false) {
             currentLikeCount = (currentLikeCount ?? 0) + 1;
             const countStr = formatCountBadge(currentLikeCount);
             likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>${countStr}`;
-            showError('いいねしました');
+            showError('post.liked');
           }
         } catch (e) {
-          showError(`いいねエラー：${e.message}`);
+          showError('errors.likeFailed');
         } finally {
           likeBtn.disabled = false;
         }
@@ -884,15 +890,15 @@ async function loadTimeline(force = false, append = false) {
             await client.unsave(post.uri, post.cid);
             saved = false;
             saveBtn.innerHTML = '<md-icon class="save-icon" slot="icon">bookmark</md-icon>';
-            showError('保存解除しました');
+            showError('post.saved');
           } else {
             await client.save(post.uri, post.cid);
             saved = true;
             saveBtn.innerHTML = '<md-icon class="save-icon is-filled" slot="icon">bookmark</md-icon>';
-            showError('保存しました');
+            showError('post.saved');
           }
         } catch (e) {
-          showError(`保存エラー：${e.message}`);
+          showError('errors.saveFailed');
         } finally {
           saveBtn.disabled = false;
         }
@@ -942,7 +948,7 @@ async function loadTimeline(force = false, append = false) {
     });
 
     if (fragment.childNodes.length === 0) {
-      showError(append ? '追加できる投稿はありません' : '新しい投稿はありません');
+      showError(append ? 'notifications.noMorePosts' : 'notifications.noNewPosts');
       return;
     }
 
@@ -954,7 +960,7 @@ async function loadTimeline(force = false, append = false) {
     menuContainer.appendChild(menuFragment);
   } catch (e) {
     console.error('Timeline load error:', e);
-    showError('タイムラインの取得に失敗しました');
+    showError('errors.fetchFailed');
   } finally {
     showLoading(false);
     timelineLoading = false;
@@ -999,10 +1005,10 @@ function appendNotificationActions(supporting, notification) {
     replyButton.disabled = true;
     try {
       await client.reply(post.uri, post.cid, text.trim(), post.record?.reply);
-      showSuccess('返信しました');
+      showSuccess('post.replied');
       await loadNotifications();
     } catch (e) {
-      showError(`返信エラー：${e.message}`);
+      showError('errors.replyFailed');
     } finally {
       replyButton.disabled = false;
     }
@@ -1025,17 +1031,17 @@ function appendNotificationActions(supporting, notification) {
         liked = false;
         likeRecordUri = null;
         likeCount = Math.max(0, likeCount - 1);
-        showSuccess('いいね解除しました');
+        showSuccess('post.likeRemoved');
       } else {
         const result = await client.like(post.uri, post.cid);
         liked = true;
         likeRecordUri = result?.data?.uri || null;
         likeCount += 1;
-        showSuccess('いいねしました');
+        showSuccess('post.liked');
       }
       updateLikeButton();
     } catch (e) {
-      showError(`いいねエラー：${e.message}`);
+      showError('errors.likeFailed');
     } finally {
       likeButton.disabled = false;
     }
@@ -1123,7 +1129,7 @@ async function loadNotifications() {
     updateNotificationBadge(notifications);
   } catch (e) {
     console.error('Notifications load error:', e);
-    showError(`通知の取得に失敗しました：${e.message}`);
+    showError('errors.fetchFailed');
   } finally {
     showLoading(false);
     notificationsLoading = false;
