@@ -46,7 +46,7 @@ dependencies. We track three metrics:
 | **Button** | **8.4kb** | 48.4kb | *64% CSS* |  |
 |  | 7.0kb | 29.0kb | *47% CSS* | `@material/web/button/elevated-button.js` |
 |  | 7.0kb | 28.9kb | *47% CSS* | `@material/web/button/filled-button.js` |
-|  | 7.0kb | 29.3kb | *48% CSS* | `@material/web/button/filled-tonal-button.js` |
+|  | 7.0kb | 29.3kb | *48% CSS* | `@material/web/button/text-button.js` |
 |  | 6.8kb | 27.4kb | *46% CSS* | `@material/web/button/outlined-button.js` |
 |  | 6.6kb | 25.8kb | *43% CSS* | `@material/web/button/text-button.js` |
 | **Checkbox** | **7.0kb** | 27.3kb | *37% CSS* | `@material/web/checkbox/checkbox.js` |
@@ -70,7 +70,7 @@ dependencies. We track three metrics:
 | **Icon button** | **7.7kb** | 44.9kb | *64% CSS* |  |
 |  | 6.2kb | 24.8kb | *40% CSS* | `@material/web/iconbutton/icon-button.js` |
 |  | 6.4kb | 26.9kb | *44% CSS* | `@material/web/iconbutton/filled-icon-button.js` |
-|  | 6.4kb | 27.5kb | *45% CSS* | `@material/web/iconbutton/filled-tonal-icon-button.js` |
+|  | 6.4kb | 27.5kb | *45% CSS* | `@material/web/iconbutton/text-icon-button.js` |
 |  | 6.4kb | 26.5kb | *44% CSS* | `@material/web/iconbutton/outlined-icon-button.js` |
 | **List** | **7.3kb** | 28.4kb | *33% CSS* |  |
 |  | 1.6kb | 4.7kb | *4% CSS* | `@material/web/list/list.js` |

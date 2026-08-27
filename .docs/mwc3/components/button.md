@@ -118,7 +118,7 @@ payment'"
         <span>2</span>
       </div>
       <div>
-        <md-filled-tonal-button>Tonal</md-filled-tonal-button>
+        <md-text-button>Tonal</md-text-button>
         <span>3</span>
       </div>
       <div>
@@ -139,7 +139,7 @@ payment'"
 
 1.  [Elevated button](#elevated-button)
 1.  [Filled button](#filled-button)
-1.  [Filled tonal button](#filled-tonal-button)
+1.  [Text button](#text-button)
 1.  [Outlined button](#outlined-button)
 1.  [Text button](#text-button)
 
@@ -198,10 +198,10 @@ box](images/button/usage-icon.webp "Slot in icons to the appropriate slots")
       style="justify-content:center;gap: 8px;"
       title="Outlined and filled buttons."
       aria-label="An outlined button with the text 'Back' next to a filled button with the text 'Complete'">
-    <md-filled-tonal-button>
+    <md-text-button>
       Send
       <svg slot="icon" viewBox="0 0 48 48"><path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z"/></svg>
-    </md-filled-tonal-button>
+    </md-text-button>
 
     <md-text-button trailing-icon>
       Open
@@ -215,10 +215,10 @@ box](images/button/usage-icon.webp "Slot in icons to the appropriate slots")
 <!-- catalog-only-end -->
 
 ```html
-<md-filled-tonal-button>
+<md-text-button>
   Send
   <svg slot="icon" viewBox="0 0 48 48"><path d="M6 40V8l38 16Zm3-4.65L36.2 24 9 12.5v8.4L21.1 24 9 27Zm0 0V12.5 27Z"/></svg>
-</md-filled-tonal-button>
+</md-text-button>
 
 <md-text-button trailing-icon>
   Open
@@ -263,7 +263,7 @@ for guidance on when this is recommended.
 <!-- go/md-elevated-button -->
 
 [Elevated buttons](https://m3.material.io/components/buttons/guidelines#4e89da4d-a8fa-4e20-bb8d-b8a93eff3e3e)<!-- {.external} -->
-are essentially filled tonal buttons with a shadow. To prevent shadow creep,
+are essentially text buttons with a shadow. To prevent shadow creep,
 only use them when absolutely necessary, such as when the button requires visual
 separation from a patterned background.
 
@@ -321,19 +321,19 @@ final actions that complete a flow, like Save, Join now, or Confirm.
 <md-filled-button>Filled</md-filled-button>
 ```
 
-## Filled tonal button
+## Text button
 
-<!-- go/md-filled-tonal-button -->
+<!-- go/md-text-button -->
 
 A
-[filled tonal button](https://m3.material.io/components/buttons/guidelines#07a1577b-aaf5-4824-a698-03526421058b)<!-- {.external} -->
+[text button](https://m3.material.io/components/buttons/guidelines#07a1577b-aaf5-4824-a698-03526421058b)<!-- {.external} -->
 is an alternative middle ground between filled and outlined buttons. They're
 useful in contexts where a lower-priority button requires slightly more emphasis
 than an outline would give, such as "Next" in an onboarding flow.
 
 <!-- no-catalog-start -->
 
-![A filled tonal button](images/button/usage-filled-tonal-button.webp)
+![A text button](images/button/usage-text-button.webp)
 
 <!-- no-catalog-end -->
 <!-- catalog-only-start -->
@@ -344,7 +344,7 @@ than an outline would give, such as "Next" in an onboarding flow.
   <figure
       style="justify-content:center;align-items:center;"
       aria-label="A tonal button.">
-    <md-filled-tonal-button>Tonal</md-filled-tonal-button>
+    <md-text-button>Tonal</md-text-button>
   </figure>
 </div>
 
@@ -353,7 +353,7 @@ than an outline would give, such as "Next" in an onboarding flow.
 <!-- catalog-only-end -->
 
 ```html
-<md-filled-tonal-button>Tonal</md-filled-tonal-button>
+<md-text-button>Tonal</md-text-button>
 ```
 
 ## Outlined button
@@ -547,23 +547,23 @@ Token                                 | Default value
 <md-filled-button>Filled</md-filled-button>
 ```
 
-### Filled tonal button tokens
+### Text button tokens
 
 Token                                       | Default value
 ------------------------------------------- | -------------
-`--md-filled-tonal-button-container-color`  | `--md-sys-color-secondary-container`
-`--md-filled-tonal-button-container-shape`  | `--md-sys-shape-corner-full`
-`--md-filled-tonal-button-label-text-color` | `--md-sys-color-on-secondary-container`
-`--md-filled-tonal-button-label-text-font`  | `--md-sys-typescale-label-large-font`
+`--md-text-button-container-color`  | `--md-sys-color-secondary-container`
+`--md-text-button-container-shape`  | `--md-sys-shape-corner-full`
+`--md-text-button-label-text-color` | `--md-sys-color-on-secondary-container`
+`--md-text-button-label-text-font`  | `--md-sys-typescale-label-large-font`
 
 *   [All tokens](https://github.com/material-components/material-web/blob/main/tokens/_md-comp-filled-tonal-button.scss)
     <!-- {.external} -->
 
-### Filled tonal button example
+### Text button example
 
 <!-- no-catalog-start -->
 
-![Image of a filled tonal button with a different theme applied](images/button/theming-filled-tonal-button.webp "Filled tonal button theming example.")
+![Image of a text button with a different theme applied](images/button/theming-text-button.webp "Text button theming example.")
 
 <!-- no-catalog-end -->
 <!-- catalog-only-start -->
@@ -579,14 +579,14 @@ Token                                       | Default value
     <style>
       .styled-example {
         background-color: white;
-        --md-filled-tonal-button-container-shape: 0px;
-        --md-filled-tonal-button-label-text-font: system-ui;
+        --md-text-button-container-shape: 0px;
+        --md-text-button-label-text-font: system-ui;
         --md-sys-color-secondary-container: #CCE8E7;
         --md-sys-color-on-secondary-container: #051F1F;
       }
     </style>
 
-    <md-filled-tonal-button>Tonal</md-filled-tonal-button>
+    <md-text-button>Tonal</md-text-button>
   </figure>
 </div>
 
@@ -597,14 +597,14 @@ Token                                       | Default value
 ```html
 <style>
 :root {
-  --md-filled-tonal-button-container-shape: 0px;
-  --md-filled-tonal-button-label-text-font: system-ui;
+  --md-text-button-container-shape: 0px;
+  --md-text-button-label-text-font: system-ui;
   --md-sys-color-secondary-container: #CCE8E7;
   --md-sys-color-on-secondary-container: #051F1F;
 }
 </style>
 
-<md-filled-tonal-button>Tonal</md-filled-tonal-button>
+<md-text-button>Tonal</md-text-button>
 ```
 
 ### Outlined button tokens
@@ -770,7 +770,7 @@ Token                               | Default value
 
 <!-- mdformat on(autogenerated might break rendering in catalog) -->
 
-### MdFilledTonalButton <code>&lt;md-filled-tonal-button&gt;</code>
+### MdTextButton <code>&lt;md-text-button&gt;</code>
 
 #### Properties
 

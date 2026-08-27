@@ -62,7 +62,7 @@ people take supplementary actions with a single tap.
 
 1.  [Icon Button](#icon-button)
 2.  [Filled Icon Button](#filled-icon-button)
-3.  [Filled Tonal Icon Button](#filled-tonal-icon-button)
+3.  [Text Icon Button](#text-icon-button)
 4.  [Outlined Icon Button](#outlined-icon-button)
 
 ## Usage
@@ -91,9 +91,9 @@ the icon font.
 <md-filled-icon-button>
   <md-icon>check</md-icon>
 </md-filled-icon-button>
-<md-filled-tonal-icon-button>
+<md-text-icon-button>
   <md-icon>check</md-icon>
-</md-filled-tonal-icon-button>
+</md-text-icon-button>
 <md-outlined-icon-button>
   <md-icon>check</md-icon>
 </md-outlined-icon-button>
@@ -141,10 +141,10 @@ attribute.
     <md-icon>close</md-icon>
     <md-icon slot="selected">check</md-icon>
   </md-filled-icon-button>
-  <md-filled-tonal-icon-button toggle>
+  <md-text-icon-button toggle>
     <md-icon>close</md-icon>
     <md-icon slot="selected">check</md-icon>
-  </md-filled-tonal-icon-button>
+  </md-text-icon-button>
   <md-outlined-icon-button toggle>
     <md-icon>close</md-icon>
     <md-icon slot="selected">check</md-icon>
@@ -159,10 +159,10 @@ attribute.
     <md-icon>close</md-icon>
     <md-icon slot="selected">check</md-icon>
   </md-filled-icon-button>
-  <md-filled-tonal-icon-button toggle selected>
+  <md-text-icon-button toggle selected>
     <md-icon>close</md-icon>
     <md-icon slot="selected">check</md-icon>
-  </md-filled-tonal-icon-button>
+  </md-text-icon-button>
   <md-outlined-icon-button toggle selected>
     <md-icon>close</md-icon>
     <md-icon slot="selected">check</md-icon>
@@ -262,26 +262,26 @@ actions.
 </md-filled-icon-button>
 ```
 
-## Filled Tonal Icon Button
+## Text Icon Button
 
-<!-- go/md-filled-tonal-icon-button -->
+<!-- go/md-text-icon-button -->
 
 <!-- no-catalog-start -->
 
-![A filled tonal icon button with a check icon](images/iconbutton/usage-filled-tonal.webp "Filled Tonal Icon Button")
+![A text icon button with a check icon](images/iconbutton/usage-text.webp "Text Icon Button")
 
 <!-- no-catalog-end -->
-<!-- catalog-include "figures/iconbutton/usage-filled-tonal.html" -->
+<!-- catalog-include "figures/iconbutton/usage-text.html" -->
 
-Filled tonal icon buttons are a middle ground between filled and outlined icon
+text icon buttons are a middle ground between filled and outlined icon
 buttons. They're useful in contexts where the button requires slightly more
 emphasis than an outline would give, such as a secondary action paired with a
 high emphasis action.
 
 ```html
-<md-filled-tonal-icon-button>
+<md-text-icon-button>
   <md-icon>check</md-icon>
-</md-filled-tonal-icon-button>
+</md-text-icon-button>
 ```
 
 ## Outlined Icon Button
@@ -297,7 +297,7 @@ high emphasis action.
 
 Outlined icon buttons are medium-emphasis buttons. They're useful when an icon
 button needs more emphasis than a standard icon button but less than a filled or
-filled tonal icon button.
+text icon button.
 
 ```html
 <md-outlined-icon-button>
@@ -382,38 +382,38 @@ Token                                              | Default value
 </md-filled-icon-button>
 ```
 
-### Filled Tonal Icon Button tokens
+### Text Icon Button tokens
 
 Token                                                    | Default value
 -------------------------------------------------------- | -------------
-`--md-filled-tonal-icon-button-selected-container-color` | `--md-sys-color-secondary-container`
-`--md-filled-tonal-icon-button-container-shape`          | `--md-sys-shape-corner-full`
-`--md-filled-tonal-icon-button-container-width`          | `40px`
-`--md-filled-tonal-icon-button-container-height`         | `40px`
-`--md-filled-tonal-icon-button-icon-size`                | `24px`
+`--md-text-icon-button-selected-container-color` | `--md-sys-color-secondary-container`
+`--md-text-icon-button-container-shape`          | `--md-sys-shape-corner-full`
+`--md-text-icon-button-container-width`          | `40px`
+`--md-text-icon-button-container-height`         | `40px`
+`--md-text-icon-button-icon-size`                | `24px`
 
-### Filled Tonal Icon Button example
+### Text Icon Button example
 
 <!-- no-catalog-start -->
 
-![Image of a filled tonal icon button with a different theme applied](images/iconbutton/theming-filled-tonal.webp "Filled tonal icon button theming example.")
+![Image of a text icon button with a different theme applied](images/iconbutton/theming-text.webp "text icon button theming example.")
 
 <!-- no-catalog-end -->
-<!-- catalog-include "figures/iconbutton/theming-filled-tonal.html" -->
+<!-- catalog-include "figures/iconbutton/theming-text.html" -->
 
 ```html
 <style>
 :root {
-  --md-filled-tonal-icon-button-container-width: 80px;
-  --md-filled-tonal-icon-button-container-height: 80px;
-  --md-filled-tonal-icon-button-container-shape: 0px;
-  --md-filled-tonal-icon-button-icon-size: 40px;
+  --md-text-icon-button-container-width: 80px;
+  --md-text-icon-button-container-height: 80px;
+  --md-text-icon-button-container-shape: 0px;
+  --md-text-icon-button-icon-size: 40px;
   --md-sys-color-secondary-container: #006A6A;
 }
 </style>
-<md-filled-tonal-icon-button>
+<md-text-icon-button>
   <md-icon>check</md-icon>
-</md-filled-tonal-icon-button>
+</md-text-icon-button>
 ```
 
 ### Outlined Icon Button tokens
@@ -529,7 +529,7 @@ Token                                        | Default value
 
 <!-- mdformat on(autogenerated might break rendering in catalog) -->
 
-### MdFilledTonalIconButton <code>&lt;md-filled-tonal-icon-button&gt;</code>
+### MdTextIconButton <code>&lt;md-text-icon-button&gt;</code>
 
 #### Properties
 
