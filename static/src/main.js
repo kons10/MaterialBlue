@@ -69,7 +69,7 @@ function shouldHandleClientNavigation(event) {
   return !(event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
 }
 
-document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
+document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
   link.addEventListener('mouseenter', () => {
     // SPA では HTML ドキュメントの prefetch は不要。ナビゲーションはクライアント側で処理されるため
     // 代わりに必要に応じてデータのみを事前ロードする
@@ -463,7 +463,7 @@ function syncSidebarByAuthState() {
 }
 
 function setActiveSidebarItem(key) {
-  document.querySelectorAll('.sidebar-nav md-filled-tonal-button').forEach((link) => {
+  document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
     link.classList.toggle('active', link.dataset.navItem === key);
   });
 }
@@ -714,7 +714,7 @@ async function loadTimeline(force = false, append = false) {
       };
 
       const createActionButton = (icon, iconClass = '', count = null) => {
-        const btn = document.createElement('md-filled-tonal-button');
+        const btn = document.createElement('md-text-button');
         const countStr = formatCountBadge(count);
         btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${countStr}`;
         return btn;
