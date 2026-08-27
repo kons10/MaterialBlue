@@ -9,10 +9,10 @@
     </md-filled-text-field>
 
     <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
-      <md-filled-tonal-button id="imageUploadBtn">
+      <md-text-button id="imageUploadBtn">
         <md-icon slot="icon">image</md-icon>
         画像を追加
-      </md-filled-tonal-button>
+      </md-text-button>
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
       <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
     </div>
@@ -25,18 +25,18 @@
   </div>
 
   <div style="display:flex; justify-content:flex-start; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--md-sys-color-outline);">
-    <md-filled-tonal-button id="refreshBtn">
+    <md-text-button id="refreshBtn">
       <md-icon slot="icon">refresh</md-icon>
       更新
-    </md-filled-tonal-button>
+    </md-text-button>
   </div>
 
   <md-list id="timeline" style="margin-top:16px; border-top:1px solid var(--md-sys-color-outline);"></md-list>
 
   <div id="timelineBottom" style="display:none; justify-content:center; margin-top:16px;">
-    <md-filled-tonal-button id="seeMoreBtn">
+    <md-text-button id="seeMoreBtn">
       <md-icon slot="icon">expand_more</md-icon>
       See more
-    </md-filled-tonal-button>
+    </md-text-button>
   </div>
 </md-elevated-card>
