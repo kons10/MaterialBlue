@@ -160,10 +160,6 @@ window.addEventListener('popstate', () => {
   initializeView();
 });
 
-function shouldHandleClientNavigation(event) {
-  return !(event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
-}
-
 document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
   link.addEventListener('mouseenter', () => {
     // SPA では HTML ドキュメントの prefetch は不要。ナビゲーションはクライアント側で処理されるため
