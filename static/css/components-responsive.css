@@ -1,0 +1,231 @@
+/* Phase 3 — component adaptation */
+
+/* Shared component invariants */
+#login,
+#timeline-card,
+#notifications-card,
+#settings-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#login .login-fields,
+#composer,
+.settings-content,
+.notifications-content {
+  min-width: 0;
+}
+
+/* Login / account controls */
+.login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.login-fields md-outlined-text-field,
+.login-submit {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.login-submit {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Settings */
+.settings-header,
+.notifications-header,
+.timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.settings-content {
+  margin-top: 16px;
+  border-top: 1px solid var(--md-sys-color-outline);
+  padding-top: 16px;
+}
+
+.settings-list {
+  background: transparent;
+  padding: 0;
+}
+
+.settings-item {
+  min-width: 0;
+}
+
+.settings-item [slot="headline"],
+.settings-item [slot="supporting-text"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-item md-outlined-select,
+.settings-item md-filled-tonal-button,
+.settings-item md-filled-button {
+  max-width: 100%;
+}
+
+.settings-item md-outlined-select {
+  min-width: min(160px, 100%);
+}
+
+.settings-divider {
+  margin: 8px 0;
+}
+
+/* Generic action rows */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.action-row > * {
+  min-width: 0;
+}
+
+/* Composer */
+.composer-field {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.composer-attachments {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  margin-top: 12px;
+}
+
+.composer-image-count {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.composer-image-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(120px, 30%), 1fr));
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 12px;
+}
+
+.composer-submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+/* Notification component */
+.notifications-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.notifications-list {
+  margin-top: 16px;
+  border-top: 1px solid var(--md-sys-color-outline);
+  min-width: 0;
+}
+
+.notification-preview-list {
+  min-width: 0;
+}
+
+.notification-preview-item {
+  min-width: 0;
+}
+
+.notification-preview-meta,
+.notification-post-card,
+.notification-post-author,
+.notification-post-author-text,
+.notification-post-images,
+.notification-post-stats {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.notification-post-images {
+  overflow: hidden;
+}
+
+.notification-post-image {
+  display: block;
+  max-width: 100%;
+}
+
+.notification-post-stats {
+  flex-wrap: wrap;
+}
+
+/* User-generated text and handles must never force the page wider. */
+.post-author-line,
+.post-author-name,
+.post-author-id,
+.notification-preview-author-name,
+.notification-preview-handle,
+.notification-post-author-name,
+.notification-post-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Component-width responsive behavior for narrow controls. */
+@container (max-width: 520px) {
+  .settings-item {
+    padding-block: 12px;
+  }
+
+  .settings-item md-outlined-select,
+  .settings-item md-filled-tonal-button,
+  .settings-item md-filled-button {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 599px) {
+  #login,
+  #timeline-card,
+  #notifications-card,
+  #settings-card {
+    margin-inline: 0;
+  }
+
+  .composer-attachments {
+    align-items: stretch;
+  }
+
+  .composer-attachments md-filled-tonal-button {
+    max-width: 100%;
+  }
+
+  .notification-preview-item {
+    padding-inline: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-row,
+  .composer-attachments {
+    scroll-behavior: auto;
+  }
+}
