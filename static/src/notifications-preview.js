@@ -4,6 +4,7 @@ import { t, getCurrentLocale } from '/src/i18n.js';
 const client = createBskyClient();
 let rendering = false;
 let observer = null;
+let viewObserver = null;
 let lastNotificationSignature = '';
 
 const reasonKeyMap = {
@@ -289,6 +290,10 @@ function notificationTargetUri(notification) {
   return null;
 }
 
+function isPreviewRendered(container) {
+  return container.firstElementChild?.classList.contains('notification-preview-list') === true;
+}
+
 async function fetchAndRender() {
   const container = document.getElementById('notifications');
   if (!container || rendering) return;
@@ -304,7 +309,7 @@ async function fetchAndRender() {
     const postsByUri = new Map(posts.map((post) => [post.uri, post]));
 
     const signature = notifications.map((notification) => `${notification.uri}:${notification.isRead}:${notification.indexedAt}`).join('|');
-    if (signature === lastNotificationSignature && container.dataset.notificationPreview === 'ready') return;
+    if (signature === lastNotificationSignature && isPreviewRendered(container)) return;
     lastNotificationSignature = signature;
 
     if (observer) observer.disconnect();
@@ -338,6 +343,11 @@ async function fetchAndRender() {
   }
 }
 
+function refreshPreview() {
+  lastNotificationSignature = '';
+  void fetchAndRender();
+}
+
 function setup() {
   injectStyles();
   const container = document.getElementById('notifications');
@@ -348,18 +358,27 @@ function setup() {
 
   observer = new MutationObserver(() => {
     if (rendering) return;
-    if (container.dataset.notificationPreview !== 'ready') {
-      fetchAndRender();
+    if (!isPreviewRendered(container)) {
+      refreshPreview();
     }
   });
   observer.observe(container, { childList: true });
 
+  const card = document.getElementById('notifications-card');
+  if (card) {
+    viewObserver = new MutationObserver(() => {
+      if (card.hidden === false && !rendering) {
+        refreshPreview();
+      }
+    });
+    viewObserver.observe(card, { attributes: true, attributeFilter: ['hidden', 'style'] });
+  }
+
+  window.refreshNotificationPreview = refreshPreview;
+
   fetchAndRender();
 
-  document.getElementById('notificationsRefreshBtn')?.addEventListener('click', () => {
-    lastNotificationSignature = '';
-    setTimeout(fetchAndRender, 250);
-  });
+  document.getElementById('notificationsRefreshBtn')?.addEventListener('click', refreshPreview);
   document.getElementById('notificationsSeenBtn')?.addEventListener('click', () => {
     lastNotificationSignature = '';
     setTimeout(fetchAndRender, 350);
