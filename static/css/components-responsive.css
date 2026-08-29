@@ -1,12 +1,10 @@
 /* Phase 3 — component adaptation */
 
 /* Shared component invariants */
-#login,
-#timeline-card,
-#notifications-card,
-#settings-card {
+.component-card {
   min-width: 0;
   max-width: 100%;
+  container-type: inline-size;
 }
 
 #login .login-fields,
@@ -76,6 +74,11 @@
   min-width: min(160px, 100%);
 }
 
+.settings-danger-action {
+  --md-filled-button-container-color: var(--md-sys-color-error, #ba1a1a);
+  --md-filled-button-label-text-color: var(--md-sys-color-on-error, #ffffff);
+}
+
 .settings-divider {
   margin: 8px 0;
 }
@@ -90,6 +93,25 @@
 }
 
 .action-row > * {
+  min-width: 0;
+}
+
+.timeline-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.timeline-list {
+  min-width: 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--md-sys-color-outline);
+}
+
+.timeline-more {
+  display: none;
+  justify-content: center;
+  margin-top: 16px;
   min-width: 0;
 }
 
@@ -200,16 +222,14 @@
   .settings-item md-filled-button {
     min-width: 0;
   }
+
+  .notification-preview-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 @media (max-width: 599px) {
-  #login,
-  #timeline-card,
-  #notifications-card,
-  #settings-card {
-    margin-inline: 0;
-  }
-
   .composer-attachments {
     align-items: stretch;
   }
@@ -220,12 +240,5 @@
 
   .notification-preview-item {
     padding-inline: 12px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .action-row,
-  .composer-attachments {
-    scroll-behavior: auto;
   }
 }
