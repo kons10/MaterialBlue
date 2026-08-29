@@ -6,8 +6,25 @@ import { initI18n, t, formatDate, formatRelativeTime, formatCompactNumber, setLo
 // 定数・設定
 // ============================================================================
 const MAX_IMAGES = 4;
+const MAX_POST_GRAPHEMES = 300;
 const ERROR_DISPLAY_DURATION = 5000;
 const SUCCESS_DISPLAY_DURATION = 3000;
+
+/**
+ * Grapheme（ユーザーが認識する文字）の数を数える
+ * 絵文字、結合文字などを1文字として数える
+ * @param {string} text - 数えるテキスト
+ * @returns {number} グラフェムの数
+ */
+function countGraphemes(text) {
+  if (!text) return 0;
+  
+  // 正規表現を使ってグラフェムクラスターを分割
+  // この実装は基本的な絵文字と結合文字に対応
+  const graphemeRegex = /[\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?=[^\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/g;
+  const matches = text.match(graphemeRegex);
+  return matches ? matches.length : 0;
+}
 
 // ============================================================================
 // クライアント初期化
@@ -348,11 +365,18 @@ function setupPostHandler() {
       return;
     }
 
+    // グラフェム数をチェック
+    const graphemeCount = countGraphemes(text);
+    if (graphemeCount > MAX_POST_GRAPHEMES) {
+      showError('errors.graphemeLimit', { count: graphemeCount });
+      return;
+    }
+
     postBtn.disabled = true;
     postBtn.textContent = '投稿中...';
 
     try {
-      console.log('投稿開始:', { text, imageCount: selectedImages.length });
+      console.log('投稿開始:', { text, imageCount: selectedImages.length, graphemeCount });
 
       if (selectedImages.length > 0) {
         await client.postWithImage(text, selectedImages);
@@ -485,7 +509,9 @@ function createImagePreviewItem(file, index) {
  */
 function createImageRemoveButton(index) {
   const removeBtn = document.createElement('md-icon-button');
-  removeBtn.textContent = 'close';
+  const icon = document.createElement('md-icon');
+  icon.textContent = 'close';
+  removeBtn.appendChild(icon);
   removeBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background-color:var(--md-sys-color-error);color:white;border-radius:50%;width:24px;height:24px;font-size:16px;';
   
   removeBtn.addEventListener('click', () => {

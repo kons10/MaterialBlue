@@ -100,5 +100,6 @@
   "numbers.followers": "フォロワー",
   "numbers.following": "フォロー",
   "numbers.likes": "いいね",
-  "numbers.reposts": "拡散"
+  "numbers.reposts": "拡散",
+  "errors.graphemeLimit": "文字数制限エラー：{count} 文字（最大 300 文字）"
 }

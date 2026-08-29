@@ -114,10 +114,10 @@ function getTranslation(key, locale = currentLocale) {
   }
   
   // どの locale にも存在しない場合はキーを返す（開発環境では警告）
-  if (process?.env?.NODE_ENV === 'development') {
+  if (typeof globalThis !== 'undefined' && globalThis.process?.env?.NODE_ENV === 'development') {
     console.warn(`Missing translation for key: ${key}`);
   }
-  
+
   return key;
 }
 

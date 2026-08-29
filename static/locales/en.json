@@ -100,5 +100,6 @@
   "numbers.followers": "Followers",
   "numbers.following": "Following",
   "numbers.likes": "Likes",
-  "numbers.reposts": "Reposts"
+  "numbers.reposts": "Reposts",
+  "errors.graphemeLimit": "Character limit error: {count} characters (max 300)"
 }

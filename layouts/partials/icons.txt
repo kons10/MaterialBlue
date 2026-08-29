@@ -29,3 +29,4 @@ rss_feed
 send
 settings
 language
+close
