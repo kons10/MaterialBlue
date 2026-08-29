@@ -35,7 +35,7 @@
   </script>
 
 </head>
-<body class="sidebar-collapsed">
+<body data-sidebar-open="false">
   <div id="startupSplash" class="startup-splash" role="status" aria-live="polite" data-i18n-aria="splash.ariaLabel">
     <div class="startup-splash-card">
       <div class="startup-splash-logo" aria-hidden="true">
@@ -51,7 +51,7 @@
     </noscript>
 
   <div class="app-shell">
-    <aside class="sidebar" aria-label="Sidebar">
+    <aside id="sidebar" class="sidebar" aria-label="Sidebar">
       <div class="brand">
         <md-icon>rss_feed</md-icon>
         <strong>Material Blue</strong>
@@ -82,11 +82,12 @@
         </md-outlined-button>
       </div>
     </aside>
+    <div id="sidebarScrim" class="sidebar-scrim" aria-hidden="true"></div>
 
     <div class="content-area">
       <header>
         <div class="header-inner">
-          <md-icon-button id="sidebarToggle" class="menu-btn" data-i18n-aria="header.menuToggle" aria-label="メニュー切り替え">
+          <md-icon-button id="sidebarToggle" class="menu-btn" data-i18n-aria="header.menuToggle" aria-label="メニュー切り替え" aria-expanded="false" aria-controls="sidebar">
             <md-icon>menu</md-icon>
           </md-icon-button>
           <md-icon>dynamic_feed</md-icon>
@@ -141,36 +142,41 @@
 
 
       const btn = document.getElementById('sidebarToggle');
-      if (!btn) return;
-      btn.addEventListener('click', () => {
-        document.body.classList.toggle('sidebar-collapsed');
+      const scrim = document.getElementById('sidebarScrim');
+      const compactQuery = window.matchMedia('(max-width: 599px)');
+
+      const setSidebarOpen = (open) => {
+        document.body.dataset.sidebarOpen = open ? 'true' : 'false';
+        btn?.setAttribute('aria-expanded', String(open));
+      };
+
+      const closeSidebar = () => setSidebarOpen(false);
+
+      btn?.addEventListener('click', () => {
+        setSidebarOpen(document.body.dataset.sidebarOpen !== 'true');
       });
+      scrim?.addEventListener('click', closeSidebar);
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && compactQuery.matches && document.body.dataset.sidebarOpen === 'true') {
+          closeSidebar();
+          btn?.focus();
+        }
+      });
+
       document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
         link.addEventListener('click', () => {
           document.querySelectorAll('.sidebar-nav md-text-button').forEach((other) => other.classList.remove('active'));
           link.classList.add('active');
-          if (window.matchMedia('(max-width: 900px)').matches) {
-            document.body.classList.add('sidebar-collapsed');
-          }
+          if (compactQuery.matches) closeSidebar();
         });
       });
-      if (!window.matchMedia('(max-width: 900px)').matches) {
-        document.body.classList.remove('sidebar-collapsed');
-      }
 
-      document.addEventListener('click', (event) => {
-        if (!window.matchMedia('(max-width: 900px)').matches) return;
-        if (document.body.classList.contains('sidebar-collapsed')) return;
-
-        const sidebar = document.querySelector('.sidebar');
-        if (!sidebar) return;
-
-        const clickedInsideSidebar = sidebar.contains(event.target);
-        const clickedMenuButton = btn.contains(event.target);
-        if (!clickedInsideSidebar && !clickedMenuButton) {
-          document.body.classList.add('sidebar-collapsed');
-        }
+      compactQuery.addEventListener('change', () => {
+        if (!compactQuery.matches) closeSidebar();
       });
+
+      closeSidebar();
     })();
   </script>
 </body>

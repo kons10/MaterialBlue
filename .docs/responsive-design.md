@@ -34,14 +34,17 @@ Files:
 Phase 1 preserves current visual behavior. Structural adaptation is deferred.
 
 ## Phase 2 — Application shell and navigation
-- Convert the shell to Compact / Medium / Expanded.
-- Separate viewport layout behavior from sidebar interaction state.
-- Replace shared sidebar-collapsed state with explicit compact drawer state.
-- Use a real scrim element instead of a body pseudo-element.
-- Adopt 100dvh with fallback.
-- Centralize z-index layers.
+**Status: Implemented**
 
-Acceptance: resizing never leaves navigation invalid; CSS owns viewport layout; dialogs, drawers, and scrims stack predictably.
+- Compact (<600px): off-canvas drawer with real scrim, click-to-dismiss, and Escape-to-close.
+- Medium (600–1199px): persistent compact navigation rail with fluid content.
+- Expanded (>=1200px): persistent full sidebar with labels.
+- CSS owns viewport layout; JavaScript owns only Compact drawer interaction state via data-sidebar-open.
+- Resizing out of Compact clears drawer state.
+- 100dvh is used with 100vh fallback.
+- Layering uses centralized z-index tokens.
+
+Acceptance: resizing never leaves navigation invalid; dialogs, drawers, headers, and scrims stack predictably.
 
 ## Phase 3 — Component adaptation
 Targets: settings items, action rows, post headers, notification items, media grids, composer controls, and login/account controls.
