@@ -514,11 +514,10 @@ When modifying layout:
 
 ---
 
-
-
 ### 18A. Responsive Architecture Rules
 
 Use Compact (<600px), Medium (600–1199px), and Expanded (>=1200px). Implement mobile-first. CSS owns viewport layout; JavaScript only owns drawer interaction state. Do not duplicate breakpoint behavior in JavaScript. Keep responsive state separate from sidebar open/closed state. Prefer fluid sizing, use min-width: 0 for shrinkable long-text containers, do not hide overflow globally to conceal bugs, and use centralized z-index layers. Test responsive changes around 320px, 600px, 900px, and 1200px. The roadmap is in `.docs/responsive-design.md`.
+
 
 ### 19. Performance
 
@@ -824,3 +823,24 @@ When reviewing a change that introduces a new Material Symbol, verify both:
 * the icon is present in the icon list / registry
 
 A feature is not complete if only the first condition is satisfied.
+
+
+## Responsive Design Rules (Mandatory)
+
+- Mobile-first: start from the narrow layout and progressively enhance.
+- Do not add static inline `style` attributes; use semantic classes.
+- Use Compact (<600px), Medium (600–1199px), and Expanded (>=1200px).
+- Do not add arbitrary one-off breakpoints to patch isolated symptoms.
+- Prefer fluid sizing primitives: `min()`, `max()`, `clamp()`, `minmax()`, Flexbox, and Grid.
+- Shrinkable text containers must consider `min-width: 0`; long user content must wrap safely.
+- Images and videos must never exceed their containers.
+- Do not hide overflow globally to conceal responsive bugs; fix the overflowing element.
+- Keep viewport layout in CSS and interaction state in JavaScript.
+- Keep responsive state separate from drawer/sidebar open state.
+- Prefer Container Queries when component width matters more than viewport width.
+- Use centralized z-index layers and shared design tokens.
+- Prefer `100dvh` with sensible fallback for full-height mobile layouts.
+- Test around 320px, 600px, 900px, and 1200px with long localized strings, handles, URLs, and media grids.
+- No new UI may introduce unintended horizontal page scrolling.
+
+The complete migration plan is documented in `.docs/responsive-design.md`.
