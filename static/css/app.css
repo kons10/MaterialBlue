@@ -430,3 +430,14 @@ md-icon {
 .footer-copy {
   margin: 0;
 }
+
+
+/* Phase 1 semantic replacements for former inline styles */
+.app-title {
+  margin: 0;
+  font-weight: 500;
+}
+
+.footer-copy {
+  margin: 0;
+}
