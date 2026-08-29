@@ -339,63 +339,52 @@ if (clearCookiesBtn) clearCookiesBtn.addEventListener('click', async () => {
 function setupPostHandler() {
   const { postBtn, postText } = elements;
   if (!postBtn) return;
-  
-  if (!text && selectedImages.length === 0) {
-    showError('post.required');
-    return;
-  }
-  
-  postBtn.disabled = true;
-  postBtn.textContent = '投稿中...';
-  
-  try {
-    console.log('投稿開始:', { text, imageCount: selectedImages.length });
-    
+
+  postBtn.addEventListener('click', async () => {
+    const text = getPostText(postText);
+
     if (!text && selectedImages.length === 0) {
-      showError('投稿内容または画像を入力してください');
+      showError('post.required');
       return;
     }
-    
+
     postBtn.disabled = true;
     postBtn.textContent = '投稿中...';
-    
-    showError('post.posted');
-    errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
-    errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
-    setTimeout(() => {
-      errorMessage.style.background = '';
-      errorMessage.style.color = '';
-    }, 3000);
-    await loadTimeline(true);
-  } catch (e) {
-    console.error('投稿エラー詳細:', e);
-    showError('errors.postFailed');
-  } finally {
-    postBtn.disabled = false;
-    postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>投稿';
-  }
-});
 
-// 画像アップロードボタンクリック
-if (imageUploadBtn) imageUploadBtn.addEventListener('click', () => {
-  imageInput.click();
-});
+    try {
+      console.log('投稿開始:', { text, imageCount: selectedImages.length });
 
-// 画像選択時の処理
-if (imageInput) imageInput.addEventListener('change', (e) => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
-  
-  // 最大 4 枚まで（Bluesky の制限）
-  const remainingSlots = 4 - selectedImages.length;
-  const filesToAdd = files.slice(0, remainingSlots);
-  
-  if (files.length > remainingSlots) {
-    showError('post.maxImages', { remaining: remainingSlots });
+      if (selectedImages.length > 0) {
+        await client.postWithImage(text, selectedImages);
+        selectedImages = [];
+        updateImagePreview();
+      } else {
+        await client.post(text);
+      }
+
+      clearPostText(postText);
+      showSuccess('投稿しました！');
+      await loadTimeline(true);
+    } catch (e) {
+      console.error('投稿エラー詳細:', e);
+      showError(`投稿エラー：${e.message}`);
+    } finally {
+      postBtn.disabled = false;
+      postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>投稿';
+    }
+  });
+}
+
+/**
+ * 投稿テキストの取得（shadow DOM 対応）
+ */
+function getPostText(postTextField) {
+  if (postTextField?.value) {
+    return postTextField.value.trim();
   }
-  
+
   // shadow DOM 内の textarea から直接取得
-  const textarea = postTextField?.querySelector('textarea') || 
+  const textarea = postTextField?.querySelector('textarea') ||
                    postTextField?.shadowRoot?.querySelector('textarea') ||
                    postTextField?.shadowRoot?.querySelector('input');
   return textarea ? textarea.value.trim() : '';
