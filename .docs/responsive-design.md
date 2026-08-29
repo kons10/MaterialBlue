@@ -47,9 +47,15 @@ Phase 1 preserves current visual behavior. Structural adaptation is deferred.
 Acceptance: resizing never leaves navigation invalid; dialogs, drawers, headers, and scrims stack predictably.
 
 ## Phase 3 — Component adaptation
-Targets: settings items, action rows, post headers, notification items, media grids, composer controls, and login/account controls.
+**Status: Implemented**
 
-Rules: semantic component classes; stack controls when horizontal competition is excessive; `min-width: 0` for shrinkable text; safe wrapping for URLs and unbreakable user content; Container Queries when component width is the real trigger.
+- Added a dedicated semantic component stylesheet: `static/css/components-responsive.css`.
+- Settings, notifications, login/account controls, and timeline composer now use semantic component classes instead of presentation-critical inline styles.
+- Component cards establish container-query context so component width can drive adaptation.
+- Shared action rows wrap instead of forcing controls into a single horizontal line.
+- Shrinkable content gets `min-width: 0`; user-generated names, handles, URLs, and post text use safe wrapping.
+- Composer media previews use responsive grid sizing and bounded media width.
+- Notification post previews remain bounded and can collapse to a single column based on component width.
 
 Acceptance: translated strings, long names, handles, URLs, and media do not break layout.
 
