@@ -32,6 +32,7 @@
   --mb-z-sidebar: 50;
   --mb-z-dialog: 100;
   --mb-z-snackbar: 110;
+  --mb-z-splash: 120;
 
   /* Motion */
   --mb-motion-fast: 150ms;
