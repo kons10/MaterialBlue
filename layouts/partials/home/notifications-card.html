@@ -1,10 +1,10 @@
-<md-elevated-card id="notifications-card" style="padding:16px; display:none;" hidden>
-  <div slot="headline" class="md-typescale-title-large" style="display:flex; align-items:center; gap:8px;">
+<md-elevated-card id="notifications-card" class="component-card notifications-card" hidden>
+  <div slot="headline" class="md-typescale-title-large notifications-header">
     <md-icon>notifications</md-icon>
     <span data-i18n="notifications.title">通知</span>
   </div>
 
-  <div style="display:flex; justify-content:flex-start; align-items:center; gap:8px; margin-top:16px; padding-top:16px; border-top:1px solid var(--md-sys-color-outline); flex-wrap:wrap;">
+  <div class="action-row notifications-actions">
     <md-filled-tonal-button id="notificationsRefreshBtn">
       <md-icon slot="icon">refresh</md-icon>
       <span data-i18n="notifications.refresh">更新</span>
@@ -15,7 +15,7 @@
     </md-outlined-button>
   </div>
 
-  <div id="notifications" style="margin-top:16px; border-top:1px solid var(--md-sys-color-outline);"></div>
+  <div id="notifications" class="notifications-list notifications-content"></div>
 
   <script type="module" src="/src/notifications-preview.js"></script>
 </md-elevated-card>
