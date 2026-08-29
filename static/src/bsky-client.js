@@ -282,7 +282,14 @@ export function createBskyClient() {
     async notifications(limit = 50) {
       if (!this.isLoggedIn) throw new Error('Not logged in');
       const res = await agent.api.app.bsky.notification.listNotifications({ limit });
-      return res.data.notifications || [];
+      return (res.data.notifications || []).map((notification) => {
+        // いいね・拡散などの通知は notification.uri がアクションレコードを指すため、
+        // 通知対象の投稿を取得できるよう reasonSubject を優先する。
+        const targetUri = notification.reasonSubject || notification.uri;
+        return targetUri === notification.uri
+          ? notification
+          : { ...notification, uri: targetUri };
+      });
     },
 
     async markNotificationsSeen(seenAt = new Date().toISOString()) {
