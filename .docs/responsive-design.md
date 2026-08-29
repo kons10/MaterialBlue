@@ -1,51 +1,87 @@
 # MaterialBlue Responsive Design Roadmap
 
-## Status
+## Purpose
+This is the source of truth for migrating MaterialBlue from a desktop-first single-breakpoint UI to a maintainable responsive architecture.
 
-- Phase 1 — Foundation: design-rule baseline.
-- Phase 2 — Application Shell and Navigation: **implemented**.
-- Phase 3 — Component Adaptation: pending.
-- Phase 4 — Robustness Hardening: pending.
-- Phase 5 — Enforcement: pending.
+## Target philosophy
+Responsiveness must be a system, not a pile of emergency media queries. Layout adapts intentionally; components remain valid at different available widths; interaction state is separate from viewport state; long text, URLs, media, and translations must never cause page-wide overflow.
 
-## Size classes
+## Target size classes
+### Compact — below 600px
+Single-column layout, overlay drawer navigation, compact padding, and safe operation down to approximately 320px.
 
-### Compact (<600px)
-Single-column content with an off-canvas drawer. The drawer has a real scrim, click-to-dismiss behavior, and Escape-to-close behavior.
+### Medium — 600px to below 1200px
+Adaptive tablet/narrow-desktop layout with compact navigation patterns. Do not allow a full sidebar to starve content.
 
-### Medium (600–1199px)
-An 88px navigation rail keeps content fluid. Drawer interaction is disabled because navigation is persistent.
+### Expanded — 1200px and above
+Persistent full sidebar, expanded spacing, and constrained readable content width.
 
-### Expanded (>=1200px)
-A persistent 280px sidebar shows full navigation labels while content remains width-constrained.
+## Phase 1 — Foundation
+**Status: Implemented**
 
-## Phase 2 implementation
+- Externalize static CSS from the base layout.
+- Add shared responsive design tokens.
+- Replace static inline presentation styles in the base layout with semantic classes.
+- Add mandatory responsive rules to AGENTS.md.
+- Establish this roadmap.
 
-### Application shell
-The shell is mobile-first: Compact starts as one content column, Medium adds a navigation rail, and Expanded upgrades to the full sidebar.
+Files:
+- `static/css/tokens.css`
+- `static/css/app.css`
+- `AGENTS.md`
+- `.docs/responsive-design.md`
 
-### State separation
-CSS decides the viewport layout. JavaScript only controls `data-sidebar-open` for Compact drawer interaction. Crossing into Medium/Expanded clears drawer interaction state.
+Phase 1 preserves current visual behavior. Structural adaptation is deferred.
 
-### Scrim and layering
-The old body pseudo-element overlay is replaced by `.sidebar-scrim`. Layering is centralized with header, scrim, sidebar, and splash variables.
+## Phase 2 — Application shell and navigation
+**Status: Implemented**
 
-### Viewport height
-Full-height regions use `100dvh` with `100vh` fallback.
+- Compact (<600px): off-canvas drawer with real scrim, click-to-dismiss, and Escape-to-close.
+- Medium (600–1199px): persistent compact navigation rail with fluid content.
+- Expanded (>=1200px): persistent full sidebar with labels.
+- CSS owns viewport layout; JavaScript owns only Compact drawer interaction state via data-sidebar-open.
+- Resizing out of Compact clears drawer state.
+- 100dvh is used with 100vh fallback.
+- Layering uses centralized z-index tokens.
 
-### Accessibility
-The menu trigger uses `aria-expanded` and `aria-controls`. The drawer supports scrim dismissal and Escape-to-close with focus returned to the trigger.
+Acceptance: resizing never leaves navigation invalid; dialogs, drawers, headers, and scrims stack predictably.
 
-## Validation matrix
+## Phase 3 — Component adaptation
+Targets: settings items, action rows, post headers, notification items, media grids, composer controls, and login/account controls.
 
+Rules: semantic component classes; stack controls when horizontal competition is excessive; `min-width: 0` for shrinkable text; safe wrapping for URLs and unbreakable user content; Container Queries when component width is the real trigger.
+
+Acceptance: translated strings, long names, handles, URLs, and media do not break layout.
+
+## Phase 4 — Robustness hardening
+- Audit width/min-width/max-width.
+- Replace unjustified fixed widths with fluid constraints.
+- Audit flex/grid shrink behavior.
+- Audit image/video sizing.
+- Audit embeds and plugin-provided UI.
+- Audit touch targets, reduced motion, keyboard navigation, and horizontal overflow.
+
+### Test matrix
 | Width | Focus |
 |---|---|
-| 320px | Narrow Compact safety |
-| 600px | Compact → Medium transition |
-| 900px | Tablet regression |
-| 1200px | Medium → Expanded transition |
+| 320px | Extreme compact safety |
+| 360px | Small phone |
+| 600px | Compact/Medium transition |
+| 768px | Tablet |
+| 900px | Legacy breakpoint regression |
+| 1200px | Medium/Expanded transition |
 | 1440px | Wide desktop readability |
 
-## Phase 3 next
+Test long localized strings, long names, handles, URLs, 1–4 media items, embeds, notifications, settings controls, and navigation states.
 
-Adapt settings rows, composer action rows, post headers, notification cards, media grids, and account controls. Use semantic component classes, stacking where horizontal competition is excessive, safe text wrapping, and Container Queries where component width is the correct trigger.
+## Phase 5 — Enforcement
+Recommended: code-review checklist based on AGENTS.md; optional checks flagging newly introduced inline styles; visual/manual regression checks at documented widths; responsive review before merging every new component.
+
+## Definition of done
+A responsive change is complete only when it works in all applicable layout modes, introduces no unintended horizontal overflow, keeps interaction state valid after resizing, safely handles localized and user-generated long text, preserves accessibility, and does not require unrelated compensating CSS patches.
+
+## Anti-patterns
+Do not add random media queries for isolated symptoms, use `overflow-x: hidden` to conceal overflow, keep presentation-critical values inline, duplicate breakpoint logic between CSS and JavaScript, add arbitrary `z-index: 9999` values, assume components always have desktop-width space, or force fixed-width controls into narrow rows.
+
+## Future CSS organization
+As ownership grows, split deliberately: `tokens.css`, `base.css`, `layout.css`, `components.css`, and `responsive.css`. Do not split files merely for aesthetics; split when maintainability improves.

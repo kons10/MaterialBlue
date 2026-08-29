@@ -514,10 +514,11 @@ When modifying layout:
 
 ---
 
+
+
 ### 18A. Responsive Architecture Rules
 
-Use Compact (<600px), Medium (600–1199px), and Expanded (>=1200px). Implement mobile-first. CSS owns viewport layout; JavaScript only owns drawer interaction state. Do not duplicate breakpoint behavior in JavaScript. Keep responsive state separate from sidebar open/closed state. Prefer fluid sizing, use min-width: 0 for shrinkable long-text containers, do not hide overflow globally to conceal bugs, and use centralized z-index layers. Test responsive changes around 320px, 600px, 900px, and 1200px. The roadmap is in `.docs/responsive-design.md`.
-
+Use Compact (<600px), Medium (600–1199px), and Expanded (>=1200px). Implement mobile-first. CSS owns viewport layout; JavaScript only owns drawer interaction state. Do not duplicate breakpoint behavior in JavaScript. Keep responsive state separate from sidebar open/closed state. Prefer fluid sizing, use min-width: 0 for shrinkable long-text containers, do not hide overflow globally to conceal bugs, and use centralized z-index layers. Test responsive changes around 320px, 600px, 900px, and 1200px. The roadmap is in .docs/responsive-design.md.
 
 ### 19. Performance
 
