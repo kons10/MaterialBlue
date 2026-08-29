@@ -1,0 +1,52 @@
+/**
+ * MaterialBlue responsive design tokens.
+ * Phase 1 foundation: values are centralized here before later layout phases.
+ */
+:root {
+  /* Breakpoint reference values (documentary; media queries use literals). */
+  --mb-breakpoint-compact: 600px;
+  --mb-breakpoint-medium: 1200px;
+
+  /* Layout */
+  --mb-content-max-width: 760px;
+  --mb-sidebar-width: 280px;
+  --mb-navigation-rail-width: 80px;
+
+  /* Spacing scale */
+  --mb-space-1: 4px;
+  --mb-space-2: 8px;
+  --mb-space-3: 12px;
+  --mb-space-4: 16px;
+  --mb-space-5: 24px;
+  --mb-space-6: 32px;
+
+  /* Responsive page padding */
+  --mb-page-padding: var(--mb-space-2);
+
+  /* Interaction */
+  --mb-touch-target-min: 48px;
+
+  /* Layering */
+  --mb-z-header: 30;
+  --mb-z-scrim: 40;
+  --mb-z-sidebar: 50;
+  --mb-z-dialog: 100;
+  --mb-z-snackbar: 110;
+  --mb-z-splash: 120;
+
+  /* Motion */
+  --mb-motion-fast: 150ms;
+  --mb-motion-normal: 250ms;
+}
+
+@media (min-width: 600px) {
+  :root {
+    --mb-page-padding: var(--mb-space-4);
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --mb-page-padding: var(--mb-space-5);
+  }
+}
