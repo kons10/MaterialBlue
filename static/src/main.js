@@ -373,7 +373,7 @@ function setupPostHandler() {
     }
 
     postBtn.disabled = true;
-    postBtn.textContent = '投稿中...';
+    postBtn.textContent = t('post.posting');
 
     try {
       console.log('投稿開始:', { text, imageCount: selectedImages.length, graphemeCount });
@@ -394,7 +394,7 @@ function setupPostHandler() {
       showError(`投稿エラー：${e.message}`);
     } finally {
       postBtn.disabled = false;
-      postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>投稿';
+      postBtn.innerHTML = '<md-icon slot="icon">send</md-icon>' + t('post.submit');
     }
   });
 }
@@ -476,7 +476,7 @@ function updateImagePreview() {
   });
   
   imagePreview.innerHTML = '';
-  imageCount.textContent = selectedImages.length > 0 ? `${selectedImages.length}枚選択中` : '';
+  imageCount.textContent = selectedImages.length > 0 ? t('post.imageCountSelected', { count: selectedImages.length }) : '';
   
   selectedImages.forEach((file, index) => {
     const container = createImagePreviewItem(file, index);
@@ -545,13 +545,13 @@ function getReplyThreadPosts(reply) {
 /**
  * 著者情報行の作成
  */
-function createAuthorLine(author = {}, fallbackName = '投稿者', nameTypeClass = 'md-typescale-body-large') {
+function createAuthorLine(author = {}, fallbackName = '', nameTypeClass = 'md-typescale-body-large') {
   const authorLine = document.createElement('div');
   authorLine.className = 'post-author-line';
 
   const displayName = document.createElement('span');
   displayName.className = `post-author-name ${nameTypeClass}`;
-  displayName.textContent = author.displayName || author.handle || fallbackName;
+  displayName.textContent = author.displayName || author.handle || (fallbackName ? t(fallbackName) : t('post.authorFallback'));
   authorLine.appendChild(displayName);
 
   if (author.handle) {
@@ -600,7 +600,7 @@ function createReplyCard(replyPost) {
   const card = document.createElement('div');
   card.style.cssText = 'padding:8px;border-radius:12px;background:var(--md-sys-color-surface-container-high);';
 
-  const author = createAuthorLine(replyAuthor, '返信元', 'md-typescale-body-small');
+  const author = createAuthorLine(replyAuthor, t('post.replyAuthorFallback'), 'md-typescale-body-small');
 
   const text = document.createElement('div');
   text.className = 'md-typescale-body-small';
@@ -792,7 +792,7 @@ async function loadTimeline(force = false, append = false) {
         repostIcon.style.fontSize = '16px';
 
         const repostLabel = document.createElement('span');
-        repostLabel.textContent = `${reposterName}による拡散`;
+        repostLabel.textContent = t('post.repostedBy', { name: reposterName });
 
         overline.appendChild(repostIcon);
         overline.appendChild(repostLabel);
@@ -843,7 +843,7 @@ async function loadTimeline(force = false, append = false) {
       const replyCount = post.replyCount ?? null;
       const replyBtn = createActionButton('reply', '', replyCount);
       replyBtn.addEventListener('click', async () => {
-        const text = window.prompt('返信内容を入力してください');
+        const text = window.prompt(t('post.replyPrompt'));
         if (!text || !text.trim()) return;
         replyBtn.disabled = true;
         try {
@@ -926,7 +926,7 @@ async function loadTimeline(force = false, append = false) {
       }
 
       async function handleQuote() {
-        const text = window.prompt('引用文を入力してください');
+        const text = window.prompt(t('post.quotePrompt'));
         if (!text || !text.trim()) return;
         quoteItem.disabled = true;
         try {
@@ -1084,15 +1084,16 @@ async function loadTimeline(force = false, append = false) {
 
 
 function getNotificationReasonLabel(reason) {
-  const labels = {
-    like: 'いいね',
-    repost: '拡散',
-    follow: 'フォロー',
-    mention: 'メンション',
-    reply: '返信',
-    quote: '引用'
+  const keyMap = {
+    like: 'notification.label.like',
+    repost: 'notification.label.repost',
+    follow: 'notification.label.follow',
+    mention: 'notification.label.mention',
+    reply: 'notification.label.reply',
+    quote: 'notification.label.quote'
   };
-  return labels[reason] || reason || '通知';
+  const key = keyMap[reason];
+  return key ? t(key) : t('notification.label.fallback');
 }
 
 function appendNotificationActions(supporting, notification) {
@@ -1114,7 +1115,7 @@ function appendNotificationActions(supporting, notification) {
 
   const replyButton = createButton('reply', post.replyCount ?? 0);
   replyButton.addEventListener('click', async () => {
-    const text = window.prompt('返信内容を入力してください');
+    const text = window.prompt(t('post.replyPrompt'));
     if (!text || !text.trim()) return;
     replyButton.disabled = true;
     try {
@@ -1172,7 +1173,7 @@ function renderNotifications(notifications) {
 
   if (notifications.length === 0) {
     const emptyItem = document.createElement('md-list-item');
-    emptyItem.innerHTML = '<div slot="headline">通知なし</div><div slot="supporting-text">新しい通知はありません</div>';
+    emptyItem.innerHTML = `<div slot="headline">${t('notification.emptyHeadline')}</div><div slot="supporting-text">${t('notification.empty')}</div>`;
     container.appendChild(emptyItem);
     return;
   }
@@ -1186,7 +1187,7 @@ function renderNotifications(notifications) {
     icon.slot = 'start';
     icon.textContent = notification.isRead ? 'notifications' : 'notifications_active';
 
-    const headline = createAuthorLine(notification.author, '通知元');
+    const headline = createAuthorLine(notification.author, 'notification.sourceFallback');
     headline.slot = 'headline';
 
     const supporting = document.createElement('div');

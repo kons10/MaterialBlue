@@ -1,16 +1,18 @@
 import { createBskyClient } from '/src/bsky-client.js';
+import { t, getCurrentLocale } from '/src/i18n.js';
 
 const client = createBskyClient();
 let rendering = false;
 let observer = null;
 let lastNotificationSignature = '';
 
-const reasonLabels = {
-  like: 'あなたの投稿にいいねしました',
-  repost: 'あなたの投稿を再投稿しました',
-  reply: 'あなたの投稿に返信しました',
-  quote: 'あなたの投稿を引用しました',
-  mention: 'あなたの投稿でメンションしました',
+const reasonKeyMap = {
+  like: 'notification.reason.like',
+  repost: 'notification.reason.repost',
+  reply: 'notification.reason.reply',
+  quote: 'notification.reason.quote',
+  mention: 'notification.reason.mention',
+  follow: 'notification.reason.follow',
 };
 
 function injectStyles() {
@@ -174,13 +176,13 @@ function createPostCard(post) {
 
   const authorName = document.createElement('span');
   authorName.className = 'notification-post-author-name';
-  authorName.textContent = post.author?.displayName || post.author?.handle || '投稿者';
+  authorName.textContent = post.author?.displayName || post.author?.handle || t('notification.authorFallback');
   authorText.appendChild(authorName);
 
   if (post.record?.createdAt) {
     const date = document.createElement('span');
     date.className = 'notification-post-date';
-    date.textContent = `· ${new Date(post.record.createdAt).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}`;
+    date.textContent = `· ${new Date(post.record.createdAt).toLocaleDateString(getCurrentLocale(), { month: 'numeric', day: 'numeric' })}`;
     authorText.appendChild(date);
   }
 
@@ -241,7 +243,7 @@ function createNotificationItem(notification, post) {
 
   const authorName = document.createElement('div');
   authorName.className = 'notification-preview-author-name md-typescale-title-medium';
-  authorName.textContent = notification.author?.displayName || notification.author?.handle || '通知元';
+  authorName.textContent = notification.author?.displayName || notification.author?.handle || t('notification.sourceFallback');
   author.appendChild(authorName);
 
   if (notification.author?.handle) {
@@ -253,7 +255,8 @@ function createNotificationItem(notification, post) {
 
   const reason = document.createElement('div');
   reason.className = 'notification-preview-reason md-typescale-body-medium';
-  reason.textContent = reasonLabels[notification.reason] || `あなたに${notification.reason || '通知'}しました`;
+  const reasonKey = reasonKeyMap[notification.reason];
+  reason.textContent = reasonKey ? t(reasonKey) : t('notification.reason.unknown', { action: notification.reason || '通知' });
   author.appendChild(reason);
 
   if (notification.indexedAt) {
@@ -261,9 +264,9 @@ function createNotificationItem(notification, post) {
     time.className = 'notification-preview-time md-typescale-body-small';
     const date = new Date(notification.indexedAt);
     const dateText = document.createElement('span');
-    dateText.textContent = date.toLocaleDateString('ja-JP');
+    dateText.textContent = date.toLocaleDateString(getCurrentLocale());
     const timeText = document.createElement('span');
-    timeText.textContent = date.toLocaleTimeString('ja-JP');
+    timeText.textContent = date.toLocaleTimeString(getCurrentLocale());
     time.append(dateText, timeText);
     author.appendChild(time);
   }
@@ -315,7 +318,7 @@ async function fetchAndRender() {
       const empty = document.createElement('div');
       empty.className = 'md-typescale-body-medium';
       empty.style.padding = '24px 16px';
-      empty.textContent = '新しい通知はありません';
+      empty.textContent = t('notification.empty');
       list.appendChild(empty);
     } else {
       notifications.forEach((notification) => {

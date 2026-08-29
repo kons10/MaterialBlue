@@ -1,17 +1,17 @@
 <md-elevated-card id="timeline-card" style="padding:16px; display:none;" hidden>
   <div slot="headline" class="md-typescale-title-large" style="display:flex; align-items:center; gap:8px;">
     <md-icon>rss_feed</md-icon>
-    タイムライン
+    <span data-i18n="timeline.title">タイムライン</span>
   </div>
 
   <div id="composer" style="margin-top:16px;">
-    <md-filled-text-field id="postText" label="何かあった？" type="textarea" rows="5" fullwidth style="width:100%;">
+    <md-filled-text-field id="postText" data-i18n-label="post.placeholder" label="何かあった？" type="textarea" rows="5" fullwidth style="width:100%;">
     </md-filled-text-field>
 
     <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
       <md-filled-tonal-button id="imageUploadBtn">
         <md-icon slot="icon">image</md-icon>
-        画像を追加
+        <span data-i18n="post.attach">画像を追加</span>
       </md-filled-tonal-button>
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
       <span id="imageCount" style="font-size:14px; color:var(--md-sys-color-on-surface-variant);"></span>
@@ -20,14 +20,14 @@
 
     <md-filled-button id="postBtn" style="width:100%; justify-content:center; margin-top:12px;">
       <md-icon slot="icon">send</md-icon>
-      投稿
+      <span data-i18n="post.submit">投稿</span>
     </md-filled-button>
   </div>
 
   <div style="display:flex; justify-content:flex-start; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--md-sys-color-outline);">
     <md-filled-tonal-button id="refreshBtn">
       <md-icon slot="icon">refresh</md-icon>
-      更新
+      <span data-i18n="navigation.refresh">更新</span>
     </md-filled-tonal-button>
   </div>
 
@@ -36,7 +36,7 @@
   <div id="timelineBottom" style="display:none; justify-content:center; margin-top:16px;">
     <md-filled-tonal-button id="seeMoreBtn">
       <md-icon slot="icon">expand_more</md-icon>
-      See more
+      <span data-i18n="navigation.seeMore">See more</span>
     </md-filled-tonal-button>
   </div>
 </md-elevated-card>
