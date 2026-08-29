@@ -211,7 +211,7 @@
   word-break: break-word;
 }
 
-/* Component-width responsive behavior for narrow controls. */
+/* Component-width responsive behavior. */
 @container (max-width: 520px) {
   .settings-item {
     padding-block: 12px;
@@ -223,7 +223,7 @@
     min-width: 0;
   }
 
-  .notification-preview-item {
+  .notifications-card .notification-preview-item {
     grid-template-columns: 1fr;
     gap: 12px;
   }
