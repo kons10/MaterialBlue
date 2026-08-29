@@ -28,3 +28,4 @@ reply
 rss_feed
 send
 settings
+language

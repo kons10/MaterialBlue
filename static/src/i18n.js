@@ -283,6 +283,22 @@ export function updateAllTranslations() {
     const key = element.getAttribute('data-i18n-placeholder');
     element.setAttribute('placeholder', t(key));
   });
+  
+  // label の翻訳 (md-select, md-text-field など)
+  document.querySelectorAll('[data-i18n-label]').forEach(element => {
+    const key = element.getAttribute('data-i18n-label');
+    if (element.label !== undefined) {
+      element.label = t(key);
+    }
+  });
+  
+  // supportingText の翻訳 (md-select, md-text-field など)
+  document.querySelectorAll('[data-i18n-supporting-text]').forEach(element => {
+    const key = element.getAttribute('data-i18n-supporting-text');
+    if (element.supportingText !== undefined) {
+      element.supportingText = t(key);
+    }
+  });
 }
 
 /**

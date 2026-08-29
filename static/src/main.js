@@ -172,6 +172,33 @@ if (logoutBtn) logoutBtn.addEventListener('click', async () => {
   syncSidebarByAuthState();
 });
 
+// 言語切り替え機能
+const localeSelect = document.getElementById('localeSelect');
+
+function syncLocaleSelect() {
+  if (!localeSelect) return;
+  const current = getCurrentLocale();
+  localeSelect.value = current;
+}
+
+async function handleLocaleChange(locale) {
+  if (!locale) return;
+  try {
+    await setLocale(locale);
+    // 翻訳が反映された状態でページ全体を再読み込み
+    location.reload();
+  } catch (e) {
+    console.error('Locale change failed:', e);
+    showError('errors.localeChangeFailed');
+  }
+}
+
+if (localeSelect) {
+  localeSelect.addEventListener('change', () => {
+    handleLocaleChange(localeSelect.value);
+  });
+}
+
 if (clearCacheBtn) clearCacheBtn.addEventListener('click', async () => {
   clearCacheBtn.disabled = true;
   try {
@@ -607,6 +634,7 @@ function showSettings() {
     settingsCard.style.display = 'block';
   }
   setActiveSidebarItem('settings');
+  syncLocaleSelect();
 }
 
 async function loadTimeline(force = false, append = false) {

@@ -7,6 +7,29 @@
   <div style="margin-top:16px; border-top:1px solid var(--md-sys-color-outline); padding-top:16px;">
     <md-list style="background:transparent; padding:0;">
       <md-list-item>
+        <md-icon slot="start">language</md-icon>
+        <div slot="headline" data-i18n="settings.language">言語</div>
+        <div slot="supporting-text" data-i18n="settings.languageDescription">表示言語を設定します。</div>
+        <md-outlined-select
+          id="localeSelect"
+          slot="end"
+          style="min-width:160px;"
+          data-i18n-label="settings.language"
+          data-i18n-supporting-text="settings.languageDescription"
+          hasLeadingIcon>
+          <md-icon slot="start">language</md-icon>
+          <md-select-option value="ja">
+            <div slot="headline" data-i18n="settings.languageJa">日本語</div>
+          </md-select-option>
+          <md-select-option value="en">
+            <div slot="headline" data-i18n="settings.languageEn">English</div>
+          </md-select-option>
+        </md-outlined-select>
+      </md-list-item>
+
+      <md-divider style="margin: 8px 0;"></md-divider>
+
+      <md-list-item>
         <md-icon slot="start">delete_outline</md-icon>
         <div slot="headline" data-i18n="settings.clearCache">キャッシュをクリア</div>
         <div slot="supporting-text" data-i18n="settings.cacheDescription">ブラウザにキャッシュされたデータをクリアします。</div>
@@ -15,9 +38,9 @@
           <span data-i18n="settings.clearCacheAction">クリア</span>
         </md-filled-tonal-button>
       </md-list-item>
-      
+
       <md-divider style="margin: 8px 0;"></md-divider>
-      
+
       <md-list-item>
         <md-icon slot="start">cookie</md-icon>
         <div slot="headline" data-i18n="settings.clearCookies">Cookie をクリア</div>
