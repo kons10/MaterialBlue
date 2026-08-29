@@ -2,32 +2,54 @@
 import { createBskyClient } from '/src/bsky-client.js';
 import { initI18n, t, formatDate, formatRelativeTime, formatCompactNumber, setLocale, getCurrentLocale } from '/src/i18n.js';
 
+// ============================================================================
+// 定数・設定
+// ============================================================================
+const MAX_IMAGES = 4;
+const ERROR_DISPLAY_DURATION = 5000;
+const SUCCESS_DISPLAY_DURATION = 3000;
+
+// ============================================================================
+// クライアント初期化
+// ============================================================================
 const client = createBskyClient();
-const loginBtn = document.getElementById('loginBtn');
-const timelineCard = document.getElementById('timeline-card');
-const notificationsCard = document.getElementById('notifications-card');
-const refreshBtn = document.getElementById('refreshBtn');
-const seeMoreBtn = document.getElementById('seeMoreBtn');
-const timelineBottom = document.getElementById('timelineBottom');
-const logoutBtn = document.getElementById('logoutBtn');
-const notificationsRefreshBtn = document.getElementById('notificationsRefreshBtn');
-const notificationsSeenBtn = document.getElementById('notificationsSeenBtn');
-const postBtn = document.getElementById('postBtn');
-const imageUploadBtn = document.getElementById('imageUploadBtn');
-const imageInput = document.getElementById('imageInput');
-const imageCount = document.getElementById('imageCount');
-const imagePreview = document.getElementById('imagePreview');
-const loading = document.getElementById('loading');
-const errorMessage = document.getElementById('errorMessage');
-const settingsCard = document.getElementById('settings-card');
-const clearCacheBtn = document.getElementById('clearCacheBtn');
-const clearCookiesBtn = document.getElementById('clearCookiesBtn');
+
+// ============================================================================
+// DOM 要素のキャッシュ
+// ============================================================================
+const elements = {
+  loginBtn: document.getElementById('loginBtn'),
+  timelineCard: document.getElementById('timeline-card'),
+  notificationsCard: document.getElementById('notifications-card'),
+  refreshBtn: document.getElementById('refreshBtn'),
+  seeMoreBtn: document.getElementById('seeMoreBtn'),
+  timelineBottom: document.getElementById('timelineBottom'),
+  logoutBtn: document.getElementById('logoutBtn'),
+  notificationsRefreshBtn: document.getElementById('notificationsRefreshBtn'),
+  notificationsSeenBtn: document.getElementById('notificationsSeenBtn'),
+  postBtn: document.getElementById('postBtn'),
+  imageUploadBtn: document.getElementById('imageUploadBtn'),
+  imageInput: document.getElementById('imageInput'),
+  imageCount: document.getElementById('imageCount'),
+  imagePreview: document.getElementById('imagePreview'),
+  loading: document.getElementById('loading'),
+  errorMessage: document.getElementById('errorMessage'),
+  settingsCard: document.getElementById('settings-card'),
+  clearCacheBtn: document.getElementById('clearCacheBtn'),
+  clearCookiesBtn: document.getElementById('clearCookiesBtn'),
+  loginCard: document.getElementById('login'),
+  timeline: document.getElementById('timeline'),
+  notifications: document.getElementById('notifications'),
+  postText: document.getElementById('postText'),
+};
+
+// ============================================================================
+// アプリケーション状態
+// ============================================================================
 let timelineLoading = false;
 let timelineCursor = null;
 let timelineHasMore = false;
 let notificationsLoading = false;
-
-// 選択された画像を保持する配列
 let selectedImages = [];
 
 // エラーメッセージ表示関数（i18n 対応）
@@ -47,19 +69,80 @@ function showSuccess(messageKey, params = {}) {
   const message = t(messageKey, params);
   errorMessage.textContent = message;
   errorMessage.style.display = 'block';
-  errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
-  errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
-  setTimeout(() => {
-    errorMessage.style.display = 'none';
+  
+  if (type === 'success') {
+    errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
+    errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
+  } else {
     errorMessage.style.background = '';
     errorMessage.style.color = '';
-  }, 5000);
+  }
+  
+  const duration = type === 'success' ? SUCCESS_DISPLAY_DURATION : ERROR_DISPLAY_DURATION;
+  setTimeout(() => {
+    errorMessage.style.display = 'none';
+  }, duration);
 }
 
-// ローディング表示関数
+/**
+ * ローディング表示の切り替え
+ */
 function showLoading(show) {
+  const { loading } = elements;
   if (!loading) return;
   loading.style.display = show ? 'block' : 'none';
+}
+
+/**
+ * パスの正規化（末尾のスラッシュ確保）
+ */
+function normalizePath(pathname) {
+  return pathname.endsWith('/') ? pathname : `${pathname}/`;
+}
+
+/**
+ * クライアントサイドナビゲーション
+ */
+function navigateTo(path) {
+  const target = normalizePath(path);
+  if (normalizePath(window.location.pathname) !== target) {
+    window.history.pushState({}, '', target);
+    initializeView();
+  }
+}
+
+/**
+ * ナビゲーションイベントの処理可否判定
+ */
+function shouldHandleClientNavigation(event) {
+  return !(
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  );
+}
+
+/**
+ * カードの表示/非表示を管理
+ */
+function showCard(activeCardId) {
+  const cardStates = {
+    login: activeCardId === 'login',
+    timeline: activeCardId === 'timeline',
+    notifications: activeCardId === 'notifications',
+    settings: activeCardId === 'settings',
+  };
+  
+  Object.entries(cardStates).forEach(([key, isVisible]) => {
+    const card = elements[`${key}Card`];
+    if (!card) return;
+    
+    card.hidden = !isVisible;
+    card.style.display = isVisible ? 'block' : 'none';
+  });
 }
 
 bootstrap();
@@ -67,10 +150,6 @@ bootstrap();
 window.addEventListener('popstate', () => {
   initializeView();
 });
-
-function shouldHandleClientNavigation(event) {
-  return !(event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
-}
 
 document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
   link.addEventListener('mouseenter', () => {
@@ -254,18 +333,12 @@ if (clearCookiesBtn) clearCookiesBtn.addEventListener('click', async () => {
   }
 });
 
-if (postBtn) postBtn.addEventListener('click', async () => {
-  const postTextField = document.getElementById('postText');
-  let text = '';
-  if (postTextField.value) {
-    text = postTextField.value.trim();
-  } else {
-    // shadow DOM 内の textarea から直接取得
-    const textarea = postTextField.querySelector('textarea') || 
-                     postTextField.shadowRoot?.querySelector('textarea') ||
-                     postTextField.shadowRoot?.querySelector('input');
-    text = textarea ? textarea.value.trim() : '';
-  }
+/**
+ * 投稿処理の設定
+ */
+function setupPostHandler() {
+  const { postBtn, postText } = elements;
+  if (!postBtn) return;
   
   if (!text && selectedImages.length === 0) {
     showError('post.required');
@@ -278,23 +351,13 @@ if (postBtn) postBtn.addEventListener('click', async () => {
   try {
     console.log('投稿開始:', { text, imageCount: selectedImages.length });
     
-    if (selectedImages.length > 0) {
-      // 画像付き投稿
-      await client.postWithImage(text, selectedImages);
-      selectedImages = [];
-      updateImagePreview();
-    } else {
-      // テキストのみ投稿
-      await client.post(text);
+    if (!text && selectedImages.length === 0) {
+      showError('投稿内容または画像を入力してください');
+      return;
     }
     
-    if (postTextField.value) {
-      postTextField.value = '';
-    } else {
-      const textarea = postTextField.querySelector('textarea') || 
-                       postTextField.shadowRoot?.querySelector('textarea');
-      if (textarea) textarea.value = '';
-    }
+    postBtn.disabled = true;
+    postBtn.textContent = '投稿中...';
     
     showError('post.posted');
     errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
@@ -331,67 +394,128 @@ if (imageInput) imageInput.addEventListener('change', (e) => {
     showError('post.maxImages', { remaining: remainingSlots });
   }
   
-  filesToAdd.forEach(file => {
-    selectedImages.push(file);
-  });
-  
-  updateImagePreview();
-  imageInput.value = ''; // 同じファイルを再度選択できるようにリセット
-});
+  // shadow DOM 内の textarea から直接取得
+  const textarea = postTextField?.querySelector('textarea') || 
+                   postTextField?.shadowRoot?.querySelector('textarea') ||
+                   postTextField?.shadowRoot?.querySelector('input');
+  return textarea ? textarea.value.trim() : '';
+}
 
-// 画像プレビュー更新関数
+/**
+ * 投稿テキストのクリア（shadow DOM 対応）
+ */
+function clearPostText(postTextField) {
+  if (postTextField?.value) {
+    postTextField.value = '';
+  } else {
+    const textarea = postTextField?.querySelector('textarea') || 
+                     postTextField?.shadowRoot?.querySelector('textarea');
+    if (textarea) textarea.value = '';
+  }
+}
+
+setupPostHandler();
+
+/**
+ * 画像アップロードボタンの設定
+ */
+if (elements.imageUploadBtn) {
+  elements.imageUploadBtn.addEventListener('click', () => {
+    elements.imageInput.click();
+  });
+}
+
+/**
+ * 画像選択時の処理
+ */
+if (elements.imageInput) {
+  elements.imageInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    const remainingSlots = MAX_IMAGES - selectedImages.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+      showError(`画像は最大${MAX_IMAGES}枚まで添付できます。残り${remainingSlots}枚です。`);
+    }
+    
+    filesToAdd.forEach(file => {
+      selectedImages.push(file);
+    });
+    
+    updateImagePreview();
+    elements.imageInput.value = '';
+  });
+}
+
+/**
+ * 画像プレビューの更新
+ */
 function updateImagePreview() {
+  const { imagePreview, imageCount } = elements;
+  
+  // 既存の画像 URL を解放
   Array.from(imagePreview.querySelectorAll('img')).forEach((img) => {
     if (img.dataset.objectUrl) {
       URL.revokeObjectURL(img.dataset.objectUrl);
     }
   });
+  
   imagePreview.innerHTML = '';
   imageCount.textContent = selectedImages.length > 0 ? `${selectedImages.length}枚選択中` : '';
   
   selectedImages.forEach((file, index) => {
-    const container = document.createElement('div');
-    container.style.position = 'relative';
-    
-    const img = document.createElement('img');
-    const objectUrl = URL.createObjectURL(file);
-    img.src = objectUrl;
-    img.dataset.objectUrl = objectUrl;
-    img.style.width = '80px';
-    img.style.height = '80px';
-    img.style.objectFit = 'cover';
-    img.style.borderRadius = '8px';
-    
-    // 削除ボタン
-    const removeBtn = document.createElement('md-icon-button');
-    removeBtn.textContent = 'close';
-    removeBtn.style.position = 'absolute';
-    removeBtn.style.top = '-8px';
-    removeBtn.style.right = '-8px';
-    removeBtn.style.backgroundColor = 'var(--md-sys-color-error)';
-    removeBtn.style.color = 'white';
-    removeBtn.style.borderRadius = '50%';
-    removeBtn.style.width = '24px';
-    removeBtn.style.height = '24px';
-    removeBtn.style.fontSize = '16px';
-    
-    removeBtn.addEventListener('click', () => {
-      selectedImages.splice(index, 1);
-      updateImagePreview();
-    });
-    
-    container.appendChild(img);
-    container.appendChild(removeBtn);
+    const container = createImagePreviewItem(file, index);
     imagePreview.appendChild(container);
   });
 }
 
+/**
+ * 画像プレビューアイテムの作成
+ */
+function createImagePreviewItem(file, index) {
+  const container = document.createElement('div');
+  container.style.position = 'relative';
+  
+  const img = document.createElement('img');
+  const objectUrl = URL.createObjectURL(file);
+  img.src = objectUrl;
+  img.dataset.objectUrl = objectUrl;
+  img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;';
+  
+  const removeBtn = createImageRemoveButton(index);
+  
+  container.appendChild(img);
+  container.appendChild(removeBtn);
+  return container;
+}
 
+/**
+ * 画像削除ボタンの作成
+ */
+function createImageRemoveButton(index) {
+  const removeBtn = document.createElement('md-icon-button');
+  removeBtn.textContent = 'close';
+  removeBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background-color:var(--md-sys-color-error);color:white;border-radius:50%;width:24px;height:24px;font-size:16px;';
+  
+  removeBtn.addEventListener('click', () => {
+    selectedImages.splice(index, 1);
+    updateImagePreview();
+  });
+  
+  return removeBtn;
+}
+
+
+/**
+ * リプライスレッドの投稿を取得
+ */
 function getReplyThreadPosts(reply) {
   if (!reply) return [];
+  
   const posts = [];
-  const root = reply.root;
-  const parent = reply.parent;
+  const { root, parent } = reply;
 
   if (root?.uri && root.uri !== parent?.uri) {
     posts.push(root);
@@ -403,6 +527,9 @@ function getReplyThreadPosts(reply) {
   return posts;
 }
 
+/**
+ * 著者情報行の作成
+ */
 function createAuthorLine(author = {}, fallbackName = '投稿者', nameTypeClass = 'md-typescale-body-large') {
   const authorLine = document.createElement('div');
   authorLine.className = 'post-author-line';
@@ -422,54 +549,57 @@ function createAuthorLine(author = {}, fallbackName = '投稿者', nameTypeClass
   return authorLine;
 }
 
+/**
+ * リプライスレッドの追加
+ */
 function appendReplyThread(supporting, reply) {
   const replyPosts = getReplyThreadPosts(reply);
   if (replyPosts.length === 0) return;
 
-  const threadContainer = document.createElement('div');
-  threadContainer.style.display = 'flex';
-  threadContainer.style.flexDirection = 'column';
-  threadContainer.style.gap = '6px';
-  threadContainer.style.marginBottom = '10px';
-  threadContainer.style.paddingLeft = '10px';
-  threadContainer.style.borderLeft = '3px solid var(--md-sys-color-outline)';
+  const threadContainer = createReplyThreadContainer();
 
   replyPosts.forEach((replyPost) => {
-    const replyRecord = replyPost.record || {};
-    const replyAuthor = replyPost.author || {};
-
-    const card = document.createElement('div');
-    card.style.padding = '8px';
-    card.style.borderRadius = '12px';
-    card.style.background = 'var(--md-sys-color-surface-container-high)';
-
-    const author = createAuthorLine(replyAuthor, '返信元', 'md-typescale-body-small');
-
-    const text = document.createElement('div');
-    text.className = 'md-typescale-body-small';
-    text.style.whiteSpace = 'pre-wrap';
-    text.textContent = replyRecord.text || '';
-
-    card.appendChild(author);
-    if (text.textContent) card.appendChild(text);
+    const card = createReplyCard(replyPost);
     threadContainer.appendChild(card);
   });
 
   supporting.appendChild(threadContainer);
 }
 
-function normalizePath(pathname) {
-  return pathname.endsWith('/') ? pathname : `${pathname}/`;
+/**
+ * リプライスレッドコンテナの作成
+ */
+function createReplyThreadContainer() {
+  const container = document.createElement('div');
+  container.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:10px;padding-left:10px;border-left:3px solid var(--md-sys-color-outline);';
+  return container;
 }
 
-function navigateTo(path) {
-  const target = normalizePath(path);
-  if (normalizePath(window.location.pathname) !== target) {
-    window.history.pushState({}, "", target);
-    initializeView();
-  }
+/**
+ * リプライカードの作成
+ */
+function createReplyCard(replyPost) {
+  const replyRecord = replyPost.record || {};
+  const replyAuthor = replyPost.author || {};
+
+  const card = document.createElement('div');
+  card.style.cssText = 'padding:8px;border-radius:12px;background:var(--md-sys-color-surface-container-high);';
+
+  const author = createAuthorLine(replyAuthor, '返信元', 'md-typescale-body-small');
+
+  const text = document.createElement('div');
+  text.className = 'md-typescale-body-small';
+  text.style.whiteSpace = 'pre-wrap';
+  text.textContent = replyRecord.text || '';
+
+  card.appendChild(author);
+  if (text.textContent) card.appendChild(text);
+  return card;
 }
 
+/**
+ * サイドバーの認証状態同期
+ */
 function syncSidebarByAuthState() {
   const loginNav = document.querySelector('[data-nav-item="login"]');
   const composerNav = document.querySelector('[data-nav-item="composer"]');
@@ -478,6 +608,7 @@ function syncSidebarByAuthState() {
   const settingsNav = document.querySelector('[data-nav-item="settings"]');
 
   const loggedIn = client.isLoggedIn;
+  
   if (loginNav) {
     loginNav.style.display = loggedIn ? 'none' : 'flex';
     loginNav.setAttribute('aria-disabled', loggedIn ? 'true' : 'false');
@@ -495,144 +626,84 @@ function syncSidebarByAuthState() {
   }
 }
 
+/**
+ * アクティブなサイドバーアイテムの設定
+ */
 function setActiveSidebarItem(key) {
   document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
     link.classList.toggle('active', link.dataset.navItem === key);
   });
 }
 
+/**
+ * ビューの初期化（ルーティング）
+ */
 function initializeView() {
   syncSidebarByAuthState();
   const path = normalizePath(window.location.pathname);
 
-  if (path === '/settings/') {
-    showSettings();
+  const routeHandlers = {
+    '/settings/': () => showSettings(),
+    '/home/': () => client.isLoggedIn ? showTimeline() : navigateToLogin(),
+    '/notifications/': () => client.isLoggedIn ? showNotifications() : navigateToLogin(),
+    '/login/': () => client.isLoggedIn ? navigateToHome() : showLogin(),
+  };
+
+  const handler = routeHandlers[path];
+  if (handler) {
+    handler();
     return;
   }
 
-  if (path === '/home/') {
-    if (client.isLoggedIn) {
-      showTimeline();
-    } else {
-      navigateTo('/login/');
-      showLogin();
-    }
-    return;
-  }
-
-  if (path === '/notifications/') {
-    if (client.isLoggedIn) {
-      showNotifications();
-    } else {
-      navigateTo('/login/');
-      showLogin();
-    }
-    return;
-  }
-
-  if (path === '/login/') {
-    if (client.isLoggedIn) {
-      navigateTo('/home/');
-      showTimeline();
-    } else {
-      showLogin();
-    }
-    return;
-  }
-
+  // デフォルトルート
   if (client.isLoggedIn) {
-    navigateTo('/home/');
-    showTimeline();
-    return;
+    navigateToHome();
+  } else {
+    navigateToLogin();
   }
+}
 
+function navigateToLogin() {
   navigateTo('/login/');
   showLogin();
 }
 
+function navigateToHome() {
+  navigateTo('/home/');
+  showTimeline();
+}
+
+/**
+ * ログイン画面表示
+ */
 function showLogin() {
-  const loginCard = document.getElementById('login');
-  if (loginCard) {
-    loginCard.hidden = false;
-    loginCard.style.display = 'block';
-  }
-  if (timelineCard) {
-    timelineCard.hidden = true;
-    timelineCard.style.display = 'none';
-  }
-  if (notificationsCard) {
-    notificationsCard.hidden = true;
-    notificationsCard.style.display = 'none';
-  }
-  if (settingsCard) {
-    settingsCard.hidden = true;
-    settingsCard.style.display = 'none';
-  }
+  showCard('login');
   setActiveSidebarItem('login');
 }
 
+/**
+ * タイムライン画面表示
+ */
 function showTimeline() {
-  const loginCard = document.getElementById('login');
-  if (loginCard) {
-    loginCard.hidden = true;
-    loginCard.style.display = 'none';
-  }
-  if (timelineCard) {
-    timelineCard.hidden = false;
-    timelineCard.style.display = 'block';
-  }
-  if (notificationsCard) {
-    notificationsCard.hidden = true;
-    notificationsCard.style.display = 'none';
-  }
-  if (settingsCard) {
-    settingsCard.hidden = true;
-    settingsCard.style.display = 'none';
-  }
+  showCard('timeline');
   setActiveSidebarItem('timeline');
   loadTimeline();
 }
 
+/**
+ * 通知画面表示
+ */
 function showNotifications() {
-  const loginCard = document.getElementById('login');
-  if (loginCard) {
-    loginCard.hidden = true;
-    loginCard.style.display = 'none';
-  }
-  if (timelineCard) {
-    timelineCard.hidden = true;
-    timelineCard.style.display = 'none';
-  }
-  if (notificationsCard) {
-    notificationsCard.hidden = false;
-    notificationsCard.style.display = 'block';
-  }
-  if (settingsCard) {
-    settingsCard.hidden = true;
-    settingsCard.style.display = 'none';
-  }
+  showCard('notifications');
   setActiveSidebarItem('notifications');
   loadNotifications();
 }
 
+/**
+ * 設定画面表示
+ */
 function showSettings() {
-  const loginCard = document.getElementById('login');
-  if (loginCard) {
-    loginCard.hidden = true;
-    loginCard.style.display = 'none';
-  }
-  if (timelineCard) {
-    timelineCard.hidden = true;
-    timelineCard.style.display = 'none';
-  }
-  if (notificationsCard) {
-    notificationsCard.hidden = true;
-    notificationsCard.style.display = 'none';
-  }
-  if (settingsCard) {
-    settingsCard.hidden = false;
-    settingsCard.style.display = 'block';
-  }
+  showCard('settings');
   setActiveSidebarItem('settings');
   syncLocaleSelect();
 }
