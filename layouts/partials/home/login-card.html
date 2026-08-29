@@ -1,12 +1,12 @@
-<md-elevated-card id="login" style="padding:16px; margin:16px 0; display:none;" hidden>
-  <div slot="headline" class="md-typescale-title-large" data-i18n="login.title">ログイン</div>
+<md-elevated-card id="login" class="component-card login-card" hidden>
+  <div slot="headline" class="md-typescale-title-large">ログイン</div>
   <div slot="supporting-text" class="md-typescale-body-medium" data-i18n="login.description">Bluesky のアカウントでログインしてください</div>
-  
-  <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+
+  <div class="login-fields">
     <md-outlined-text-field id="id" label="ハンドル (例：user.bsky.social)" fullwidth type="text" data-i18n-placeholder="login.handle">
       <md-icon slot="leading-icon">person</md-icon>
     </md-outlined-text-field>
-    
+
     <md-outlined-text-field id="pw" label="アプリパスワード" type="password" fullwidth data-i18n-placeholder="login.appPassword">
       <md-icon slot="leading-icon">lock</md-icon>
     </md-outlined-text-field>
@@ -14,8 +14,8 @@
     <md-outlined-text-field id="pds" label="PDS" value="bsky.social" fullwidth type="text" data-i18n-placeholder="login.pds">
       <md-icon slot="leading-icon">dns</md-icon>
     </md-outlined-text-field>
-    
-    <md-filled-button id="loginBtn" style="width:100%; justify-content:center;">
+
+    <md-filled-button id="loginBtn" class="login-submit">
       <md-icon slot="icon">login</md-icon>
       <span data-i18n="login.submit">ログイン</span>
     </md-filled-button>
