@@ -1,0 +1,21 @@
+<md-elevated-card id="notifications-card" class="component-card notifications-card" hidden>
+  <div slot="headline" class="md-typescale-title-large notifications-header">
+    <md-icon>notifications</md-icon>
+    <span data-i18n="notifications.title">Notifications</span>
+  </div>
+
+  <div class="action-row notifications-actions">
+    <md-filled-tonal-button id="notificationsRefreshBtn">
+      <md-icon slot="icon">refresh</md-icon>
+      <span data-i18n="notifications.refresh">Refresh</span>
+    </md-filled-tonal-button>
+    <md-outlined-button id="notificationsSeenBtn">
+      <md-icon slot="icon">done_all</md-icon>
+      <span data-i18n="notifications.markAsSeen">Mark as seen</span>
+    </md-outlined-button>
+  </div>
+
+  <div id="notifications" class="notifications-list notifications-content"></div>
+
+  <script type="module" src="/src/notifications-preview.js"></script>
+</md-elevated-card>

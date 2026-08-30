@@ -1,0 +1,42 @@
+<md-elevated-card id="timeline-card" class="component-card timeline-card" hidden>
+  <div slot="headline" class="md-typescale-title-large timeline-header">
+    <md-icon>rss_feed</md-icon>
+    <span data-i18n="timeline.title">Timeline</span>
+  </div>
+
+  <div id="composer" class="composer">
+    <md-filled-text-field id="postText" class="composer-field" data-i18n-label="post.placeholder" label="What's on your mind?" type="textarea" rows="5" fullwidth>
+    </md-filled-text-field>
+
+    <div class="composer-attachments">
+      <md-filled-tonal-button id="imageUploadBtn">
+        <md-icon slot="icon">image</md-icon>
+        <span data-i18n="post.attach">Add image</span>
+      </md-filled-tonal-button>
+      <input type="file" id="imageInput" accept="image/*" multiple hidden>
+      <span id="imageCount" class="composer-image-count"></span>
+    </div>
+    <div id="imagePreview" class="composer-image-preview"></div>
+
+    <md-filled-button id="postBtn" class="composer-submit">
+      <md-icon slot="icon">send</md-icon>
+      <span data-i18n="post.submit">Post</span>
+    </md-filled-button>
+  </div>
+
+  <div class="action-row timeline-actions">
+    <md-filled-tonal-button id="refreshBtn">
+      <md-icon slot="icon">refresh</md-icon>
+      <span data-i18n="navigation.refresh">Refresh</span>
+    </md-filled-tonal-button>
+  </div>
+
+  <md-list id="timeline" class="timeline-list"></md-list>
+
+  <div id="timelineBottom" class="timeline-more">
+    <md-filled-tonal-button id="seeMoreBtn">
+      <md-icon slot="icon">expand_more</md-icon>
+      <span data-i18n="navigation.seeMore">See more</span>
+    </md-filled-tonal-button>
+  </div>
+</md-elevated-card>

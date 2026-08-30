@@ -1,0 +1,54 @@
+<md-elevated-card id="settings-card" class="component-card settings-card" hidden>
+  <div slot="headline" class="md-typescale-title-large settings-header">
+    <md-icon>settings</md-icon>
+    <span data-i18n="settings.title">Settings</span>
+  </div>
+
+  <div class="settings-content">
+    <md-list class="settings-list">
+      <md-list-item class="settings-item">
+        <md-icon slot="start">language</md-icon>
+        <div slot="headline" data-i18n="settings.language">Language</div>
+        <div slot="supporting-text" data-i18n="settings.languageDescription">Set the display language.</div>
+        <md-outlined-select
+          id="localeSelect"
+          slot="end"
+          data-i18n-label="settings.language"
+          data-i18n-supporting-text="settings.languageDescription"
+          hasLeadingIcon>
+          <md-icon slot="start">language</md-icon>
+          <md-select-option value="ja">
+            <div slot="headline" data-i18n="settings.languageJa">Japanese</div>
+          </md-select-option>
+          <md-select-option value="en">
+            <div slot="headline" data-i18n="settings.languageEn">English</div>
+          </md-select-option>
+        </md-outlined-select>
+      </md-list-item>
+
+      <md-divider class="settings-divider"></md-divider>
+
+      <md-list-item class="settings-item">
+        <md-icon slot="start">delete_outline</md-icon>
+        <div slot="headline" data-i18n="settings.clearCache">Clear Cache</div>
+        <div slot="supporting-text" data-i18n="settings.cacheDescription">Clear browser cached data.</div>
+        <md-filled-tonal-button id="clearCacheBtn" slot="end">
+          <md-icon slot="icon">delete</md-icon>
+          <span data-i18n="settings.clearCacheAction">Clear</span>
+        </md-filled-tonal-button>
+      </md-list-item>
+
+      <md-divider class="settings-divider"></md-divider>
+
+      <md-list-item class="settings-item">
+        <md-icon slot="start">cookie</md-icon>
+        <div slot="headline" data-i18n="settings.clearCookies">Clear Cookies</div>
+        <div slot="supporting-text" data-i18n="settings.cookiesDescription">Delete all cookies including login info, forcing logout.</div>
+        <md-filled-button id="clearCookiesBtn" class="settings-danger-action" slot="end">
+          <md-icon slot="icon">delete_forever</md-icon>
+          <span data-i18n="settings.clearCookiesAction">Clear</span>
+        </md-filled-button>
+      </md-list-item>
+    </md-list>
+  </div>
+</md-elevated-card>

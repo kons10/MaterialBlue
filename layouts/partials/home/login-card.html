@@ -1,0 +1,23 @@
+<md-elevated-card id="login" class="component-card login-card" hidden>
+  <div slot="headline" class="md-typescale-title-large" data-i18n="login.title">Login</div>
+  <div slot="supporting-text" class="md-typescale-body-medium" data-i18n="login.description">Log in with your Bluesky account</div>
+
+  <div class="login-fields">
+    <md-outlined-text-field id="id" label="Handle (e.g., user.bsky.social)" fullwidth type="text" data-i18n-placeholder="login.handle">
+      <md-icon slot="leading-icon">person</md-icon>
+    </md-outlined-text-field>
+
+    <md-outlined-text-field id="pw" label="App Password" type="password" fullwidth data-i18n-placeholder="login.appPassword">
+      <md-icon slot="leading-icon">lock</md-icon>
+    </md-outlined-text-field>
+
+    <md-outlined-text-field id="pds" label="PDS" value="bsky.social" fullwidth type="text" data-i18n-placeholder="login.pds">
+      <md-icon slot="leading-icon">dns</md-icon>
+    </md-outlined-text-field>
+
+    <md-filled-button id="loginBtn" class="login-submit">
+      <md-icon slot="icon">login</md-icon>
+      <span data-i18n="login.submit">Login</span>
+    </md-filled-button>
+  </div>
+</md-elevated-card>

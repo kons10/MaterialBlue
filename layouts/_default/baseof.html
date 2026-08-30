@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }}</title>
+  <meta name="theme-color" content="#6750A4">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Material Blue">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  {{ partial "material-symbols.html" . }}
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/components-responsive.css">
+  <script nomodule>
+    window.alert('Error: ESM not available. Please update to an ESM-compatible browser.');
+  </script>
+  <!-- 1. Web Componentsのポリフィル（shadydom, custom-elementsなど） -->
+<script src="https://cdn.jsdelivr.net/npm/@webcomponents/webcomponentsjs@2/webcomponents-loader.js"></script>
+
+  <!-- 2. Lit用ポリフィルサポート（これがないとLitのレンダリングが壊れる） -->
+  <script type="module">
+    import 'https://esm.sh/lit@3/polyfill-support.js';
+  </script>
+
+  <!-- 3. @material/web のモジュール読み込み -->
+  <script type="module">
+    import 'https://esm.sh/@material/web@latest/all.js';
+  </script>
+
+</head>
+<body data-sidebar-open="false">
+  <div id="startupSplash" class="startup-splash" role="status" aria-live="polite" data-i18n-aria="splash.ariaLabel">
+    <div class="startup-splash-card">
+      <div class="startup-splash-logo" aria-hidden="true">
+        <md-icon>dynamic_feed</md-icon>
+      </div>
+      <p class="startup-splash-title">Material Blue</p>
+      <p class="startup-splash-text md-typescale-body-medium" data-i18n="splash.loading">Loading</p>
+      <md-linear-progress class="startup-splash-progress" indeterminate></md-linear-progress>
+    </div>
+  </div>
+  <!-- Issue 2 fix: Hide splash when JavaScript is disabled -->
+  <noscript>
+    </noscript>
+
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar" aria-label="Sidebar">
+      <div class="brand">
+        <md-icon>rss_feed</md-icon>
+        <strong>Material Blue</strong>
+      </div>
+      <div class="sidebar-section-title" data-i18n="sidebar.navigation">Navigation</div>
+      <nav class="sidebar-nav" aria-label="Page navigation">
+        <md-text-button href="/login/" data-nav-item="login">
+          <md-icon slot="icon" aria-hidden="true">login</md-icon>
+          <span data-i18n="navigation.login">Login</span>
+        </md-text-button>
+        <md-text-button href="/home/" data-nav-item="timeline">
+          <md-icon slot="icon" aria-hidden="true">rss_feed</md-icon>
+          <span data-i18n="navigation.home">Home</span>
+        </md-text-button>
+        <md-text-button href="/notifications/" data-nav-item="notifications">
+          <md-icon slot="icon" aria-hidden="true">notifications</md-icon>
+          <span data-i18n="navigation.notifications">Notifications</span>
+        </md-text-button>
+        <md-text-button href="/settings/" data-nav-item="settings">
+          <md-icon slot="icon" aria-hidden="true">settings</md-icon>
+          <span data-i18n="navigation.settings">Settings</span>
+        </md-text-button>
+      </nav>
+      <div class="sidebar-actions">
+        <md-outlined-button id="logoutBtn">
+          <md-icon slot="icon">logout</md-icon>
+          <span data-i18n="navigation.logout">Logout</span>
+        </md-outlined-button>
+      </div>
+    </aside>
+    <div id="sidebarScrim" class="sidebar-scrim" aria-hidden="true"></div>
+
+    <div class="content-area">
+      <header>
+        <div class="header-inner">
+          <md-icon-button id="sidebarToggle" class="menu-btn" data-i18n-aria="header.menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">
+            <md-icon>menu</md-icon>
+          </md-icon-button>
+          <md-icon>dynamic_feed</md-icon>
+          <h1 class="md-typescale-headline-small app-title" data-i18n="header.title">Static Bluesky</h1>
+        </div>
+      </header>
+
+      <main>
+        {{ block "main" . }}{{ end }}
+      </main>
+
+      <footer>
+        <p class="footer-copy md-typescale-body-small" data-i18n="footer.copyright">© 2026 Built with Hugo & MWC</p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const splash = document.getElementById('startupSplash');
+      const hideSplash = () => {
+        if (!splash) return;
+        window.setTimeout(() => {
+          splash.classList.add('is-hidden');
+          splash.setAttribute('aria-hidden', 'true');
+          handleReducedMotion();
+        }, 1000);
+      };
+
+      if (document.readyState === 'complete') {
+        hideSplash();
+      } else {
+        window.addEventListener('load', hideSplash, { once: true });
+      }
+
+      splash?.addEventListener('transitionend', () => splash.remove(), { once: true });
+
+      // Issue 1 fix: Handle reduced motion - remove immediately if transitions are disabled
+      const handleReducedMotion = () => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          splash?.remove();
+        }
+      };
+
+      // Issue 3 fix: Fallback timeout - apply immediately without re-delaying
+      window.setTimeout(() => {
+        if (!splash || splash.classList.contains('is-hidden')) return;
+        splash.classList.add('is-hidden');
+        splash.setAttribute('aria-hidden', 'true');
+        handleReducedMotion();
+      }, 10000);
+
+
+      const btn = document.getElementById('sidebarToggle');
+      const scrim = document.getElementById('sidebarScrim');
+      const compactQuery = window.matchMedia('(max-width: 599px)');
+
+      const setSidebarOpen = (open) => {
+        document.body.dataset.sidebarOpen = open ? 'true' : 'false';
+        btn?.setAttribute('aria-expanded', String(open));
+      };
+
+      const closeSidebar = () => setSidebarOpen(false);
+
+      btn?.addEventListener('click', () => {
+        setSidebarOpen(document.body.dataset.sidebarOpen !== 'true');
+      });
+      scrim?.addEventListener('click', closeSidebar);
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && compactQuery.matches && document.body.dataset.sidebarOpen === 'true') {
+          closeSidebar();
+          btn?.focus();
+        }
+      });
+
+      document.querySelectorAll('.sidebar-nav md-text-button').forEach((link) => {
+        link.addEventListener('click', () => {
+          document.querySelectorAll('.sidebar-nav md-text-button').forEach((other) => other.classList.remove('active'));
+          link.classList.add('active');
+          if (compactQuery.matches) closeSidebar();
+        });
+      });
+
+      compactQuery.addEventListener('change', () => {
+        if (!compactQuery.matches) closeSidebar();
+      });
+
+      closeSidebar();
+    })();
+  </script>
+</body>
+</html>

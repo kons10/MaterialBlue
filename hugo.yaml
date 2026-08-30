@@ -1,0 +1,20 @@
+# hugo.yaml
+baseURL: 'https://bsky.zyn.f5.si/'  # ← 実際のURLに修正してね
+locale: 'en-US'                 # デフォルト言語は英語。クライアント側でブラウザの言語設定に合わせて上書き
+title: 'Static Bluesky Client'
+
+# ❌ theme: ''  ← この行を完全に削除！存在しないテーマを探しに行かなくなる
+
+publishDir: 'public'
+
+# minify 設定（オプション）
+minify:
+  disableXML: true
+  minifyOutput: true
+
+# ✅ 重要：モジュール機能を明示的に無効化（テーマ探索を防ぐおまじない）
+module:
+  hugoVersion:
+    extended: true
+    min: '0.140.0'
+  imports: []  # 空配列を指定して外部モジュール読み込みを無効化
