@@ -277,7 +277,7 @@ footer { padding: 24px var(--mb-page-padding); text-align: center; color: #666; 
   .sidebar, .sidebar-scrim { transition: none; }
 }
 
-md-icon {
+.md-icon {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
   font-style: normal;
@@ -291,9 +291,6 @@ md-icon {
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
-  display: inline-flex;
-  align-content: center;
-  align-items: center;
 }
 
 
