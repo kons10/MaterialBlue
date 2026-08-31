@@ -156,10 +156,6 @@ body {
   color: var(--md-sys-color-on-primary-container);
 }
 
-.startup-splash-logo md-icon {
-  font-size: 42px;
-}
-
 .startup-splash-title {
   margin: 0;
   font-size: 1.4rem;
