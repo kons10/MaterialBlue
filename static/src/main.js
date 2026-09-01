@@ -1169,61 +1169,110 @@ function appendNotificationActions(supporting, notification) {
 function renderNotifications(notifications) {
   const container = document.getElementById('notifications');
   if (!container) return;
-  container.innerHTML = '';
 
   if (notifications.length === 0) {
+    container.innerHTML = '';
     const emptyItem = document.createElement('md-list-item');
     emptyItem.innerHTML = `<div slot="headline">${t('notification.emptyHeadline')}</div><div slot="supporting-text">${t('notification.empty')}</div>`;
     container.appendChild(emptyItem);
     return;
   }
 
-  const fragment = document.createDocumentFragment();
-  notifications.forEach((notification) => {
-    const listItem = document.createElement('md-list-item');
-    listItem.dataset.notificationUri = notification.uri || '';
-
-    const icon = document.createElement('md-icon');
-    icon.slot = 'start';
-    icon.textContent = notification.isRead ? 'notifications' : 'notifications_active';
-
-    const headline = createAuthorLine(notification.author, 'notification.sourceFallback');
-    headline.slot = 'headline';
-
-    const supporting = document.createElement('div');
-    supporting.slot = 'supporting-text';
-    supporting.className = 'md-typescale-body-medium';
-
-    const reason = document.createElement('div');
-    reason.textContent = getNotificationReasonLabel(notification.reason);
-    supporting.appendChild(reason);
-
-    const text = notification.record?.text;
-    if (text) {
-      const body = document.createElement('div');
-      body.style.whiteSpace = 'pre-wrap';
-      body.style.marginTop = '6px';
-      body.textContent = text;
-      supporting.appendChild(body);
-    }
-
-    appendNotificationActions(supporting, notification);
-
-    if (notification.indexedAt) {
-      const time = document.createElement('div');
-      time.className = 'md-typescale-body-small';
-      time.style.marginTop = '6px';
-      time.textContent = formatRelativeTime(new Date(notification.indexedAt));
-      supporting.appendChild(time);
-    }
-
-    listItem.appendChild(icon);
-    listItem.appendChild(headline);
-    listItem.appendChild(supporting);
-    fragment.appendChild(listItem);
-    fragment.appendChild(document.createElement('md-divider'));
+  const existingItems = new Map();
+  Array.from(container.querySelectorAll('md-list-item[data-notification-uri]')).forEach((item) => {
+    const uri = item.dataset.notificationUri;
+    if (uri) existingItems.set(uri, item);
   });
-  container.appendChild(fragment);
+
+  const usedUris = new Set();
+  const fragment = document.createDocumentFragment();
+
+  notifications.forEach((notification) => {
+    const uri = notification.uri || '';
+    usedUris.add(uri);
+
+    let listItem = existingItems.get(uri);
+    if (!listItem) {
+      listItem = document.createElement('md-list-item');
+      listItem.dataset.notificationUri = uri;
+
+      const icon = document.createElement('md-icon');
+      icon.slot = 'start';
+      listItem.appendChild(icon);
+
+      const headline = createAuthorLine(notification.author, 'notification.sourceFallback');
+      headline.slot = 'headline';
+      listItem.appendChild(headline);
+
+      const supporting = document.createElement('div');
+      supporting.slot = 'supporting-text';
+      supporting.className = 'md-typescale-body-medium';
+      listItem.appendChild(supporting);
+
+      listItem.appendChild(document.createElement('md-divider'));
+    }
+
+    // Update icon
+    const icon = listItem.querySelector('md-icon[slot="start"]');
+    if (icon) {
+      icon.textContent = notification.isRead ? 'notifications' : 'notifications_active';
+    }
+
+    // Update headline
+    const headline = listItem.querySelector('[slot="headline"]');
+    if (headline) {
+      headline.replaceWith(createAuthorLine(notification.author, 'notification.sourceFallback'));
+    }
+
+    // Update supporting text (reason, text, time)
+    const supporting = listItem.querySelector('[slot="supporting-text"]');
+    if (supporting) {
+      supporting.innerHTML = '';
+      const reason = document.createElement('div');
+      reason.textContent = getNotificationReasonLabel(notification.reason);
+      supporting.appendChild(reason);
+
+      const text = notification.record?.text;
+      if (text) {
+        const body = document.createElement('div');
+        body.style.whiteSpace = 'pre-wrap';
+        body.style.marginTop = '6px';
+        body.textContent = text;
+        supporting.appendChild(body);
+      }
+
+      appendNotificationActions(supporting, notification);
+
+      if (notification.indexedAt) {
+        const time = document.createElement('div');
+        time.className = 'md-typescale-body-small';
+        time.style.marginTop = '6px';
+        time.textContent = formatRelativeTime(new Date(notification.indexedAt));
+        supporting.appendChild(time);
+      }
+    }
+
+    fragment.appendChild(listItem);
+    const divider = listItem.querySelector('md-divider');
+    if (divider) fragment.appendChild(divider.cloneNode());
+  });
+
+  // Remove old items that are no longer in the notifications list
+  existingItems.forEach((item, uri) => {
+    if (!usedUris.has(uri)) {
+      item.remove();
+    }
+  });
+
+  // Rebuild the list in order
+  const itemsInOrder = notifications.map((n) => n.uri).map((uri) => container.querySelector(`md-list-item[data-notification-uri="${uri}"]`)).filter(Boolean);
+  itemsInOrder.forEach((item) => {
+    container.appendChild(item);
+    const divider = item.querySelector('md-divider');
+    if (divider && !divider.parentElement) {
+      container.appendChild(divider);
+    }
+  });
 }
 
 async function loadNotifications() {
