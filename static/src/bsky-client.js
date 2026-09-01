@@ -283,12 +283,21 @@ export function createBskyClient() {
       if (!this.isLoggedIn) throw new Error('Not logged in');
       const res = await agent.api.app.bsky.notification.listNotifications({ limit });
       return (res.data.notifications || []).map((notification) => {
-        // いいね・拡散などの通知は notification.uri がアクションレコードを指すため、
-        // 通知対象の投稿を取得できるよう reasonSubject を優先する。
-        const targetUri = notification.reasonSubject || notification.uri;
-        return targetUri === notification.uri
-          ? notification
-          : { ...notification, uri: targetUri };
+        // Keep original notification as base
+        const fixed = { ...notification };
+
+        // For non-reply notifications, redirect uri to reasonSubject (the post that was liked/reposted)
+        if (notification.reason !== 'reply') {
+          const targetUri = notification.reasonSubject || notification.uri;
+          fixed.uri = targetUri;
+        }
+
+        // For reply notifications, expose parent post URI separately
+        if (notification.reason === 'reply' && notification.reasonSubject && notification.reasonSubject !== notification.uri) {
+          fixed.subjectUri = notification.reasonSubject;
+        }
+
+        return fixed;
       });
     },
 

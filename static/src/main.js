@@ -1119,7 +1119,15 @@ function appendNotificationActions(supporting, notification) {
     if (!text || !text.trim()) return;
     replyButton.disabled = true;
     try {
-      await client.reply(post.uri, post.cid, text.trim(), post.record?.reply);
+      const trimmed = text.trim();
+      const record = notification.record;
+
+      // Build reply context: new reply's parent is the reply record,
+      // root is the thread root (from record.reply.root) or the reply record itself
+      const root = record?.reply?.root || { uri: notification.uri, cid: notification.cid };
+      const parent = { uri: notification.uri, cid: notification.cid };
+
+      await client.reply(parent.uri, parent.cid, trimmed, { root, parent });
       showSuccess('post.replied');
       await loadNotifications();
     } catch (e) {
@@ -1232,13 +1240,29 @@ async function loadNotifications() {
   showLoading(true);
   try {
     const notifications = await client.notifications();
-    const postUris = [...new Set(notifications
-      .filter((notification) => notification.record?.$type === 'app.bsky.feed.post' && notification.uri)
-      .map((notification) => notification.uri))];
+    // Fetch both the reply record (for reply notifications) and the parent post (for context)
+    const postUris = [...new Set(notifications.flatMap((notification) => {
+      const uris = [];
+      // For reply notifications, fetch the reply record itself
+      if (notification.record?.$type === 'app.bsky.feed.post' && notification.uri) {
+        uris.push(notification.uri);
+      }
+      // Also fetch the parent post (subjectUri) for context display
+      if (notification.subjectUri) {
+        uris.push(notification.subjectUri);
+      } else if (notification.record?.$type === 'app.bsky.feed.post' && notification.uri) {
+        // For non-reply notifications, the uri is already the target post
+        uris.push(notification.uri);
+      }
+      return uris;
+    }))];
     const posts = await client.posts(postUris);
     const postsByUri = new Map(posts.map((post) => [post.uri, post]));
     notifications.forEach((notification) => {
-      notification.post = postsByUri.get(notification.uri) || null;
+      // For reply notifications, notification.post is the parent post (context)
+      // For other notifications, notification.post is the target post
+      const postUri = notification.subjectUri || notification.uri;
+      notification.post = postsByUri.get(postUri) || null;
     });
     renderNotifications(notifications);
     updateNotificationBadge(notifications);

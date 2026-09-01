@@ -275,6 +275,19 @@ function createNotificationItem(notification, post) {
   meta.appendChild(author);
   item.appendChild(meta);
 
+  // ❗️ FIX: Show reply text when available (for reply notifications)
+  if (notification.record?.text) {
+    const replyText = document.createElement('div');
+    replyText.className = 'notification-post-text md-typescale-body-medium';
+    replyText.style.whiteSpace = 'pre-wrap';
+    replyText.style.overflowWrap = 'anywhere';
+    replyText.style.marginTop = '8px';
+    replyText.style.color = 'var(--md-sys-color-on-surface-variant)';
+    replyText.textContent = notification.record.text;
+    item.appendChild(replyText);
+  }
+
+  // SHOW POST CONTENT IF AVAILABLE
   if (post) {
     item.appendChild(createPostCard(post));
   }
@@ -295,53 +308,68 @@ function isPreviewRendered(container) {
 }
 
 async function fetchAndRender() {
-  const container = document.getElementById('notifications');
-  if (!container || rendering) return;
+    const container = document.getElementById('notifications');
+    if (!container || rendering) return;
 
-  rendering = true;
-  try {
-    await client.ready();
-    if (!client.isLoggedIn) return;
+    rendering = true;
+    try {
+      await client.ready();
+      if (!client.isLoggedIn) return;
 
-    const notifications = await client.notifications();
-    const targetUris = [...new Set(notifications.map(notificationTargetUri).filter(Boolean))];
-    const posts = await client.posts(targetUris);
-    const postsByUri = new Map(posts.map((post) => [post.uri, post]));
+      const notifications = await client.notifications();
+      // ❗️ FIX: For reply notifications, fetch the actual reply record URI
+      // For other notifications, use the reasonSubject (parent post URI)
+      const targetUris = [...new Set(notifications.map((notification) => {
+        // For reply notifications, fetch the actual reply record
+        if (notification.reason === 'reply' && notification.uri) {
+          return notification.uri;
+        }
+        // For other notifications, use parent post URI
+        return notificationTargetUri(notification);
+      }).filter(Boolean))];
+      const posts = await client.posts(targetUris);
+      const postsByUri = new Map(posts.map((post) => [post.uri, post]));
 
-    const signature = notifications.map((notification) => `${notification.uri}:${notification.isRead}:${notification.indexedAt}`).join('|');
-    if (signature === lastNotificationSignature && isPreviewRendered(container)) return;
-    lastNotificationSignature = signature;
+      const signature = notifications.map((notification) => `${notification.uri}:${notification.isRead}:${notification.indexedAt}`).join('|');
+      if (signature === lastNotificationSignature && isPreviewRendered(container)) return;
+      lastNotificationSignature = signature;
 
-    if (observer) observer.disconnect();
-    container.innerHTML = '';
-    container.dataset.notificationPreview = 'ready';
+      if (observer) observer.disconnect();
+      container.innerHTML = '';
+      container.dataset.notificationPreview = 'ready';
 
-    const list = document.createElement('div');
-    list.className = 'notification-preview-list';
+      const list = document.createElement('div');
+      list.className = 'notification-preview-list';
 
-    if (notifications.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'md-typescale-body-medium';
-      empty.style.padding = '24px 16px';
-      empty.textContent = t('notification.empty');
-      list.appendChild(empty);
-    } else {
-      notifications.forEach((notification) => {
-        const post = postsByUri.get(notificationTargetUri(notification));
-        list.appendChild(createNotificationItem(notification, post));
-      });
-    }
+      if (notifications.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'md-typescale-body-medium';
+        empty.style.padding = '24px 16px';
+        empty.textContent = t('notification.empty');
+        list.appendChild(empty);
+      } else {
+        notifications.forEach((notification) => {
+          // For reply notifications, we want to show:
+          // 1. The actual reply text (from notification.record.text)
+          // 2. The parent post context (from postsByUri using subjectUri or notificationTargetUri)
+          const postUri = notification.reason === 'reply' && notification.subjectUri
+            ? notification.subjectUri
+            : notificationTargetUri(notification);
+          const post = postsByUri.get(postUri);
+          list.appendChild(createNotificationItem(notification, post));
+        });
+      }
 
-    container.appendChild(list);
-  } catch (error) {
-    console.error('Notification preview load error:', error);
-  } finally {
-    rendering = false;
-    if (observer) {
-      observer.observe(document.getElementById('notifications'), { childList: true });
+      container.appendChild(list);
+    } catch (error) {
+      console.error('Notification preview load error:', error);
+    } finally {
+      rendering = false;
+      if (observer) {
+        observer.observe(document.getElementById('notifications'), { childList: true });
+      }
     }
   }
-}
 
 function refreshPreview() {
   lastNotificationSignature = '';
@@ -349,41 +377,42 @@ function refreshPreview() {
 }
 
 function setup() {
-  injectStyles();
-  const container = document.getElementById('notifications');
-  if (!container) {
-    setTimeout(setup, 100);
-    return;
-  }
-
-  observer = new MutationObserver(() => {
-    if (rendering) return;
-    if (!isPreviewRendered(container)) {
-      refreshPreview();
+    injectStyles();
+    const container = document.getElementById('notifications');
+    if (!container) {
+      setTimeout(setup, 100);
+      return;
     }
-  });
-  observer.observe(container, { childList: true });
 
-  const card = document.getElementById('notifications-card');
-  if (card) {
-    viewObserver = new MutationObserver(() => {
-      if (card.hidden === false && !rendering) {
+    observer = new MutationObserver(() => {
+      if (rendering) return;
+      // Only refresh when container is empty (avoid fighting with main.js)
+      if (container.children.length === 0 && !isPreviewRendered(container)) {
         refreshPreview();
       }
     });
-    viewObserver.observe(card, { attributes: true, attributeFilter: ['hidden', 'style'] });
+    observer.observe(container, { childList: true });
+
+    const card = document.getElementById('notifications-card');
+    if (card) {
+      viewObserver = new MutationObserver(() => {
+        if (card.hidden === false && !rendering) {
+          refreshPreview();
+        }
+      });
+      viewObserver.observe(card, { attributes: true, attributeFilter: ['hidden', 'style'] });
+    }
+
+    window.refreshNotificationPreview = refreshPreview;
+
+    fetchAndRender();
+
+    document.getElementById('notificationsRefreshBtn')?.addEventListener('click', refreshPreview);
+    document.getElementById('notificationsSeenBtn')?.addEventListener('click', () => {
+      lastNotificationSignature = '';
+      setTimeout(fetchAndRender, 350);
+    });
   }
-
-  window.refreshNotificationPreview = refreshPreview;
-
-  fetchAndRender();
-
-  document.getElementById('notificationsRefreshBtn')?.addEventListener('click', refreshPreview);
-  document.getElementById('notificationsSeenBtn')?.addEventListener('click', () => {
-    lastNotificationSignature = '';
-    setTimeout(fetchAndRender, 350);
-  });
-}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', setup, { once: true });
