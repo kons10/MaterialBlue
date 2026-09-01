@@ -1174,64 +1174,133 @@ function appendNotificationActions(supporting, notification) {
   supporting.appendChild(actionRow);
 }
 
+/**
+ * 通知リストの描画（差分更新対応）
+ * 既存の DOM 要素を可能な限り再利用し、ちらつきを防止
+ */
 function renderNotifications(notifications) {
   const container = document.getElementById('notifications');
   if (!container) return;
-  container.innerHTML = '';
-
+  
+  // 既存の通知アイテムを URI でマップ
+  const existingItems = new Map();
+  Array.from(container.querySelectorAll('md-list-item[data-notification-uri]')).forEach(item => {
+    existingItems.set(item.dataset.notificationUri, item);
+  });
+  
+  const usedUris = new Set();
+  
+  // 空の場合の処理
   if (notifications.length === 0) {
+    container.innerHTML = '';
     const emptyItem = document.createElement('md-list-item');
     emptyItem.innerHTML = `<div slot="headline">${t('notification.emptyHeadline')}</div><div slot="supporting-text">${t('notification.empty')}</div>`;
     container.appendChild(emptyItem);
     return;
   }
-
-  const fragment = document.createDocumentFragment();
-  notifications.forEach((notification) => {
-    const listItem = document.createElement('md-list-item');
-    listItem.dataset.notificationUri = notification.uri || '';
-
-    const icon = document.createElement('md-icon');
-    icon.slot = 'start';
-    icon.textContent = notification.isRead ? 'notifications' : 'notifications_active';
-
-    const headline = createAuthorLine(notification.author, 'notification.sourceFallback');
-    headline.slot = 'headline';
-
-    const supporting = document.createElement('div');
-    supporting.slot = 'supporting-text';
-    supporting.className = 'md-typescale-body-medium';
-
-    const reason = document.createElement('div');
-    reason.textContent = getNotificationReasonLabel(notification.reason);
-    supporting.appendChild(reason);
-
-    const text = notification.record?.text;
-    if (text) {
-      const body = document.createElement('div');
-      body.style.whiteSpace = 'pre-wrap';
-      body.style.marginTop = '6px';
-      body.textContent = text;
-      supporting.appendChild(body);
+  
+  // 各通知を処理
+  notifications.forEach((notification, index) => {
+    const uri = notification.uri || '';
+    usedUris.add(uri);
+    
+    let listItem = existingItems.get(uri);
+    let divider = null;
+    
+    // 既存要素がない場合は新規作成
+    if (!listItem) {
+      listItem = document.createElement('md-list-item');
+      listItem.dataset.notificationUri = uri;
+      
+      const icon = document.createElement('md-icon');
+      icon.slot = 'start';
+      listItem.appendChild(icon);
+      
+      const headline = createAuthorLine(notification.author, 'notification.sourceFallback');
+      headline.slot = 'headline';
+      listItem.appendChild(headline);
+      
+      const supporting = document.createElement('div');
+      supporting.slot = 'supporting-text';
+      supporting.className = 'md-typescale-body-medium';
+      listItem.appendChild(supporting);
+      
+      divider = document.createElement('md-divider');
+      
+      container.appendChild(listItem);
+      container.appendChild(divider);
+    } else {
+      // 既存の divider を取得
+      divider = listItem.nextElementSibling;
+      if (!divider || divider.tagName !== 'MD-DIVIDER') {
+        divider = document.createElement('md-divider');
+        listItem.after(divider);
+      }
     }
-
-    appendNotificationActions(supporting, notification);
-
-    if (notification.indexedAt) {
-      const time = document.createElement('div');
-      time.className = 'md-typescale-body-small';
-      time.style.marginTop = '6px';
-      time.textContent = formatRelativeTime(new Date(notification.indexedAt));
-      supporting.appendChild(time);
+    
+    // コンテンツを更新（既存要素を再利用）
+    const icon = listItem.querySelector('md-icon[slot="start"]');
+    if (icon) {
+      icon.textContent = notification.isRead ? 'notifications' : 'notifications_active';
     }
-
-    listItem.appendChild(icon);
-    listItem.appendChild(headline);
-    listItem.appendChild(supporting);
-    fragment.appendChild(listItem);
-    fragment.appendChild(document.createElement('md-divider'));
+    
+    const headline = listItem.querySelector('[slot="headline"]');
+    if (headline) {
+      headline.innerHTML = '';
+      const authorLine = createAuthorLine(notification.author, 'notification.sourceFallback');
+      headline.appendChild(authorLine);
+    }
+    
+    const supporting = listItem.querySelector('[slot="supporting-text"]');
+    if (supporting) {
+      supporting.innerHTML = '';
+      
+      const reason = document.createElement('div');
+      reason.textContent = getNotificationReasonLabel(notification.reason);
+      supporting.appendChild(reason);
+      
+      const text = notification.record?.text;
+      if (text) {
+        const body = document.createElement('div');
+        body.style.whiteSpace = 'pre-wrap';
+        body.style.marginTop = '6px';
+        body.textContent = text;
+        supporting.appendChild(body);
+      }
+      
+      appendNotificationActions(supporting, notification);
+      
+      if (notification.indexedAt) {
+        const time = document.createElement('div');
+        time.className = 'md-typescale-body-small';
+        time.style.marginTop = '6px';
+        time.textContent = formatRelativeTime(new Date(notification.indexedAt));
+        supporting.appendChild(time);
+      }
+    }
   });
-  container.appendChild(fragment);
+  
+  // 不要になった既存要素を削除（逆順で削除してインデックスズレを防止）
+  const itemsToRemove = [];
+  existingItems.forEach((item, uri) => {
+    if (!usedUris.has(uri)) {
+      itemsToRemove.push(item);
+    }
+  });
+  
+  itemsToRemove.forEach(item => {
+    const divider = item.nextElementSibling;
+    if (divider && divider.tagName === 'MD-DIVIDER') {
+      divider.remove();
+    }
+    item.remove();
+  });
+  
+  // 空メッセージの整理
+  const emptyMessage = container.querySelector('md-list-item:not([data-notification-uri])');
+  if (emptyMessage && notifications.length > 0) {
+    emptyMessage.remove();
+  }
 }
 
 async function loadNotifications() {
