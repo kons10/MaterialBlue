@@ -21,7 +21,7 @@ A static Bluesky client built with [Material Design](https://material.io)
 |---|---|
 | Static site generator | [Hugo](https://gohugo.io/) v0.140.0+ |
 | UI components | [@material/web](https://github.com/material-components/material-web) (via esm.sh) |
-| Bluesky API | [@atproto/api](https://www.npmjs.com/package/@atproto/api) v0.13.6 (via esm.sh) |
+| Bluesky API | [@atproto/api](https://www.npmjs.com/package/@atproto/api) v0.20.5 (via esm.sh) |
 | Fonts | Google Fonts — Roboto, Material Symbols Outlined |
 
 ## Getting Started
