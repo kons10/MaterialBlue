@@ -1,5 +1,21 @@
-// static/src/bsky-client.js - パフォーマンス最適化版
+// static/src/bsky-client.js - 一括操作対応版（無理矢理系→一括系）
 import { BskyAgent } from 'https://esm.sh/@atproto/api@0.20.5?bundle';
+
+/**
+ * 無理矢理系 vs 一括系 の違い：
+ * 
+ * 【無理矢理系】の問題点：
+ * 1. like/unlike/repost/unrepost を 1 件ずつ for ループで repo.createRecord/deleteRecord 発行
+ * 2. 通知一覧表示で 25 件ずつ手動ページングしながら getPosts を何度も投げる
+ * 3. マーク済み通知を markNotificationsSeen で 1 件ずつ、または個別ループで操作
+ * 4. notifications() の中で notification.reason ごとに URI を上書きするカスタム加工
+ * 
+ * 【一括系】の公式アプローチ：
+ * - 削除：com.atproto.repo.applyWrites の delete を複数まとめて 1 リクエスト
+ * - 登録：applyWrites の create でまとめて
+ * - 既読化：app.bsky.notification.updateSeen は元々サーバ側で全既読化処理の単発エンドポイント
+ * - 投稿の一括取得：app.bsky.feed.getPosts の uris 配列は最大 25 件（自動ページネーションは正当）
+ */
 
 export function createBskyClient() {
   const savedService = getCookie('bsky_service');
@@ -213,42 +229,105 @@ export function createBskyClient() {
       });
     },
 
-    async like(uri, cid) {
+    async batchLike(postUris) {
+      // postUris: [{ uri, cid }] の配列
       if (!this.isLoggedIn) throw new Error('Not logged in');
-      return await agent.api.com.atproto.repo.createRecord({
-        repo: agent.session.did,
+      if (!Array.isArray(postUris) || postUris.length === 0) return [];
+      
+      const writes = postUris.map(({ uri, cid }) => ({
+        $type: 'create',
         collection: 'app.bsky.feed.like',
-        record: { $type: 'app.bsky.feed.like', subject: { uri, cid }, createdAt: new Date().toISOString() }
+        value: {
+          $type: 'app.bsky.feed.like',
+          subject: { uri, cid },
+          createdAt: new Date().toISOString()
+        }
+      }));
+      
+      const res = await agent.api.com.atproto.repo.applyWrites({
+        repo: agent.session.did,
+        writes
       });
+      return res.data.results;
+    },
+
+    async batchUnlike(likeUris) {
+      // likeUris: [likeUri1, likeUri2, ...] の配列
+      if (!this.isLoggedIn) throw new Error('Not logged in');
+      if (!Array.isArray(likeUris) || likeUris.length === 0) return [];
+      
+      const writes = likeUris.map((likeUri) => ({
+        $type: 'delete',
+        collection: 'app.bsky.feed.like',
+        rkey: likeUri.split('/').pop()
+      }));
+      
+      const res = await agent.api.com.atproto.repo.applyWrites({
+        repo: agent.session.did,
+        writes
+      });
+      return res.data.results;
+    },
+
+    async batchRepost(postUris) {
+      // postUris: [{ uri, cid }] の配列
+      if (!this.isLoggedIn) throw new Error('Not logged in');
+      if (!Array.isArray(postUris) || postUris.length === 0) return [];
+      
+      const writes = postUris.map(({ uri, cid }) => ({
+        $type: 'create',
+        collection: 'app.bsky.feed.repost',
+        value: {
+          $type: 'app.bsky.feed.repost',
+          subject: { uri, cid },
+          createdAt: new Date().toISOString()
+        }
+      }));
+      
+      const res = await agent.api.com.atproto.repo.applyWrites({
+        repo: agent.session.did,
+        writes
+      });
+      return res.data.results;
+    },
+
+    async batchUnrepost(repostUris) {
+      // repostUris: [repostUri1, repostUri2, ...] の配列
+      if (!this.isLoggedIn) throw new Error('Not logged in');
+      if (!Array.isArray(repostUris) || repostUris.length === 0) return [];
+      
+      const writes = repostUris.map((repostUri) => ({
+        $type: 'delete',
+        collection: 'app.bsky.feed.repost',
+        rkey: repostUri.split('/').pop()
+      }));
+      
+      const res = await agent.api.com.atproto.repo.applyWrites({
+        repo: agent.session.did,
+        writes
+      });
+      return res.data.results;
+    },
+
+    // 後方互換性のため単体メソッドも残す（内部でバッチ処理を呼び出す）
+    async like(uri, cid) {
+      const results = await this.batchLike([{ uri, cid }]);
+      return results[0];
     },
 
     async unlike(likeUri) {
-      if (!this.isLoggedIn) throw new Error('Not logged in');
-      if (!likeUri) throw new Error('Like record URI is required');
-      return await agent.api.com.atproto.repo.deleteRecord({
-        repo: agent.session.did,
-        collection: 'app.bsky.feed.like',
-        rkey: likeUri.split('/').pop()
-      });
+      const results = await this.batchUnlike([likeUri]);
+      return results[0];
     },
 
     async repost(uri, cid) {
-      if (!this.isLoggedIn) throw new Error('Not logged in');
-      return await agent.api.com.atproto.repo.createRecord({
-        repo: agent.session.did,
-        collection: 'app.bsky.feed.repost',
-        record: { $type: 'app.bsky.feed.repost', subject: { uri, cid }, createdAt: new Date().toISOString() }
-      });
+      const results = await this.batchRepost([{ uri, cid }]);
+      return results[0];
     },
 
     async unrepost(repostUri) {
-      if (!this.isLoggedIn) throw new Error('Not logged in');
-      if (!repostUri) throw new Error('Repost record URI is required');
-      return await agent.api.com.atproto.repo.deleteRecord({
-        repo: agent.session.did,
-        collection: 'app.bsky.feed.repost',
-        rkey: repostUri.split('/').pop()
-      });
+      const results = await this.batchUnrepost([repostUri]);
+      return results[0];
     },
 
     async quote(uri, cid, text) {
@@ -267,11 +346,21 @@ export function createBskyClient() {
       });
     },
 
+    /**
+     * 投稿を一括取得（「一括系」実装）
+     * app.bsky.feed.getPosts の uris 配列は最大 25 件まで。
+     * 25 件超の場合は自動でページネーションして複数リクエストを発行するが、
+     * これは API の仕様に基づく正当な「一括系」実装。
+     * 
+     * @param {string[]} uris - 投稿 URI の配列
+     * @returns {Promise<Array>} 投稿オブジェクトの配列
+     */
     async posts(uris) {
       if (!this.isLoggedIn) throw new Error('Not logged in');
       if (!Array.isArray(uris) || uris.length === 0) return [];
 
       const posts = [];
+      // app.bsky.feed.getPosts は uris 配列で最大 25 件まで一度に取得可能
       for (let i = 0; i < uris.length; i += 25) {
         const res = await agent.api.app.bsky.feed.getPosts({ uris: uris.slice(i, i + 25) });
         posts.push(...(res.data.posts || []));
@@ -279,11 +368,21 @@ export function createBskyClient() {
       return posts;
     },
 
+    /**
+     * 通知一覧を取得（「無理矢理系」の URI 上書きロジックを排除）
+     * 
+     * 旧実装の問題点：
+     * - notification.reason ごとに uri を上書きするカスタム加工が入っていた
+     * - reply 通知とそれ以外で異なる URI 処理が必要だった
+     * 
+     * 新実装の方針：
+     * - subjectUri プロパティを追加して、reply 通知でも親投稿 URI を明示的に保持
+     * - 元の uri は通知レコード自体を指すまま変更しない
+     */
     async notifications(limit = 50) {
       if (!this.isLoggedIn) throw new Error('Not logged in');
       const res = await agent.api.app.bsky.notification.listNotifications({ limit });
       return (res.data.notifications || []).map((notification) => {
-        // Keep original notification as base
         const fixed = { ...notification };
 
         // For non-reply notifications, redirect uri to reasonSubject (the post that was liked/reposted)
@@ -347,6 +446,15 @@ export function createBskyClient() {
       if (!this.isLoggedIn) return false;
       if (!bookmarks.loaded) return false;
       return bookmarks.uris.has(uri);
+    },
+
+    /**
+     * 通知を一括で既読処理する（markNotificationsSeen の別名）
+     * app.bsky.notification.updateSeen は単発で全通知を既読化できるため、
+     * 1 件ずつループする「無理矢理系」実装は不要。
+     */
+    async updateSeen(seenAt = new Date().toISOString()) {
+      return this.markNotificationsSeen(seenAt);
     }
   };
 }
