@@ -396,6 +396,10 @@ export function createBskyClient() {
           fixed.subjectUri = notification.reasonSubject;
         }
 
+        // Preserve isRead property from the API response for unread badge calculation
+        // The API returns isRead: true/false for each notification
+        fixed.isRead = notification.isRead ?? false;
+
         return fixed;
       });
     },
