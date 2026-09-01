@@ -282,23 +282,9 @@ export function createBskyClient() {
     async notifications(limit = 50) {
       if (!this.isLoggedIn) throw new Error('Not logged in');
       const res = await agent.api.app.bsky.notification.listNotifications({ limit });
-      return (res.data.notifications || []).map((notification) => {
-        // Keep original notification as base
-        const fixed = { ...notification };
-
-        // For non-reply notifications, redirect uri to reasonSubject (the post that was liked/reposted)
-        if (notification.reason !== 'reply') {
-          const targetUri = notification.reasonSubject || notification.uri;
-          fixed.uri = targetUri;
-        }
-
-        // For reply notifications, expose parent post URI separately
-        if (notification.reason === 'reply' && notification.reasonSubject && notification.reasonSubject !== notification.uri) {
-          fixed.subjectUri = notification.reasonSubject;
-        }
-
-        return fixed;
-      });
+      // Keep AT Protocol notification records intact. The view layer resolves
+      // reasonSubject separately, so notification.uri never changes meaning.
+      return res.data.notifications || [];
     },
 
     async markNotificationsSeen(seenAt = new Date().toISOString()) {
