@@ -87,18 +87,12 @@ function showSuccess(messageKey, params = {}) {
   errorMessage.textContent = message;
   errorMessage.style.display = 'block';
   
-  if (type === 'success') {
-    errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
-    errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
-  } else {
-    errorMessage.style.background = '';
-    errorMessage.style.color = '';
-  }
+  errorMessage.style.background = 'var(--md-sys-color-primary-container, #bbdefb)';
+  errorMessage.style.color = 'var(--md-sys-color-on-primary-container, #0d47a1)';
   
-  const duration = type === 'success' ? SUCCESS_DISPLAY_DURATION : ERROR_DISPLAY_DURATION;
   setTimeout(() => {
     errorMessage.style.display = 'none';
-  }, duration);
+  }, SUCCESS_DISPLAY_DURATION);
 }
 
 /**

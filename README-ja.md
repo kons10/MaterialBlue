@@ -21,7 +21,7 @@
 |---|---|
 | 静的サイトジェネレーター | [Hugo](https://gohugo.io/) v0.140.0 以上 |
 | UI コンポーネント | [Material Web Components](https://github.com/material-components/material-web)（esm.sh 経由） |
-| Bluesky API | [@atproto/api](https://www.npmjs.com/package/@atproto/api) v0.13.6（esm.sh 経由） |
+| Bluesky API | [@atproto/api](https://www.npmjs.com/package/@atproto/api) v0.20.5（esm.sh 経由） |
 | フォント | Google Fonts — Roboto, Material Symbols Outlined |
 
 ## はじめかた
