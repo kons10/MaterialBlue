@@ -9,6 +9,7 @@ __pycache__/
 *.so
 *.a
 *.out
+.hugo_build.lock
 dist/
 build/
 public/
