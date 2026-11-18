@@ -904,7 +904,7 @@ async function loadTimeline(force = false, append = false) {
           } else {
             const res = await client.repost(post.uri, post.cid);
             reposted = true;
-            repostRecordUri = res?.data?.uri || null;
+            repostRecordUri = res?.uri || null;
             const newCount = (repostCount ?? 0) + 1;
             const countStr = formatCountBadge(newCount);
             repostBtn.innerHTML = `<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>${countStr}`;
@@ -971,7 +971,7 @@ async function loadTimeline(force = false, append = false) {
           } else {
             const res = await client.like(post.uri, post.cid);
             liked = true;
-            likeRecordUri = res?.data?.uri || null;
+            likeRecordUri = res?.uri || null;
             currentLikeCount = (currentLikeCount ?? 0) + 1;
             const countStr = formatCountBadge(currentLikeCount);
             likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>${countStr}`;
@@ -1152,7 +1152,7 @@ function appendNotificationActions(supporting, notification) {
       } else {
         const result = await client.like(post.uri, post.cid);
         liked = true;
-        likeRecordUri = result?.data?.uri || null;
+        likeRecordUri = result?.uri || null;
         likeCount += 1;
         showSuccess('post.liked');
       }
