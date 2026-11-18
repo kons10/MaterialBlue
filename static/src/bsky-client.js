@@ -17,6 +17,21 @@ import { BskyAgent } from 'https://esm.sh/@atproto/api@0.20.5?bundle';
  * - 投稿の一括取得：app.bsky.feed.getPosts の uris 配列は最大 25 件（自動ページネーションは正当）
  */
 
+/**
+ * Promise が指定時間を超えた場合だけ警告する。
+ * タイムアウト時に処理自体を打ち切らず、完了まで待つことで
+ * セッション復元中に未ログイン状態として初期化される競合を防ぐ。
+ */
+function warnIfSlow(promise, timeoutMs, message) {
+  const timeoutId = setTimeout(() => {
+    console.warn(message);
+  }, timeoutMs);
+
+  return Promise.resolve(promise).finally(() => {
+    clearTimeout(timeoutId);
+  });
+}
+
 export function createBskyClient() {
   const savedService = getCookie('bsky_service');
   const initialService = normalizeService(savedService || 'bsky.social');
@@ -62,7 +77,7 @@ export function createBskyClient() {
     const sessionData = {
       accessJwt: access,
       refreshJwt: refresh,
-      did: decodeURIComponent(did),
+      did,
       handle: handle || '',
       email: '',
       emailConfirmed: false
@@ -82,14 +97,11 @@ export function createBskyClient() {
         clearSession();
       });
 
-    const timeoutPromise = new Promise((resolve) => {
-      setTimeout(() => {
-        console.warn('Session resume timed out after 3000ms');
-        resolve();
-      }, 3000);
-    });
-
-    return Promise.race([restorePromise, timeoutPromise]);
+    return warnIfSlow(
+      restorePromise,
+      3000,
+      'Session resume timed out after 3000ms'
+    );
   })() : Promise.resolve();
 
   return {
@@ -106,14 +118,11 @@ export function createBskyClient() {
           if (this.isLoggedIn) await this.syncBookmarks();
         })();
 
-        const timeoutPromise = new Promise((resolve) => {
-          setTimeout(() => {
-            console.warn('Client ready timed out after 4000ms');
-            resolve();
-          }, 4000);
-        });
-
-        await Promise.race([readyPromise, timeoutPromise]);
+        await warnIfSlow(
+          readyPromise,
+          4000,
+          'Client ready timed out after 4000ms'
+        );
       } catch (e) {
         console.warn('Client ready failed:', e);
       }
@@ -235,7 +244,7 @@ export function createBskyClient() {
       if (!Array.isArray(postUris) || postUris.length === 0) return [];
       
       const writes = postUris.map(({ uri, cid }) => ({
-        $type: 'create',
+        $type: 'com.atproto.repo.applyWrites#create',
         collection: 'app.bsky.feed.like',
         value: {
           $type: 'app.bsky.feed.like',
@@ -257,7 +266,7 @@ export function createBskyClient() {
       if (!Array.isArray(likeUris) || likeUris.length === 0) return [];
       
       const writes = likeUris.map((likeUri) => ({
-        $type: 'delete',
+        $type: 'com.atproto.repo.applyWrites#delete',
         collection: 'app.bsky.feed.like',
         rkey: likeUri.split('/').pop()
       }));
@@ -275,7 +284,7 @@ export function createBskyClient() {
       if (!Array.isArray(postUris) || postUris.length === 0) return [];
       
       const writes = postUris.map(({ uri, cid }) => ({
-        $type: 'create',
+        $type: 'com.atproto.repo.applyWrites#create',
         collection: 'app.bsky.feed.repost',
         value: {
           $type: 'app.bsky.feed.repost',
@@ -297,7 +306,7 @@ export function createBskyClient() {
       if (!Array.isArray(repostUris) || repostUris.length === 0) return [];
       
       const writes = repostUris.map((repostUri) => ({
-        $type: 'delete',
+        $type: 'com.atproto.repo.applyWrites#delete',
         collection: 'app.bsky.feed.repost',
         rkey: repostUri.split('/').pop()
       }));
