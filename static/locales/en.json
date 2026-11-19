@@ -130,5 +130,6 @@
   "notification.authorFallback": "Author",
   "notification.sourceFallback": "Notifier",
   "notification.emptyHeadline": "No notifications",
-  "notification.empty": "No new notifications"
+  "notification.empty": "No new notifications",
+  "notification.targetUnavailable": "Target post unavailable"
 }

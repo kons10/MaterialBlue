@@ -378,39 +378,17 @@ export function createBskyClient() {
     },
 
     /**
-     * 通知一覧を取得（「無理矢理系」の URI 上書きロジックを排除）
-     * 
-     * 旧実装の問題点：
-     * - notification.reason ごとに uri を上書きするカスタム加工が入っていた
-     * - reply 通知とそれ以外で異なる URI 処理が必要だった
-     * 
-     * 新実装の方針：
-     * - subjectUri プロパティを追加して、reply 通知でも親投稿 URI を明示的に保持
-     * - 元の uri は通知レコード自体を指すまま変更しない
+     * 通知一覧を取得。
+     * uri は通知レコード自身、reasonSubject は通知対象の投稿を指すため、
+     * API が返した URI を書き換えずに保持する。
      */
     async notifications(limit = 50) {
       if (!this.isLoggedIn) throw new Error('Not logged in');
       const res = await agent.api.app.bsky.notification.listNotifications({ limit });
-      return (res.data.notifications || []).map((notification) => {
-        const fixed = { ...notification };
-
-        // For non-reply notifications, redirect uri to reasonSubject (the post that was liked/reposted)
-        if (notification.reason !== 'reply') {
-          const targetUri = notification.reasonSubject || notification.uri;
-          fixed.uri = targetUri;
-        }
-
-        // For reply notifications, expose parent post URI separately
-        if (notification.reason === 'reply' && notification.reasonSubject && notification.reasonSubject !== notification.uri) {
-          fixed.subjectUri = notification.reasonSubject;
-        }
-
-        // Preserve isRead property from the API response for unread badge calculation
-        // The API returns isRead: true/false for each notification
-        fixed.isRead = notification.isRead ?? false;
-
-        return fixed;
-      });
+      return (res.data.notifications || []).map((notification) => ({
+        ...notification,
+        isRead: notification.isRead ?? false
+      }));
     },
 
     async markNotificationsSeen(seenAt = new Date().toISOString()) {

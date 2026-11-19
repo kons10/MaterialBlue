@@ -39,6 +39,7 @@ function createPostCard(post) {
   const card = document.createElement('div');
   card.className = 'notification-post-card';
 
+
   const authorRow = document.createElement('div');
   authorRow.className = 'notification-post-author';
   authorRow.appendChild(createAvatar(post.author?.avatar, post.author?.handle || ''));
@@ -146,36 +147,38 @@ function createNotificationItem(notification, post) {
   meta.appendChild(author);
   item.appendChild(meta);
 
-  // ❗️ FIX: Show reply text when available (for reply notifications)
-  if (notification.record?.text) {
+  // Keep reply text and its referenced post in one content column.
+  const content = document.createElement('div');
+  content.className = 'notification-preview-content';
+
+  // A mention/reply notification can carry the same post record that is
+  // already rendered in the target-post card. Avoid showing that text twice.
+  const notificationText = notification.record?.text?.trim();
+  const targetPostText = post?.record?.text?.trim();
+  const hasDistinctNotificationText = notificationText &&
+    notificationText !== targetPostText;
+
+  if (hasDistinctNotificationText) {
     const replyText = document.createElement('div');
-    replyText.className = 'notification-post-text md-typescale-body-medium';
-    replyText.style.whiteSpace = 'pre-wrap';
-    replyText.style.overflowWrap = 'anywhere';
-    replyText.style.marginTop = '8px';
-    replyText.style.color = 'var(--md-sys-color-on-surface-variant)';
-    replyText.textContent = notification.record.text;
-    item.appendChild(replyText);
+    replyText.className = 'notification-preview-reply-card md-typescale-body-medium';
+    replyText.textContent = notificationText;
+    content.appendChild(replyText);
   }
 
-  // SHOW POST CONTENT IF AVAILABLE
   if (post) {
-    item.appendChild(createPostCard(post));
+    content.appendChild(createPostCard(post));
+  } else if (notification.reason !== 'follow') {
+    const unavailable = document.createElement('div');
+    unavailable.className = 'notification-post-unavailable md-typescale-body-small';
+    unavailable.textContent = t('notification.targetUnavailable');
+    content.appendChild(unavailable);
+  }
+
+  if (content.childElementCount > 0) {
+    item.appendChild(content);
   }
 
   return item;
-}
-
-function notificationTargetUri(notification) {
-  if (notification.reasonSubject) return notification.reasonSubject;
-  if (['like', 'repost', 'reply', 'quote', 'mention'].includes(notification.reason)) {
-    return notification.uri || null;
-  }
-  return null;
-}
-
-function isPreviewRendered(container) {
-  return container.firstElementChild?.classList.contains('notification-preview-list') === true;
 }
 
 function renderNotifications(notifications = []) {

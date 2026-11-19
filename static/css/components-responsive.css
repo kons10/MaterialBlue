@@ -287,3 +287,64 @@
 @media (max-width: 760px) {
   .notification-preview-item { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px 12px; }
 }
+
+
+.notification-post-unavailable {
+  align-self: center;
+  padding: 12px 14px;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px dashed var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+}
+
+
+/* Keep notification metadata and post content in separate, predictable columns. */
+.notification-preview-item {
+  align-items: start;
+}
+.notification-preview-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.notification-preview-reply-text {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.notification-preview-content > .notification-post-card,
+.notification-preview-content > .notification-post-unavailable {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Contain the notification's own post text separately from its target post. */
+.notification-preview-reply-card {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low, var(--md-sys-color-surface));
+  color: var(--md-sys-color-on-surface);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  contain: inline-size;
+}
+.notification-preview-content,
+.notification-preview-content > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
