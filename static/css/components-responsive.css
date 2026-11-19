@@ -302,3 +302,30 @@
   border: 1px dashed var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
   border-radius: 12px;
 }
+
+
+/* Keep notification metadata and post content in separate, predictable columns. */
+.notification-preview-item {
+  align-items: start;
+}
+.notification-preview-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.notification-preview-reply-text {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.notification-preview-content > .notification-post-card,
+.notification-preview-content > .notification-post-unavailable {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
