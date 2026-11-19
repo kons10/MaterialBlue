@@ -4,10 +4,7 @@ import path from 'node:path';
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
 const FREE_MODELS = [
-  'qwen/qwen3-coder:free',
-  'deepseek/deepseek-r1:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemma-3-27b-it:free'
+  'openrouter/free'
 ];
 
 const TARGET_EXTS = new Set(['.js', '.ts', '.py', '.html', '.css', '.go', '.rs', '.sh']);
