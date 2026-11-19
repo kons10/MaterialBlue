@@ -4,13 +4,13 @@ let rendering = false;
 let activeTab = 'all';
 let currentNotifications = [];
 
-const reasonLabels = {
-  like: 'いいねしました',
-  repost: 'リポストしました',
-  reply: '返信しました',
-  quote: '引用しました',
-  mention: 'あなたに言及しました',
-  follow: 'フォローしました',
+const reasonKeys = {
+  like: 'notification.reason.like',
+  repost: 'notification.reason.repost',
+  reply: 'notification.reason.reply',
+  quote: 'notification.reason.quote',
+  mention: 'notification.reason.mention',
+  follow: 'notification.reason.follow',
 };
 
 function avatar(src, alt = '') {
@@ -105,7 +105,7 @@ function createActorRow(notification, post, grouped = []) {
   activity.className = 'notification-activity';
 
   const icon = document.createElement('md-icon');
-  icon.className = 'notification-activity-icon';
+  icon.className = 'notification-activity-icon notification-activity-' + reason;
   icon.textContent = reason === 'repost' ? 'repeat' : reason === 'follow' ? 'person_add' : 'favorite';
   activity.appendChild(icon);
 
@@ -127,7 +127,7 @@ function createActorRow(notification, post, grouped = []) {
   description.appendChild(label);
 
   const action = document.createElement('span');
-  action.textContent = reasonLabels[reason] || t('notification.reason.unknown', { action: reason || '通知' });
+  action.textContent = reasonKeys[reason] ? t(reasonKeys[reason]) : t('notification.reason.unknown', { action: reason || '通知' });
   description.appendChild(action);
 
   const time = document.createElement('span');
