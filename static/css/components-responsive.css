@@ -289,12 +289,6 @@
 }
 
 
-/* Notification target-post identification */
-.notification-post-target-label {
-  margin-bottom: 8px;
-  color: var(--md-sys-color-primary);
-  font-weight: 600;
-}
 .notification-post-unavailable {
   align-self: center;
   padding: 12px 14px;
