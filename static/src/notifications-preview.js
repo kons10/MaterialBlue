@@ -39,6 +39,11 @@ function createPostCard(post) {
   const card = document.createElement('div');
   card.className = 'notification-post-card';
 
+  const targetLabel = document.createElement('div');
+  targetLabel.className = 'notification-post-target-label md-typescale-label-small';
+  targetLabel.textContent = t('notification.targetPost', {}, 'Target post');
+  card.appendChild(targetLabel);
+
   const authorRow = document.createElement('div');
   authorRow.className = 'notification-post-author';
   authorRow.appendChild(createAvatar(post.author?.avatar, post.author?.handle || ''));
@@ -161,6 +166,11 @@ function createNotificationItem(notification, post) {
   // SHOW POST CONTENT IF AVAILABLE
   if (post) {
     item.appendChild(createPostCard(post));
+  } else if (notification.reason !== 'follow') {
+    const unavailable = document.createElement('div');
+    unavailable.className = 'notification-post-unavailable md-typescale-body-small';
+    unavailable.textContent = t('notification.targetUnavailable', {}, 'Target post unavailable');
+    item.appendChild(unavailable);
   }
 
   return item;
