@@ -1174,30 +1174,27 @@ async function loadNotifications() {
   showLoading(true);
   try {
     const notifications = await client.notifications();
-    // Fetch both the reply record (for reply notifications) and the parent post (for context)
-    const postUris = [...new Set(notifications.flatMap((notification) => {
-      const uris = [];
-      // For reply notifications, fetch the reply record itself
-      if (notification.record?.$type === 'app.bsky.feed.post' && notification.uri) {
-        uris.push(notification.uri);
-      }
-      // Also fetch the parent post (subjectUri) for context display
-      if (notification.subjectUri) {
-        uris.push(notification.subjectUri);
-      } else if (notification.record?.$type === 'app.bsky.feed.post' && notification.uri) {
-        // For non-reply notifications, the uri is already the target post
-        uris.push(notification.uri);
-      }
-      return uris;
-    }))];
+
+    // uri は通知レコード、reasonSubject は通知の対象投稿。
+    // like/repost では uri が like/repost レコードなので、必ず reasonSubject を優先する。
+    const postUris = [...new Set(notifications
+      .map((notification) => {
+        if (notification.reasonSubject) return notification.reasonSubject;
+        if (notification.record?.$type === 'app.bsky.feed.post') return notification.uri || null;
+        return null;
+      })
+      .filter(Boolean))];
+
     const posts = await client.posts(postUris);
     const postsByUri = new Map(posts.map((post) => [post.uri, post]));
+
     notifications.forEach((notification) => {
-      // For reply notifications, notification.post is the parent post (context)
-      // For other notifications, notification.post is the target post
-      const postUri = notification.subjectUri || notification.uri;
-      notification.post = postsByUri.get(postUri) || null;
+      const targetUri = notification.reasonSubject ||
+        (notification.record?.$type === 'app.bsky.feed.post' ? notification.uri : null);
+      notification.targetPostUri = targetUri || null;
+      notification.post = targetUri ? (postsByUri.get(targetUri) || null) : null;
     });
+
     window.__materialBlueNotifications = notifications;
     window.dispatchEvent(new CustomEvent('materialblue:notifications', { detail: { notifications } }));
     updateNotificationBadge(notifications);
