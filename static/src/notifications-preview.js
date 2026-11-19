@@ -1,11 +1,6 @@
-import { createBskyClient } from '/src/bsky-client.js';
 import { t, getCurrentLocale } from '/src/i18n.js';
 
-const client = createBskyClient();
 let rendering = false;
-let observer = null;
-let viewObserver = null;
-let lastNotificationSignature = '';
 
 const reasonKeyMap = {
   like: 'notification.reason.like',
@@ -15,130 +10,6 @@ const reasonKeyMap = {
   mention: 'notification.reason.mention',
   follow: 'notification.reason.follow',
 };
-
-function injectStyles() {
-  if (document.getElementById('notification-preview-styles')) return;
-  const style = document.createElement('style');
-  style.id = 'notification-preview-styles';
-  style.textContent = `
-    .notification-preview-list {
-      display: flex;
-      flex-direction: column;
-    }
-    .notification-preview-item {
-      display: grid;
-      grid-template-columns: minmax(220px, 0.8fr) minmax(300px, 1.2fr);
-      gap: 20px;
-      align-items: center;
-      padding: 18px 16px;
-      border-bottom: 1px solid var(--md-sys-color-outline);
-    }
-    .notification-preview-meta {
-      min-width: 0;
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      column-gap: 12px;
-      align-items: start;
-    }
-    .notification-preview-icon {
-      grid-row: 1 / span 3;
-      align-self: center;
-    }
-    .notification-preview-author {
-      min-width: 0;
-    }
-    .notification-preview-author-name {
-      font-weight: 500;
-      overflow-wrap: anywhere;
-    }
-    .notification-preview-handle {
-      color: var(--md-sys-color-on-surface-variant, #49454f);
-      overflow-wrap: anywhere;
-    }
-    .notification-preview-reason {
-      margin-top: 4px;
-    }
-    .notification-preview-time {
-      display: flex;
-      flex-direction: column;
-      margin-top: 10px;
-      color: var(--md-sys-color-on-surface-variant, #49454f);
-    }
-    .notification-post-card {
-      min-width: 0;
-      padding: 12px;
-      border: 1px solid var(--md-sys-color-outline);
-      border-radius: 14px;
-      background: var(--md-sys-color-surface, #fff);
-      overflow: hidden;
-    }
-    .notification-post-author {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      margin-bottom: 8px;
-    }
-    .notification-post-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-      flex: 0 0 auto;
-      background: var(--md-sys-color-surface-container-high, #ece6f0);
-    }
-    .notification-post-author-text {
-      min-width: 0;
-    }
-    .notification-post-author-name {
-      font-weight: 600;
-      overflow-wrap: anywhere;
-    }
-    .notification-post-date {
-      color: var(--md-sys-color-on-surface-variant, #49454f);
-      margin-left: 4px;
-      white-space: nowrap;
-    }
-    .notification-post-text {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-    .notification-post-images {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
-      margin-top: 10px;
-    }
-    .notification-post-image {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      object-fit: cover;
-      border-radius: 8px;
-      background: var(--md-sys-color-surface-container-high, #ece6f0);
-    }
-    .notification-post-stats {
-      display: flex;
-      gap: 18px;
-      margin-top: 10px;
-      color: var(--md-sys-color-on-surface-variant, #49454f);
-    }
-    .notification-post-stat {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    @media (max-width: 760px) {
-      .notification-preview-item {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-      .notification-post-images {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 function createAvatar(src, alt = '') {
   const avatar = document.createElement('img');
@@ -167,6 +38,7 @@ function createStat(icon, count) {
 function createPostCard(post) {
   const card = document.createElement('div');
   card.className = 'notification-post-card';
+
 
   const authorRow = document.createElement('div');
   authorRow.className = 'notification-post-author';
@@ -275,144 +147,79 @@ function createNotificationItem(notification, post) {
   meta.appendChild(author);
   item.appendChild(meta);
 
-  // ❗️ FIX: Show reply text when available (for reply notifications)
-  if (notification.record?.text) {
+  // Keep reply text and its referenced post in one content column.
+  const content = document.createElement('div');
+  content.className = 'notification-preview-content';
+
+  // A mention/reply notification can carry the same post record that is
+  // already rendered in the target-post card. Avoid showing that text twice.
+  const notificationText = notification.record?.text?.trim();
+  const targetPostText = post?.record?.text?.trim();
+  const hasDistinctNotificationText = notificationText &&
+    notificationText !== targetPostText;
+
+  if (hasDistinctNotificationText) {
     const replyText = document.createElement('div');
-    replyText.className = 'notification-post-text md-typescale-body-medium';
-    replyText.style.whiteSpace = 'pre-wrap';
-    replyText.style.overflowWrap = 'anywhere';
-    replyText.style.marginTop = '8px';
-    replyText.style.color = 'var(--md-sys-color-on-surface-variant)';
-    replyText.textContent = notification.record.text;
-    item.appendChild(replyText);
+    replyText.className = 'notification-preview-reply-card md-typescale-body-medium';
+    replyText.textContent = notificationText;
+    content.appendChild(replyText);
   }
 
-  // SHOW POST CONTENT IF AVAILABLE
   if (post) {
-    item.appendChild(createPostCard(post));
+    content.appendChild(createPostCard(post));
+  } else if (notification.reason !== 'follow') {
+    const unavailable = document.createElement('div');
+    unavailable.className = 'notification-post-unavailable md-typescale-body-small';
+    unavailable.textContent = t('notification.targetUnavailable');
+    content.appendChild(unavailable);
+  }
+
+  if (content.childElementCount > 0) {
+    item.appendChild(content);
   }
 
   return item;
 }
 
-function notificationTargetUri(notification) {
-  if (notification.reasonSubject) return notification.reasonSubject;
-  if (['like', 'repost', 'reply', 'quote', 'mention'].includes(notification.reason)) {
-    return notification.uri || null;
-  }
-  return null;
-}
+function renderNotifications(notifications = []) {
+  const container = document.getElementById('notifications');
+  if (!container || rendering) return;
 
-function isPreviewRendered(container) {
-  return container.firstElementChild?.classList.contains('notification-preview-list') === true;
-}
+  rendering = true;
+  try {
+    const list = document.createElement('div');
+    list.className = 'notification-preview-list';
 
-async function fetchAndRender() {
-    const container = document.getElementById('notifications');
-    if (!container || rendering) return;
-
-    rendering = true;
-    try {
-      await client.ready();
-      if (!client.isLoggedIn) return;
-
-      const notifications = await client.notifications();
-      // ❗️ FIX: For reply notifications, fetch the actual reply record URI
-      // For other notifications, use the reasonSubject (parent post URI)
-      const targetUris = [...new Set(notifications.map((notification) => {
-        // For reply notifications, fetch the actual reply record
-        if (notification.reason === 'reply' && notification.uri) {
-          return notification.uri;
-        }
-        // For other notifications, use parent post URI
-        return notificationTargetUri(notification);
-      }).filter(Boolean))];
-      const posts = await client.posts(targetUris);
-      const postsByUri = new Map(posts.map((post) => [post.uri, post]));
-
-      const signature = notifications.map((notification) => `${notification.uri}:${notification.isRead}:${notification.indexedAt}`).join('|');
-      if (signature === lastNotificationSignature && isPreviewRendered(container)) return;
-      lastNotificationSignature = signature;
-
-      if (observer) observer.disconnect();
-      container.innerHTML = '';
-      container.dataset.notificationPreview = 'ready';
-
-      const list = document.createElement('div');
-      list.className = 'notification-preview-list';
-
-      if (notifications.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'md-typescale-body-medium';
-        empty.style.padding = '24px 16px';
-        empty.textContent = t('notification.empty');
-        list.appendChild(empty);
-      } else {
-        notifications.forEach((notification) => {
-          // For reply notifications, we want to show:
-          // 1. The actual reply text (from notification.record.text)
-          // 2. The parent post context (from postsByUri using subjectUri or notificationTargetUri)
-          const postUri = notification.reason === 'reply' && notification.subjectUri
-            ? notification.subjectUri
-            : notificationTargetUri(notification);
-          const post = postsByUri.get(postUri);
-          list.appendChild(createNotificationItem(notification, post));
-        });
-      }
-
-      container.appendChild(list);
-    } catch (error) {
-      console.error('Notification preview load error:', error);
-    } finally {
-      rendering = false;
-      if (observer) {
-        observer.observe(document.getElementById('notifications'), { childList: true });
-      }
+    if (notifications.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'notification-preview-empty md-typescale-body-medium';
+      empty.textContent = t('notification.empty');
+      list.appendChild(empty);
+    } else {
+      notifications.forEach((notification) => {
+        list.appendChild(createNotificationItem(notification, notification.post || null));
+      });
     }
-  }
 
-function refreshPreview() {
-  lastNotificationSignature = '';
-  void fetchAndRender();
+    container.replaceChildren(list);
+    container.dataset.notificationPreview = 'ready';
+  } finally {
+    rendering = false;
+  }
 }
 
 function setup() {
-    injectStyles();
-    const container = document.getElementById('notifications');
-    if (!container) {
-      setTimeout(setup, 100);
-      return;
-    }
+  const container = document.getElementById('notifications');
+  if (!container) return;
 
-    observer = new MutationObserver(() => {
-      if (rendering) return;
-      // Only refresh when container is empty (avoid fighting with main.js)
-      if (container.children.length === 0 && !isPreviewRendered(container)) {
-        refreshPreview();
-      }
-    });
-    observer.observe(container, { childList: true });
+  window.addEventListener('materialblue:notifications', (event) => {
+    renderNotifications(event.detail?.notifications || []);
+  });
 
-    const card = document.getElementById('notifications-card');
-    if (card) {
-      viewObserver = new MutationObserver(() => {
-        if (card.hidden === false && !rendering) {
-          refreshPreview();
-        }
-      });
-      viewObserver.observe(card, { attributes: true, attributeFilter: ['hidden', 'style'] });
-    }
-
-    window.refreshNotificationPreview = refreshPreview;
-
-    fetchAndRender();
-
-    document.getElementById('notificationsRefreshBtn')?.addEventListener('click', refreshPreview);
-    document.getElementById('notificationsSeenBtn')?.addEventListener('click', () => {
-      lastNotificationSignature = '';
-      setTimeout(fetchAndRender, 350);
-    });
+  if (Array.isArray(window.__materialBlueNotifications)) {
+    renderNotifications(window.__materialBlueNotifications);
   }
+}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', setup, { once: true });

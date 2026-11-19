@@ -242,3 +242,109 @@
     padding-inline: 12px;
   }
 }
+
+
+/* Notifications — single renderer, hybrid Bluesky / Material You layout */
+.notification-preview-list { display: flex; flex-direction: column; min-width: 0; }
+.notification-preview-item {
+  display: grid; grid-template-columns: minmax(190px, 0.72fr) minmax(0, 1.28fr);
+  align-items: center; gap: 16px; min-width: 0; padding: 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+}
+.notification-preview-meta {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: start;
+  column-gap: 10px; min-width: 0;
+}
+.notification-preview-icon { grid-row: 1 / span 3; align-self: start; margin-top: 3px; color: var(--md-sys-color-primary); }
+.notification-preview-author, .notification-preview-author-name, .notification-preview-handle { min-width: 0; overflow-wrap: anywhere; }
+.notification-preview-author-name, .notification-post-author-name { font-weight: 600; }
+.notification-preview-handle, .notification-preview-time, .notification-post-date { color: var(--md-sys-color-on-surface-variant); }
+.notification-preview-reason { margin-top: 3px; }
+.notification-preview-time { display: block; margin-top: 6px; }
+.notification-preview-empty { padding: 24px 16px; }
+.notification-post-card {
+  min-width: 0; padding: 12px 14px; border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 16px; background: var(--md-sys-color-surface-container-low, var(--md-sys-color-surface)); overflow: hidden;
+}
+.notification-post-author { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 8px; }
+.notification-post-avatar {
+  width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; object-fit: cover;
+  background: var(--md-sys-color-surface-container-high);
+}
+.notification-post-author-text, .notification-post-author-name { min-width: 0; overflow-wrap: anywhere; }
+.notification-post-date { margin-left: 4px; white-space: nowrap; }
+.notification-post-text { min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.notification-post-images {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;
+  margin-top: 10px; overflow: hidden;
+}
+.notification-post-image {
+  display: block; width: 100%; max-width: 100%; aspect-ratio: 1; border-radius: 10px;
+  object-fit: cover; background: var(--md-sys-color-surface-container-high);
+}
+.notification-post-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; color: var(--md-sys-color-on-surface-variant); }
+.notification-post-stat { display: inline-flex; align-items: center; gap: 4px; }
+@media (max-width: 760px) {
+  .notification-preview-item { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px 12px; }
+}
+
+
+.notification-post-unavailable {
+  align-self: center;
+  padding: 12px 14px;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px dashed var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+}
+
+
+/* Keep notification metadata and post content in separate, predictable columns. */
+.notification-preview-item {
+  align-items: start;
+}
+.notification-preview-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.notification-preview-reply-text {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.notification-preview-content > .notification-post-card,
+.notification-preview-content > .notification-post-unavailable {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Contain the notification's own post text separately from its target post. */
+.notification-preview-reply-card {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low, var(--md-sys-color-surface));
+  color: var(--md-sys-color-on-surface);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  contain: inline-size;
+}
+.notification-preview-content,
+.notification-preview-content > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
