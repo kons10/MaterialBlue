@@ -41,7 +41,7 @@ function createPostCard(post) {
 
   const targetLabel = document.createElement('div');
   targetLabel.className = 'notification-post-target-label md-typescale-label-small';
-  targetLabel.textContent = t('notification.targetPost', {}, 'Target post');
+  targetLabel.textContent = t('notification.targetPost');
   card.appendChild(targetLabel);
 
   const authorRow = document.createElement('div');
@@ -169,7 +169,7 @@ function createNotificationItem(notification, post) {
   } else if (notification.reason !== 'follow') {
     const unavailable = document.createElement('div');
     unavailable.className = 'notification-post-unavailable md-typescale-body-small';
-    unavailable.textContent = t('notification.targetUnavailable', {}, 'Target post unavailable');
+    unavailable.textContent = t('notification.targetUnavailable');
     item.appendChild(unavailable);
   }
 
