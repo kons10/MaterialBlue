@@ -151,26 +151,28 @@ function createNotificationItem(notification, post) {
   meta.appendChild(author);
   item.appendChild(meta);
 
-  // ❗️ FIX: Show reply text when available (for reply notifications)
+  // Keep reply text and its referenced post in one content column.
+  const content = document.createElement('div');
+  content.className = 'notification-preview-content';
+
   if (notification.record?.text) {
     const replyText = document.createElement('div');
-    replyText.className = 'notification-post-text md-typescale-body-medium';
-    replyText.style.whiteSpace = 'pre-wrap';
-    replyText.style.overflowWrap = 'anywhere';
-    replyText.style.marginTop = '8px';
-    replyText.style.color = 'var(--md-sys-color-on-surface-variant)';
+    replyText.className = 'notification-preview-reply-text md-typescale-body-medium';
     replyText.textContent = notification.record.text;
-    item.appendChild(replyText);
+    content.appendChild(replyText);
   }
 
-  // SHOW POST CONTENT IF AVAILABLE
   if (post) {
-    item.appendChild(createPostCard(post));
+    content.appendChild(createPostCard(post));
   } else if (notification.reason !== 'follow') {
     const unavailable = document.createElement('div');
     unavailable.className = 'notification-post-unavailable md-typescale-body-small';
     unavailable.textContent = t('notification.targetUnavailable');
-    item.appendChild(unavailable);
+    content.appendChild(unavailable);
+  }
+
+  if (content.childElementCount > 0) {
+    item.appendChild(content);
   }
 
   return item;
