@@ -131,6 +131,5 @@
   "notification.sourceFallback": "通知元",
   "notification.emptyHeadline": "通知なし",
   "notification.empty": "新しい通知はありません",
-  "notification.targetPost": "対象の投稿",
   "notification.targetUnavailable": "対象の投稿を取得できません"
 }
