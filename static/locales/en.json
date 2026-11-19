@@ -131,6 +131,5 @@
   "notification.sourceFallback": "Notifier",
   "notification.emptyHeadline": "No notifications",
   "notification.empty": "No new notifications",
-  "notification.targetPost": "Target post",
   "notification.targetUnavailable": "Target post unavailable"
 }
