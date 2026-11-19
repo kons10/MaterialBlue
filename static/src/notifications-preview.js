@@ -39,10 +39,6 @@ function createPostCard(post) {
   const card = document.createElement('div');
   card.className = 'notification-post-card';
 
-  const targetLabel = document.createElement('div');
-  targetLabel.className = 'notification-post-target-label md-typescale-label-small';
-  targetLabel.textContent = t('notification.targetPost');
-  card.appendChild(targetLabel);
 
   const authorRow = document.createElement('div');
   authorRow.className = 'notification-post-author';
