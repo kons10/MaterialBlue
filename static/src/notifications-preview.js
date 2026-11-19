@@ -176,18 +176,6 @@ function createNotificationItem(notification, post) {
   return item;
 }
 
-function notificationTargetUri(notification) {
-  if (notification.reasonSubject) return notification.reasonSubject;
-  if (['like', 'repost', 'reply', 'quote', 'mention'].includes(notification.reason)) {
-    return notification.uri || null;
-  }
-  return null;
-}
-
-function isPreviewRendered(container) {
-  return container.firstElementChild?.classList.contains('notification-preview-list') === true;
-}
-
 function renderNotifications(notifications = []) {
   const container = document.getElementById('notifications');
   if (!container || rendering) return;
