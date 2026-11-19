@@ -157,7 +157,7 @@ function createNotificationItem(notification, post) {
 
   if (notification.record?.text) {
     const replyText = document.createElement('div');
-    replyText.className = 'notification-preview-reply-text md-typescale-body-medium';
+    replyText.className = 'notification-preview-reply-card md-typescale-body-medium';
     replyText.textContent = notification.record.text;
     content.appendChild(replyText);
   }
