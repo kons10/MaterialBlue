@@ -37,8 +37,7 @@ function relativeTime(value) {
 }
 
 function makeIconButton(iconName, label, count = null) {
-  const button = document.createElement('button');
-  button.type = 'button';
+  const button = document.createElement('span');
   button.className = 'notification-action';
   button.title = label;
   button.setAttribute('aria-label', label);
@@ -138,17 +137,26 @@ function createActorRow(notification, post, grouped = []) {
   activity.appendChild(description);
   item.appendChild(activity);
 
+  const ownText = notification.record?.text?.trim();
+  const targetText = post?.record?.text?.trim();
+  if (ownText && ownText !== targetText) {
+    const reply = document.createElement('div');
+    reply.className = 'notification-own-text';
+    reply.textContent = ownText;
+    item.appendChild(reply);
+  }
+
   if (post) {
     const postBlock = document.createElement('div');
     postBlock.className = 'notification-target-post';
     postBlock.appendChild(createPostContent(post));
     if (!isReaction) postBlock.appendChild(createPostActions(post));
     item.appendChild(postBlock);
-  } else if (notification.record?.text) {
-    const ownText = document.createElement('div');
-    ownText.className = 'notification-own-text';
-    ownText.textContent = notification.record.text;
-    item.appendChild(ownText);
+  } else if (ownText && ownText === targetText) {
+    const reply = document.createElement('div');
+    reply.className = 'notification-own-text';
+    reply.textContent = ownText;
+    item.appendChild(reply);
   }
   return item;
 }
