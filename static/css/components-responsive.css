@@ -329,3 +329,28 @@
   max-width: 100%;
   box-sizing: border-box;
 }
+
+
+/* Contain the notification's own post text separately from its target post. */
+.notification-preview-reply-card {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low, var(--md-sys-color-surface));
+  color: var(--md-sys-color-on-surface);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  contain: inline-size;
+}
+.notification-preview-content,
+.notification-preview-content > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
