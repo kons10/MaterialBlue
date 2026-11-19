@@ -155,10 +155,17 @@ function createNotificationItem(notification, post) {
   const content = document.createElement('div');
   content.className = 'notification-preview-content';
 
-  if (notification.record?.text) {
+  // A mention/reply notification can carry the same post record that is
+  // already rendered in the target-post card. Avoid showing that text twice.
+  const notificationText = notification.record?.text?.trim();
+  const targetPostText = post?.record?.text?.trim();
+  const hasDistinctNotificationText = notificationText &&
+    notificationText !== targetPostText;
+
+  if (hasDistinctNotificationText) {
     const replyText = document.createElement('div');
     replyText.className = 'notification-preview-reply-card md-typescale-body-medium';
-    replyText.textContent = notification.record.text;
+    replyText.textContent = notificationText;
     content.appendChild(replyText);
   }
 
