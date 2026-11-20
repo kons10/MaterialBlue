@@ -1,6 +1,8 @@
 account_circle
 bookmark
+bookmark_border
 chat_bubble
+chat_bubble_outline
 cookie
 delete
 delete_forever
@@ -11,15 +13,18 @@ dynamic_feed
 edit_note
 expand_more
 favorite
+favorite_border
 format_quote
 hourglass_empty
 image
+ios_share
 lock
 login
 logout
 menu
 notifications
 notifications_active
+open_in_new
 person
 refresh
 repeat
@@ -28,5 +33,9 @@ reply
 rss_feed
 send
 settings
+share
+verified
+videocam
 language
 close
+bar_chart

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mb-post Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/components-responsive.css">
+  <script src="https://cdn.jsdelivr.net/npm/@webcomponents/webcomponentsjs@2/webcomponents-loader.js"></script>
+  <script type="module">
+    import 'https://esm.sh/lit@3/polyfill-support.js';
+  </script>
+  <script type="module">
+    import 'https://esm.sh/@material/web@latest/all.js';
+  </script>
+</head>
+<body>
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1>mb-post Component Test</h1>
+    <div id="test-container"></div>
+  </div>
+
+  <script type="module">
+    import { initI18n, t } from '/src/i18n.js';
+    import '/src/components/mb-post.js';
+
+    // Mock client for testing
+    const mockClient = {
+      isLoggedIn: true,
+      isSaved: (uri) => false,
+      like: async (uri, cid) => ({ uri: `like/${uri}/${cid}` }),
+      unlike: async (uri) => {},
+      repost: async (uri, cid) => ({ uri: `repost/${uri}/${cid}` }),
+      unrepost: async (uri) => {},
+      quote: async (uri, cid, text) => ({ uri: `quote/${uri}/${cid}` }),
+      reply: async (uri, cid, text, replyContext) => ({ uri: `reply/${uri}/${cid}` }),
+      save: async (uri, cid) => ({ uri, saved: true }),
+      unsave: async (uri, cid) => ({ uri, saved: false }),
+    };
+
+    async function runTest() {
+      await initI18n();
+      
+      const container = document.getElementById('test-container');
+      
+      // Test post 1: Simple text post
+      const post1 = {
+        uri: 'at://did:plc:test1/app.bsky.feed.post/1',
+        cid: 'bafyrei123',
+        author: {
+          did: 'did:plc:test1',
+          handle: 'user1.bsky.social',
+          displayName: 'Test User 1',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user1',
+        },
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'Hello, MaterialBlue! This is a test post with some text content. 🎉',
+          createdAt: new Date().toISOString(),
+        },
+        embed: null,
+        replyCount: 5,
+        repostCount: 10,
+        likeCount: 42,
+        indexedAt: new Date(Date.now() - 3600000).toISOString(),
+        viewer: {
+          like: null,
+          repost: null,
+        },
+      };
+      
+      // Test post 2: Post with images
+      const post2 = {
+        uri: 'at://did:plc:test2/app.bsky.feed.post/2',
+        cid: 'bafyrei456',
+        author: {
+          did: 'did:plc:test2',
+          handle: 'user2.bsky.social',
+          displayName: 'Test User 2',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user2',
+        },
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'Check out these images! 📸',
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+        },
+        embed: {
+          $type: 'app.bsky.embed.images',
+          images: [
+            { alt: 'Image 1', thumbnail: 'https://picsum.photos/400/300?1', fullsize: 'https://picsum.photos/800/600?1' },
+            { alt: 'Image 2', thumbnail: 'https://picsum.photos/400/300?2', fullsize: 'https://picsum.photos/800/600?2' },
+            { alt: 'Image 3', thumbnail: 'https://picsum.photos/400/300?3', fullsize: 'https://picsum.photos/800/600?3' },
+          ],
+        },
+        replyCount: 2,
+        repostCount: 3,
+        likeCount: 15,
+        indexedAt: new Date(Date.now() - 7200000).toISOString(),
+        viewer: {
+          like: null,
+          repost: null,
+        },
+      };
+      
+      // Test post 3: Reply post
+      const post3 = {
+        uri: 'at://did:plc:test3/app.bsky.feed.post/3',
+        cid: 'bafyrei789',
+        author: {
+          did: 'did:plc:test3',
+          handle: 'user3.bsky.social',
+          displayName: 'Test User 3',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user3',
+        },
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'This is a reply to another post!',
+          createdAt: new Date(Date.now() - 10800000).toISOString(),
+          reply: {
+            root: { uri: 'at://did:plc:root/app.bsky.feed.post/root', cid: 'rootcid' },
+            parent: { uri: 'at://did:plc:parent/app.bsky.feed.post/parent', cid: 'parentcid' },
+          },
+        },
+        reply: {
+          root: { 
+            uri: 'at://did:plc:root/app.bsky.feed.post/root', 
+            cid: 'rootcid',
+            author: { handle: 'rootuser.bsky.social', displayName: 'Root User' },
+            record: { text: 'This is the root post of the thread.' }
+          },
+          parent: { 
+            uri: 'at://did:plc:parent/app.bsky.feed.post/parent', 
+            cid: 'parentcid',
+            author: { handle: 'parentuser.bsky.social', displayName: 'Parent User' },
+            record: { text: 'This is the parent post being replied to.' }
+          },
+        },
+        embed: null,
+        replyCount: 0,
+        repostCount: 1,
+        likeCount: 5,
+        indexedAt: new Date(Date.now() - 10800000).toISOString(),
+        viewer: {
+          like: null,
+          repost: null,
+        },
+      };
+      
+      // Test post 4: Quote post
+      const post4 = {
+        uri: 'at://did:plc:test4/app.bsky.feed.post/4',
+        cid: 'bafyreiquote',
+        author: {
+          did: 'did:plc:test4',
+          handle: 'user4.bsky.social',
+          displayName: 'Test User 4',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user4',
+        },
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'Quoting this interesting post!',
+          createdAt: new Date(Date.now() - 14400000).toISOString(),
+          embed: {
+            $type: 'app.bsky.embed.record',
+            record: {
+              uri: 'at://did:plc:quoted/app.bsky.feed.post/quoted',
+              cid: 'quotedcid',
+              author: { handle: 'quoteduser.bsky.social', displayName: 'Quoted User' },
+              value: { text: 'This is the quoted post content.' },
+            },
+          },
+        },
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: {
+            uri: 'at://did:plc:quoted/app.bsky.feed.post/quoted',
+            cid: 'quotedcid',
+            author: { handle: 'quoteduser.bsky.social', displayName: 'Quoted User' },
+            value: { text: 'This is the quoted post content.' },
+          },
+        },
+        replyCount: 1,
+        repostCount: 2,
+        likeCount: 8,
+        indexedAt: new Date(Date.now() - 14400000).toISOString(),
+        viewer: {
+          like: null,
+          repost: null,
+        },
+      };
+      
+      // Test post 5: External link embed
+      const post5 = {
+        uri: 'at://did:plc:test5/app.bsky.feed.post/5',
+        cid: 'bafyreiext',
+        author: {
+          did: 'did:plc:test5',
+          handle: 'user5.bsky.social',
+          displayName: 'Test User 5',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user5',
+        },
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'Check out this link!',
+          createdAt: new Date(Date.now() - 18000000).toISOString(),
+        },
+        embed: {
+          $type: 'app.bsky.embed.external',
+          external: {
+            uri: 'https://example.com',
+            title: 'Example Domain',
+            description: 'This domain is for use in illustrative examples in documents.',
+            thumb: 'https://picsum.photos/400/200?ext',
+          },
+        },
+        replyCount: 0,
+        repostCount: 0,
+        likeCount: 3,
+        indexedAt: new Date(Date.now() - 18000000).toISOString(),
+        viewer: {
+          like: null,
+          repost: null,
+        },
+      };
+      
+      // Test post 6: Repost
+      const post6 = {
+        uri: 'at://did:plc:test6/app.bsky.feed.post/6',
+        cid: 'bafyreirepost',
+        author: {
+          did: 'did:plc:test6',
+          handle: 'user6.bsky.social',
+          displayName: 'Test User 6',
+          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user6',
+        },
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'Original post that was reposted.',
+          createdAt: new Date(Date.now() - 21600000).toISOString(),
+        },
+        reason: {
+          $type: 'app.bsky.feed.defs#reasonRepost',
+          by: {
+            did: 'did:plc:reposter',
+            handle: 'reposter.bsky.social',
+            displayName: 'Reposter User',
+          },
+          indexedAt: new Date(Date.now() - 1000000).toISOString(),
+        },
+        replyCount: 10,
+        repostCount: 25,
+        likeCount: 100,
+        indexedAt: new Date(Date.now() - 21600000).toISOString(),
+        viewer: {
+          like: null,
+          repost: 'at://did:plc:reposter/app.bsky.feed.repost/123',
+        },
+      };
+      
+      const posts = [post1, post2, post3, post4, post5, post6];
+      
+      posts.forEach((postData, index) => {
+        const postEl = document.createElement('mb-post');
+        postEl.post = postData;
+        postEl.client = mockClient;
+        container.appendChild(postEl);
+        
+        // Add spacing between posts
+        if (index < posts.length - 1) {
+          const spacer = document.createElement('div');
+          spacer.style.cssText = 'height: 16px;';
+          container.appendChild(spacer);
+        }
+      });
+      
+      console.log('Test posts rendered!');
+    }
+    
+    runTest().catch(console.error);
+  </script>
+</body>
+</html>
