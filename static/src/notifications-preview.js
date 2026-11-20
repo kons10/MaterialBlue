@@ -219,16 +219,11 @@ function setup() {
   const container = document.getElementById('notifications');
   if (!container) return;
 
-  document.querySelectorAll('[data-notification-tab]').forEach((tab) => {
-    tab.addEventListener('click', () => {
-      activeTab = tab.dataset.notificationTab;
-      document.querySelectorAll('[data-notification-tab]').forEach((item) => {
-        const selected = item === tab;
-        item.classList.toggle('is-active', selected);
-        item.setAttribute('aria-selected', String(selected));
-      });
-      renderNotifications();
-    });
+  // Let Material Web own tab selection, keyboard interaction and indicator rendering.
+  const tabs = document.getElementById('notificationsTabs');
+  tabs?.addEventListener('change', () => {
+    activeTab = tabs.activeTab?.dataset.notificationTab || 'all';
+    renderNotifications();
   });
 
   const settingsButton = document.getElementById('notificationsSettingsBtn');
