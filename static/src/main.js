@@ -766,7 +766,32 @@ async function loadTimeline(force = false, append = false) {
 
       const postEl = document.createElement('mb-post');
       postEl.post = post;
-      postEl.client = client;  // アクションボタンを有効化
+      postEl.translator = t;
+      postEl.formatters = { formatRelativeTime, formatCompactNumber };
+      postEl.actions = {
+        requestText: ({ kind }) => window.prompt(t(kind === 'quote' ? 'post.quotePrompt' : 'post.replyPrompt')),
+        reply: ({ post: target, text, reply }) => client.reply(target.uri, target.cid, text, reply),
+        repost: ({ post: target }) => client.repost(target.uri, target.cid),
+        unrepost: ({ repostUri }) => client.unrepost(repostUri),
+        quote: ({ post: target, text }) => client.quote(target.uri, target.cid, text),
+        like: ({ post: target }) => client.like(target.uri, target.cid),
+        unlike: ({ likeUri }) => client.unlike(likeUri),
+        isSaved: ({ post: target }) => client.isSaved?.(target.uri) || false,
+        save: ({ post: target }) => client.save(target.uri, target.cid),
+        unsave: ({ post: target }) => client.unsave(target.uri, target.cid),
+        share: async ({ post: target, url }) => {
+          if (!url) return;
+          if (navigator.share) {
+            try {
+              await navigator.share({ title: t('post.shareTitle', { handle: target.author?.handle || '' }), text: target.record?.text || '', url });
+            } catch (error) {
+              if (error.name !== 'AbortError') throw error;
+            }
+          } else {
+            await navigator.clipboard.writeText(url);
+          }
+        },
+      };
       postEl.dataset.postUri = post.uri;
 
       fragment.appendChild(postEl);
@@ -803,6 +828,11 @@ function setupMbPostListeners() {
   // 重複登録防止
   if (window.__mbPostListenersSetup) return;
   window.__mbPostListenersSetup = true;
+
+  document.addEventListener('mb-post-open-url', (event) => {
+    const url = event.detail?.url;
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  });
 
   document.addEventListener('mb-post:like', () => {
     // 必要ならローカル状態更新、またはタイムライン再読み込み
