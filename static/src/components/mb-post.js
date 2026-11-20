@@ -738,9 +738,10 @@ export class MbPost extends HTMLElement {
     this.style.cssText = `
       display:block;
       padding:12px 16px;
-      border-radius:0;
-      background:var(--md-sys-color-surface);
-      border-bottom:1px solid var(--md-sys-color-outline-variant);
+      border-radius:12px;
+      background:var(--md-sys-color-surface-container-low);
+      border:1px solid var(--md-sys-color-outline-variant);
+      margin:8px 0;
       min-width:0;
       max-width:100%;
       width:100%;
