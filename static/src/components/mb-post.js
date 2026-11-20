@@ -334,7 +334,8 @@ function createEmbed(embed, record) {
 
     case 'app.bsky.embed.record': {
       // Record embed (quote post or shared record)
-      const recordEmbed = embed.record;
+      // AT Protocol embed views wrap the quoted record in `record.record`.
+      const recordEmbed = embed.record?.record || embed.record;
       if (recordEmbed) {
         const card = document.createElement('div');
         card.className = 'mb-post-record-embed';
@@ -350,9 +351,9 @@ function createEmbed(embed, record) {
             uri: recordEmbed.uri || '',
             cid: recordEmbed.cid || '',
             author: recordEmbed.author,
-            record: recordEmbed.value || recordEmbed,
-            embed: recordEmbed.embed,
-            indexedAt: recordEmbed.indexedAt || new Date().toISOString(),
+            record: recordEmbed.value || {},
+            embed: recordEmbed.embeds?.[0] || recordEmbed.embed,
+            indexedAt: recordEmbed.indexedAt || recordEmbed.value?.createdAt,
           };
           miniPost.post = postView;
           card.appendChild(miniPost);
@@ -374,22 +375,23 @@ function createEmbed(embed, record) {
 
     case 'app.bsky.embed.recordWithMedia': {
       // Record with media (quote post with image/video)
-      const { record, media } = embed;
+      const { media } = embed;
+      const recordView = embed.record?.record || embed.record;
       const card = document.createElement('div');
       card.className = 'mb-post-record-with-media';
       card.style.cssText = 'border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;background:var(--md-sys-color-surface);margin-top:8px;overflow:hidden;';
 
       // Render the record part
-      if (record) {
+      if (recordView) {
         const miniPost = document.createElement('mb-post');
         miniPost.style.cssText = 'margin:0;border-radius:0;border:none;background:transparent;';
         const postView = {
           uri: record.uri || '',
           cid: record.cid || '',
-          author: record.author,
-          record: record.value || record,
-          embed: record.embed,
-          indexedAt: record.indexedAt || new Date().toISOString(),
+          author: recordView.author,
+          record: recordView.value || {},
+          embed: recordView.embeds?.[0] || recordView.embed,
+          indexedAt: recordView.indexedAt || recordView.value?.createdAt,
         };
         miniPost.post = postView;
         card.appendChild(miniPost);
@@ -681,17 +683,15 @@ function createPostMeta(post) {
   meta.className = 'mb-post-meta';
   meta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.75rem;color:var(--md-sys-color-on-surface-variant);';
 
-  // Relative time
-  const time = document.createElement('time');
-  time.className = 'mb-post-time';
-  time.dateTime = post.indexedAt;
-  time.textContent = formatRelativeTime(post.indexedAt);
-  meta.appendChild(time);
-
-  // Separator
-  const sep = document.createElement('span');
-  sep.textContent = '·';
-  meta.appendChild(sep);
+  // Use the record timestamp when a nested or partial PostView has no indexedAt.
+  const timestamp = post.indexedAt || post.record?.createdAt;
+  if (timestamp && !Number.isNaN(Date.parse(timestamp))) {
+    const time = document.createElement('time');
+    time.className = 'mb-post-time';
+    time.dateTime = timestamp;
+    time.textContent = formatRelativeTime(timestamp);
+    meta.appendChild(time);
+  }
 
   // Client/source (if available)
   if (post.record?.createdAt && post.record.createdAt !== post.indexedAt) {
