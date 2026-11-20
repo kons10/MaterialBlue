@@ -34,6 +34,10 @@ const ICONS = {
   link: 'link',
   external: 'open_in_new',
   warning: 'warning',
+  analytics: 'analytics',
+  share: 'share',
+  bookmark: 'bookmark',
+  bookmarkFilled: 'bookmark',
 };
 
 /**
@@ -411,21 +415,79 @@ function createEmbed(embed, record) {
 }
 
 /**
- * Create action buttons row (reply, repost, like, share, bookmark)
- * Material Design 3 / Bluesky標準順序
+ * Create action buttons row - X (Twitter) style
+ * Order: Reply → Repost → Like → Analytics → Bookmark → Share
+ * All md-icon-button with inline count text
  */
 function createActions(post, client) {
   const actionRow = document.createElement('div');
   actionRow.className = 'mb-post-actions';
-  actionRow.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:8px;flex-wrap:wrap;';
+  actionRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:0 4px;';
   actionRow.setAttribute('role', 'group');
   actionRow.setAttribute('aria-label', t('post.actionsLabel'));
 
   const viewer = post.viewer || {};
 
-  // 1. Reply (常にカウント表示)
+  // 共通: アイコンボタン作成
+  const createIconButton = (iconKey, labelKey, count, options = {}) => {
+    const filled = options.filled || false;
+    const hasCount = count && count > 0;
+    const label = t(labelKey);
+    const countStr = hasCount ? formatCount(count) : '';
+    
+    const btn = document.createElement('md-icon-button');
+    btn.setAttribute('aria-label', hasCount ? `${label}, ${countStr}` : label);
+    btn.setAttribute('aria-pressed', String(filled));
+    btn.innerHTML = `
+      <md-icon class="${filled ? 'is-filled' : ''}">${ICONS[filled ? `${iconKey}Filled` : iconKey]}</md-icon>
+      ${hasCount ? `<span class="mb-post-action-count">${countStr}</span>` : ''}
+    `;
+    
+    // Xスタイル: アイコンとカウントを横並び、ホバーで背景色
+    btn.style.cssText = `
+      --md-icon-button-container-color: transparent;
+      --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border-radius: var(--catalog-shape-xl);
+    `;
+
+    return {
+      btn,
+      update: (newFilled, newCount) => {
+        const newHasCount = newCount && newCount > 0;
+        const newCountStr = newHasCount ? formatCount(newCount) : '';
+        const newLabel = newHasCount ? `${label}, ${newCountStr}` : label;
+        
+        btn.setAttribute('aria-pressed', String(newFilled));
+        btn.setAttribute('aria-label', newLabel);
+        
+        const iconEl = btn.querySelector('md-icon');
+        if (iconEl) {
+          iconEl.textContent = ICONS[newFilled ? `${iconKey}Filled` : iconKey];
+          iconEl.classList.toggle('is-filled', newFilled);
+        }
+        
+        let countEl = btn.querySelector('.mb-post-action-count');
+        if (newHasCount) {
+          if (!countEl) {
+            countEl = document.createElement('span');
+            countEl.className = 'mb-post-action-count';
+            btn.appendChild(countEl);
+          }
+          countEl.textContent = newCountStr;
+        } else if (countEl) {
+          countEl.remove();
+        }
+      }
+    };
+  };
+
+  // 1. Reply
   const replyCount = post.replyCount ?? 0;
-  const { btn: replyBtn } = createActionButton('reply', 'post.reply', replyCount);
+  const { btn: replyBtn } = createIconButton('reply', 'post.reply', replyCount);
   replyBtn.addEventListener('click', async () => {
     const text = window.prompt(t('post.replyPrompt'));
     if (!text || !text.trim()) return;
@@ -442,11 +504,11 @@ function createActions(post, client) {
   });
   actionRow.appendChild(replyBtn);
 
-  // 2. Repost (メニュー付き: Repost / Quote)
+  // 2. Repost (メニュー付き)
   const repostCount = post.repostCount ?? 0;
   let reposted = Boolean(viewer.repost);
   let repostRecordUri = viewer.repost || null;
-  const { btn: repostBtn, update: updateRepostBtn } = createActionButton('repost', 'post.repost', repostCount, { filled: reposted });
+  const { btn: repostBtn, update: updateRepostBtn } = createIconButton('repost', 'post.repost', repostCount, { filled: reposted });
 
   const repostMenu = document.createElement('md-menu');
   repostMenu.anchorElement = repostBtn;
@@ -471,7 +533,9 @@ function createActions(post, client) {
   repostMenu.appendChild(doRepostItem);
   repostMenu.appendChild(quoteItem);
 
-  repostBtn.addEventListener('click', () => {
+  repostBtn.addEventListener('click', (e) => {
+    // メニュー開閉のみ、クリックイベント伝播防止
+    e.stopPropagation();
     repostMenu.open = !repostMenu.open;
   });
 
@@ -527,7 +591,7 @@ function createActions(post, client) {
   let liked = Boolean(viewer.like);
   let likeRecordUri = viewer.like || null;
   let currentLikeCount = likeCount;
-  const { btn: likeBtn, update: updateLikeBtn } = createActionButton('like', 'post.like', likeCount, { filled: liked });
+  const { btn: likeBtn, update: updateLikeBtn } = createIconButton('like', 'post.like', likeCount, { filled: liked });
   likeBtn.addEventListener('click', async () => {
     likeBtn.disabled = true;
     try {
@@ -553,29 +617,17 @@ function createActions(post, client) {
   });
   actionRow.appendChild(likeBtn);
 
-  // 4. Share
-  const { btn: shareBtn } = createActionButton('share', 'post.share', null);
-  shareBtn.addEventListener('click', async () => {
-    const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t('post.shareTitle', { handle: post.author.handle }),
-          text: post.record?.text,
-          url: postUrl,
-        });
-      } catch (e) {
-        if (e.name !== 'AbortError') console.error('Share failed:', e);
-      }
-    } else {
-      await navigator.clipboard.writeText(postUrl);
-    }
+  // 4. Analytics (表示数) - post.viewCount または viewer?.viewCount
+  const viewCount = post.viewCount ?? post.viewer?.viewCount ?? 0;
+  const { btn: analyticsBtn } = createIconButton('analytics', 'post.analytics', viewCount);
+  analyticsBtn.addEventListener('click', () => {
+    // TODO: 詳細統計モーダル表示
   });
-  actionRow.appendChild(shareBtn);
+  actionRow.appendChild(analyticsBtn);
 
-  // 5. Bookmark (保存数は非公開なのでカウントなし)
+  // 5. Bookmark
   let saved = client.isSaved?.(post.uri) || false;
-  const { btn: saveBtn, update: updateSaveBtn } = createActionButton('bookmark', 'post.save', null, { filled: saved });
+  const { btn: saveBtn, update: updateSaveBtn } = createIconButton('bookmark', 'post.save', null, { filled: saved });
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     try {
@@ -596,6 +648,26 @@ function createActions(post, client) {
     }
   });
   actionRow.appendChild(saveBtn);
+
+  // 6. Share
+  const { btn: shareBtn } = createIconButton('share', 'post.share', null);
+  shareBtn.addEventListener('click', async () => {
+    const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t('post.shareTitle', { handle: post.author.handle }),
+          text: post.record?.text,
+          url: postUrl,
+        });
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error('Share failed:', e);
+      }
+    } else {
+      await navigator.clipboard.writeText(postUrl);
+    }
+  });
+  actionRow.appendChild(shareBtn);
 
   return actionRow;
 }
@@ -706,12 +778,13 @@ export class MbPost extends HTMLElement {
     this.className = 'mb-post';
     this.style.cssText = `
       display:block;
-      padding:16px;
-      border-radius:16px;
+      padding:12px 16px;
+      border-radius:0;
       background:var(--md-sys-color-surface);
-      border:1px solid var(--md-sys-color-outline-variant);
+      border-bottom:1px solid var(--md-sys-color-outline-variant);
       min-width:0;
       max-width:100%;
+      width:100%;
       box-sizing:border-box;
     `;
 
@@ -746,6 +819,11 @@ export class MbPost extends HTMLElement {
     avatar.style.cssText = 'width:40px;height:40px;border-radius:50%;object-fit:cover;';
     avatarCol.appendChild(avatar);
     article.appendChild(avatarCol);
+
+    // Content column
+    const contentCol = document.createElement('div');
+    contentCol.className = 'mb-post-content-column';
+    contentCol.style.cssText = 'flex:1;min-width:0;';
 
     // Content column
     const contentCol = document.createElement('div');

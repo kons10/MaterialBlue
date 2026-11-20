@@ -680,37 +680,40 @@ mb-post {
   min-width: 0;
 }
 
-/* mb-post action buttons using @material/web components */
+/* mb-post action buttons - X style: md-icon-button with inline count */
 .mb-post-actions {
   display: flex;
-  gap: 4px;
+  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 0 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.mb-post-actions md-icon-button,
-.mb-post-actions md-filled-tonal-button {
+.mb-post-actions md-icon-button {
   --md-icon-button-container-color: transparent;
   --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
-  --md-filled-tonal-button-container-color: transparent;
-  --md-filled-tonal-button-state-layer-color: var(--md-sys-color-on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: var(--catalog-shape-xl);
+  min-width: 0;
 }
 
-.mb-post-actions md-icon-button:hover,
-.mb-post-actions md-filled-tonal-button:hover {
+.mb-post-actions md-icon-button:hover {
   --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
-  --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-high);
 }
 
-.mb-post-actions md-icon-button:focus-visible,
-.mb-post-actions md-filled-tonal-button:focus-visible {
+.mb-post-actions md-icon-button:focus-visible {
   --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
-  --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-high);
 }
 
 .mb-post-actions md-icon {
   font-variation-settings: 'FILL' 0;
   color: var(--md-sys-color-on-surface-variant);
+  font-size: 20px;
 }
 
 .mb-post-actions md-icon.is-filled {
@@ -718,30 +721,28 @@ mb-post {
   color: var(--md-sys-color-primary);
 }
 
-.mb-post-actions md-filled-tonal-button {
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: var(--catalog-shape-xl);
-  min-height: 40px;
-}
-
 .mb-post-action-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--md-sys-color-surface-container-highest);
-  border-radius: 10px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
   line-height: 1;
 }
 
 /* Repost menu items */
 md-menu-item md-icon[slot="start"] {
   font-size: 20px;
+}
+
+/* Container query: narrow width adjustments */
+@container (max-width: 400px) {
+  .mb-post-actions md-icon-button {
+    padding: 6px 8px;
+  }
+  
+  .mb-post-action-count {
+    font-size: 0.75rem;
+  }
 }
 
 .mb-post-meta {
@@ -802,7 +803,7 @@ md-menu-item md-icon[slot="start"] {
 
 @container (max-width: 360px) {
   .mb-post {
-    padding: 12px;
+    padding: 10px 12px;
   }
   
   .mb-post-article {
@@ -810,45 +811,17 @@ md-menu-item md-icon[slot="start"] {
   }
   
   .mb-post-avatar-column {
-    flex: 0 0 32px;
+    flex: 0 0 28px;
   }
   
   .mb-post-avatar {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .mb-post-author-name {
-    font-size: 0.9375rem;
-  }
-  
-  .mb-post-author-handle {
-    font-size: 0.75rem;
-  }
-  
-  .mb-post-text {
-    font-size: 0.9375rem;
+    width: 28px;
+    height: 28px;
   }
   
   .mb-post-image {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .mb-post-actions {
-    gap: 4px;
-  }
-  
-  .mb-post-action-btn {
-    padding: 4px 6px;
-  }
-  
-  .mb-post-action-btn md-icon {
-    font-size: 18px;
-  }
-  
-  .mb-post-action-count {
-    display: none;
+    width: 72px;
+    height: 72px;
   }
 }
 
