@@ -105,8 +105,17 @@ function createActorRow(notification, post, grouped = []) {
   activity.className = 'notification-activity';
 
   const icon = document.createElement('md-icon');
+  const activityIcons = {
+    like: 'favorite',
+    repost: 'repeat',
+    reply: 'chat_bubble',
+    quote: 'format_quote',
+    mention: 'alternate_email',
+    follow: 'person_add',
+  };
   icon.className = 'notification-activity-icon notification-activity-' + reason;
-  icon.textContent = reason === 'repost' ? 'repeat' : reason === 'follow' ? 'person_add' : 'favorite';
+  icon.textContent = activityIcons[reason] || 'notifications';
+  icon.setAttribute('aria-hidden', 'true');
   activity.appendChild(icon);
 
   const avatars = document.createElement('div');
