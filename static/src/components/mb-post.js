@@ -92,7 +92,8 @@ function createAuthorLine(author, isRepost = false) {
 
 /**
  * Create action button using @material/web components
- * Returns { btn, update } where btn is md-icon-button or md-filled-tonal-button
+ * Returns { btn, container, update }; labeled actions use md-text-button,
+ * while bookmark/share use md-icon-button.
  */
 function createActionButton(iconKey, labelKey, count, options = {}) {
   const iconOnly = Boolean(options.iconOnly);
@@ -425,7 +426,7 @@ function createEmbed(embed, record) {
 /**
  * Create action buttons row - X (Twitter) style
  * Order: Reply → Repost → Like → Analytics → Bookmark → Share
- * All md-icon-button with inline count text
+ * Labeled actions use md-text-button; bookmark/share remain icon-only.
  */
 function createActions(post, client) {
   const actionRow = document.createElement('div');
@@ -436,7 +437,7 @@ function createActions(post, client) {
 
   const viewer = post.viewer || {};
 
-  // Use the shared Material Web icon-button implementation.
+  // Use text buttons for labeled actions and icon buttons for bookmark/share.
   const createIconButton = (iconKey, labelKey, count, options = {}) =>
     createActionButton(iconKey, labelKey, count, {
       ...options,
