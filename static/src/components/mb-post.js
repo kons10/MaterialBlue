@@ -95,67 +95,61 @@ function createAuthorLine(author, isRepost = false) {
  * Returns { btn, update } where btn is md-icon-button or md-filled-tonal-button
  */
 function createActionButton(iconKey, labelKey, count, options = {}) {
-  const filled = options.filled || false;
-  const hasCount = count && count > 0;
+  const toggle = Boolean(options.toggle);
+  const selected = Boolean(options.filled);
   const label = t(labelKey);
-  const countStr = hasCount ? formatCount(count) : '';
-  const ariaLabel = hasCount ? `${label}, ${countStr}` : label;
+  const btn = document.createElement('md-icon-button');
+  btn.type = 'button';
+  if (toggle) {
+    btn.toggle = true;
+    btn.selected = selected;
+    btn.setAttribute('aria-label-selected', label);
+  }
+  btn.setAttribute('aria-label', label);
 
-  // アイコンボタン（カウントなし）または フィルドトーナルボタン（カウントあり）
-  let btn;
-  if (hasCount) {
-    btn = document.createElement('md-filled-tonal-button');
-    btn.innerHTML = `
-      <md-icon slot="icon" class="${filled ? 'is-filled' : ''}">${ICONS[filled ? `${iconKey}Filled` : iconKey]}</md-icon>
-      <span class="mb-post-action-count">${countStr}</span>
-    `;
-  } else {
-    btn = document.createElement('md-icon-button');
-    btn.innerHTML = `<md-icon class="${filled ? 'is-filled' : ''}">${ICONS[filled ? `${iconKey}Filled` : iconKey]}</md-icon>`;
+  const icon = document.createElement('md-icon');
+  icon.textContent = ICONS[iconKey];
+  btn.appendChild(icon);
+
+  if (toggle) {
+    const selectedIcon = document.createElement('md-icon');
+    selectedIcon.slot = 'selected';
+    selectedIcon.textContent = ICONS[`${iconKey}Filled`];
+    btn.appendChild(selectedIcon);
   }
 
-  btn.setAttribute('aria-label', ariaLabel);
-  btn.setAttribute('aria-pressed', String(filled));
-  
-  // MD3標準のスタイル調整
   btn.style.cssText = `
-    --md-icon-button-container-color: transparent;
+    --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
     --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
   `;
 
-  return {
-    btn,
-    update: (newFilled, newCount) => {
-      const newHasCount = newCount && newCount > 0;
-      const newCountStr = newHasCount ? formatCount(newCount) : '';
-      const newAriaLabel = newHasCount ? `${label}, ${newCountStr}` : label;
-      
-      btn.setAttribute('aria-pressed', String(newFilled));
-      btn.setAttribute('aria-label', newAriaLabel);
-      
-      // カウントあり/なしでボタンタイプ切り替えが必要な場合は再構築が必要だが、
-      // 通常はカウント0→1や1→0の遷移のみなので、innerHTML書き換えで対応
-      const iconEl = btn.querySelector('md-icon');
-      if (iconEl) {
-        iconEl.textContent = ICONS[newFilled ? `${iconKey}Filled` : iconKey];
-        iconEl.classList.toggle('is-filled', newFilled);
+  // Counts are adjacent to the icon button, not slotted into its icon-only content.
+  const container = document.createElement('span');
+  container.className = 'mb-post-action';
+  container.style.cssText = 'display:inline-flex;align-items:center;gap:4px;min-width:0;';
+  container.appendChild(btn);
+
+  let countEl = null;
+  const update = (newSelected = btn.selected, newCount = count) => {
+    if (toggle) btn.selected = Boolean(newSelected);
+    const countText = formatCount(newCount);
+    if (countText) {
+      if (!countEl) {
+        countEl = document.createElement('span');
+        countEl.className = 'mb-post-action-count';
+        countEl.setAttribute('aria-hidden', 'true');
+        container.appendChild(countEl);
       }
-      
-      const countEl = btn.querySelector('.mb-post-action-count');
-      if (newHasCount) {
-        if (countEl) {
-          countEl.textContent = newCountStr;
-        } else if (btn.tagName === 'MD-FILLED-TONAL-BUTTON') {
-          const newCountEl = document.createElement('span');
-          newCountEl.className = 'mb-post-action-count';
-          newCountEl.textContent = newCountStr;
-          btn.appendChild(newCountEl);
-        }
-      } else if (countEl) {
-        countEl.remove();
-      }
+      countEl.textContent = countText;
+    } else if (countEl) {
+      countEl.remove();
+      countEl = null;
     }
+    btn.setAttribute('aria-label', countText ? `${label}, ${countText}` : label);
   };
+
+  update(selected, count);
+  return { btn, container, update };
 }
 
 /**
@@ -430,66 +424,16 @@ function createActions(post, client) {
 
   const viewer = post.viewer || {};
 
-  // 共通: アイコンボタン作成
-  const createIconButton = (iconKey, labelKey, count, options = {}) => {
-    const filled = options.filled || false;
-    const hasCount = count && count > 0;
-    const label = t(labelKey);
-    const countStr = hasCount ? formatCount(count) : '';
-    
-    const btn = document.createElement('md-icon-button');
-    btn.setAttribute('aria-label', hasCount ? `${label}, ${countStr}` : label);
-    btn.setAttribute('aria-pressed', String(filled));
-    btn.innerHTML = `
-      <md-icon class="${filled ? 'is-filled' : ''}">${ICONS[filled ? `${iconKey}Filled` : iconKey]}</md-icon>
-      ${hasCount ? `<span class="mb-post-action-count">${countStr}</span>` : ''}
-    `;
-    
-    // Xスタイル: アイコンとカウントを横並び、ホバーで背景色
-    btn.style.cssText = `
-      --md-icon-button-container-color: transparent;
-      --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 12px;
-      border-radius: var(--catalog-shape-xl);
-    `;
-
-    return {
-      btn,
-      update: (newFilled, newCount) => {
-        const newHasCount = newCount && newCount > 0;
-        const newCountStr = newHasCount ? formatCount(newCount) : '';
-        const newLabel = newHasCount ? `${label}, ${newCountStr}` : label;
-        
-        btn.setAttribute('aria-pressed', String(newFilled));
-        btn.setAttribute('aria-label', newLabel);
-        
-        const iconEl = btn.querySelector('md-icon');
-        if (iconEl) {
-          iconEl.textContent = ICONS[newFilled ? `${iconKey}Filled` : iconKey];
-          iconEl.classList.toggle('is-filled', newFilled);
-        }
-        
-        let countEl = btn.querySelector('.mb-post-action-count');
-        if (newHasCount) {
-          if (!countEl) {
-            countEl = document.createElement('span');
-            countEl.className = 'mb-post-action-count';
-            btn.appendChild(countEl);
-          }
-          countEl.textContent = newCountStr;
-        } else if (countEl) {
-          countEl.remove();
-        }
-      }
-    };
-  };
+  // Use the shared Material Web icon-button implementation.
+  const createIconButton = (iconKey, labelKey, count, options = {}) =>
+    createActionButton(iconKey, labelKey, count, {
+      ...options,
+      toggle: ['repost', 'like', 'bookmark'].includes(iconKey),
+    });
 
   // 1. Reply
   const replyCount = post.replyCount ?? 0;
-  const { btn: replyBtn } = createIconButton('reply', 'post.reply', replyCount);
+  const { btn: replyBtn, container: replyAction } = createIconButton('reply', 'post.reply', replyCount);
   replyBtn.addEventListener('click', async () => {
     const text = window.prompt(t('post.replyPrompt'));
     if (!text || !text.trim()) return;
@@ -504,13 +448,13 @@ function createActions(post, client) {
       replyBtn.disabled = false;
     }
   });
-  actionRow.appendChild(replyBtn);
+  actionRow.appendChild(replyAction);
 
   // 2. Repost (メニュー付き)
   const repostCount = post.repostCount ?? 0;
   let reposted = Boolean(viewer.repost);
   let repostRecordUri = viewer.repost || null;
-  const { btn: repostBtn, update: updateRepostBtn } = createIconButton('repost', 'post.repost', repostCount, { filled: reposted });
+  const { btn: repostBtn, container: repostAction, update: updateRepostBtn } = createIconButton('repost', 'post.repost', repostCount, { filled: reposted });
 
   const repostMenu = document.createElement('md-menu');
   repostMenu.anchorElement = repostBtn;
@@ -587,14 +531,14 @@ function createActions(post, client) {
 
   // Keep the menu inside the component so rerendering/removing a post cannot leak it into document.body.
   actionRow.appendChild(repostMenu);
-  actionRow.appendChild(repostBtn);
+  actionRow.appendChild(repostAction);
 
   // 3. Like
   const likeCount = post.likeCount ?? 0;
   let liked = Boolean(viewer.like);
   let likeRecordUri = viewer.like || null;
   let currentLikeCount = likeCount;
-  const { btn: likeBtn, update: updateLikeBtn } = createIconButton('like', 'post.like', likeCount, { filled: liked });
+  const { btn: likeBtn, container: likeAction, update: updateLikeBtn } = createIconButton('like', 'post.like', likeCount, { filled: liked });
   likeBtn.addEventListener('click', async () => {
     likeBtn.disabled = true;
     try {
@@ -618,19 +562,19 @@ function createActions(post, client) {
       likeBtn.disabled = false;
     }
   });
-  actionRow.appendChild(likeBtn);
+  actionRow.appendChild(likeAction);
 
   // 4. Analytics (表示数) - post.viewCount または viewer?.viewCount
   const viewCount = post.viewCount ?? post.viewer?.viewCount ?? 0;
-  const { btn: analyticsBtn } = createIconButton('analytics', 'post.analytics', viewCount);
+  const { btn: analyticsBtn, container: analyticsAction } = createIconButton('analytics', 'post.analytics', viewCount);
   analyticsBtn.addEventListener('click', () => {
     // TODO: 詳細統計モーダル表示
   });
-  actionRow.appendChild(analyticsBtn);
+  actionRow.appendChild(analyticsAction);
 
   // 5. Bookmark
   let saved = client.isSaved?.(post.uri) || false;
-  const { btn: saveBtn, update: updateSaveBtn } = createIconButton('bookmark', 'post.save', null, { filled: saved });
+  const { btn: saveBtn, container: saveAction, update: updateSaveBtn } = createIconButton('bookmark', 'post.save', null, { filled: saved });
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     try {
@@ -650,10 +594,10 @@ function createActions(post, client) {
       saveBtn.disabled = false;
     }
   });
-  actionRow.appendChild(saveBtn);
+  actionRow.appendChild(saveAction);
 
   // 6. Share
-  const { btn: shareBtn } = createIconButton('share', 'post.share', null);
+  const { btn: shareBtn, container: shareAction } = createIconButton('share', 'post.share', null);
   shareBtn.addEventListener('click', async () => {
     const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
     if (navigator.share) {
@@ -670,7 +614,7 @@ function createActions(post, client) {
       await navigator.clipboard.writeText(postUrl);
     }
   });
-  actionRow.appendChild(shareBtn);
+  actionRow.appendChild(shareAction);
 
   return actionRow;
 }
