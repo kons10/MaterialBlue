@@ -112,16 +112,16 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
 
   let selectedIcon = null;
   if (toggle) {
+    btn.setAttribute('aria-pressed', String(selected));
     if (iconOnly) {
       btn.toggle = true;
       btn.selected = selected;
+      selectedIcon = document.createElement('md-icon');
+      selectedIcon.slot = 'selected';
+      selectedIcon.className = 'is-filled';
+      selectedIcon.textContent = ICONS[iconKey + 'Filled'];
+      btn.appendChild(selectedIcon);
     }
-    selectedIcon = document.createElement('md-icon');
-    if (iconOnly) selectedIcon.slot = 'selected';
-    selectedIcon.className = 'is-filled';
-    selectedIcon.textContent = ICONS[iconKey + 'Filled'];
-    btn.appendChild(selectedIcon);
-    btn.setAttribute('aria-pressed', String(selected));
   }
 
   if (iconOnly) {
@@ -146,8 +146,9 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
       btn.setAttribute('aria-pressed', String(isSelected));
       if (iconOnly) {
         btn.selected = isSelected;
-      } else if (selectedIcon) {
-        icon.textContent = isSelected ? selectedIcon.textContent : ICONS[iconKey];
+      } else {
+        icon.textContent = isSelected ? ICONS[iconKey + 'Filled'] : ICONS[iconKey];
+        icon.classList.toggle('is-filled', isSelected);
       }
     }
     const countText = formatCount(newCount);
