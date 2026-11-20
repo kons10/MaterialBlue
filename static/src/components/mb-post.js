@@ -95,59 +95,64 @@ function createAuthorLine(author, isRepost = false) {
  * Returns { btn, update } where btn is md-icon-button or md-filled-tonal-button
  */
 function createActionButton(iconKey, labelKey, count, options = {}) {
+  const iconOnly = Boolean(options.iconOnly);
   const toggle = Boolean(options.toggle);
   const selected = Boolean(options.filled);
   const label = t(labelKey);
-  const btn = document.createElement('md-icon-button');
+  const btn = document.createElement(iconOnly ? 'md-icon-button' : 'md-text-button');
   btn.type = 'button';
-  if (toggle) {
-    btn.toggle = true;
-    btn.selected = selected;
-    btn.setAttribute('aria-label-selected', label);
-  }
-  btn.setAttribute('aria-label', label);
 
   const icon = document.createElement('md-icon');
+  if (!iconOnly) {
+    btn.hasIcon = true;
+    icon.slot = 'icon';
+  }
   icon.textContent = ICONS[iconKey];
   btn.appendChild(icon);
 
+  let selectedIcon = null;
   if (toggle) {
-    const selectedIcon = document.createElement('md-icon');
-    selectedIcon.slot = 'selected';
+    selectedIcon = document.createElement('md-icon');
+    if (!iconOnly) selectedIcon.slot = 'icon';
     selectedIcon.className = 'is-filled';
-    selectedIcon.textContent = ICONS[`${iconKey}Filled`];
+    selectedIcon.textContent = ICONS[iconKey + 'Filled'];
+    selectedIcon.hidden = !selected;
     btn.appendChild(selectedIcon);
+    btn.setAttribute('aria-pressed', String(selected));
   }
 
-  btn.style.cssText = `
-    --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
-  `;
+  if (iconOnly) {
+    btn.setAttribute('aria-label', label);
+    btn.style.setProperty('--md-icon-button-icon-color', 'var(--md-sys-color-on-surface-variant)');
+  } else {
+    btn.appendChild(document.createTextNode(''));
+  }
 
-  // Counts are adjacent to the icon button, not slotted into its icon-only content.
   const container = document.createElement('span');
   container.className = 'mb-post-action';
   container.style.cssText = 'display:inline-flex;align-items:center;gap:4px;min-width:0;';
   container.appendChild(btn);
 
-  let countEl = null;
-  const update = (newSelected = btn.selected, newCount = count) => {
-    if (toggle) btn.selected = Boolean(newSelected);
-    const countText = formatCount(newCount);
-    if (countText) {
-      if (!countEl) {
-        countEl = document.createElement('span');
-        countEl.className = 'mb-post-action-count';
-        countEl.setAttribute('aria-hidden', 'true');
-        container.appendChild(countEl);
-      }
-      countEl.textContent = countText;
-    } else if (countEl) {
-      countEl.remove();
-      countEl = null;
+  let textNode = null;
+  if (!iconOnly) {
+    textNode = document.createTextNode('');
+    btn.appendChild(textNode);
+  }
+
+  const update = (newSelected = selected, newCount = count) => {
+    if (toggle) {
+      const isSelected = Boolean(newSelected);
+      btn.setAttribute('aria-pressed', String(isSelected));
+      if (selectedIcon) selectedIcon.hidden = !isSelected;
+      icon.hidden = isSelected;
     }
-    const accessibleLabel = countText ? `${label}, ${countText}` : label;
-    btn.setAttribute('aria-label', accessibleLabel);
-    if (toggle) btn.setAttribute('aria-label-selected', accessibleLabel);
+    const countText = formatCount(newCount);
+    if (iconOnly) {
+      const accessibleLabel = countText ? label + ', ' + countText : label;
+      btn.setAttribute('aria-label', accessibleLabel);
+    } else if (textNode) {
+      textNode.textContent = countText || label;
+    }
   };
 
   update(selected, count);
@@ -430,7 +435,8 @@ function createActions(post, client) {
   const createIconButton = (iconKey, labelKey, count, options = {}) =>
     createActionButton(iconKey, labelKey, count, {
       ...options,
-      toggle: ['repost', 'like', 'bookmark'].includes(iconKey),
+      iconOnly: ['bookmark', 'share'].includes(iconKey),
+      toggle: ['repost', 'like'].includes(iconKey),
     });
 
   // 1. Reply
