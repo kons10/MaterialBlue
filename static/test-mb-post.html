@@ -90,7 +90,7 @@
           createdAt: new Date(Date.now() - 7200000).toISOString(),
         },
         embed: {
-          $type: 'app.bsky.embed.images',
+          $type: 'app.bsky.embed.images#view',
           images: [
             { alt: 'Image 1', thumbnail: 'https://picsum.photos/400/300?1', fullsize: 'https://picsum.photos/800/600?1' },
             { alt: 'Image 2', thumbnail: 'https://picsum.photos/400/300?2', fullsize: 'https://picsum.photos/800/600?2' },
@@ -166,7 +166,7 @@
           text: 'Quoting this interesting post!',
           createdAt: new Date(Date.now() - 14400000).toISOString(),
           embed: {
-            $type: 'app.bsky.embed.record',
+            $type: 'app.bsky.embed.record#view',
             record: {
               uri: 'at://did:plc:quoted/app.bsky.feed.post/quoted',
               cid: 'quotedcid',
@@ -176,7 +176,7 @@
           },
         },
         embed: {
-          $type: 'app.bsky.embed.record',
+          $type: 'app.bsky.embed.record#view',
           record: {
             uri: 'at://did:plc:quoted/app.bsky.feed.post/quoted',
             cid: 'quotedcid',
@@ -210,7 +210,7 @@
           createdAt: new Date(Date.now() - 18000000).toISOString(),
         },
         embed: {
-          $type: 'app.bsky.embed.external',
+          $type: 'app.bsky.embed.external#view',
           external: {
             uri: 'https://example.com',
             title: 'Example Domain',
