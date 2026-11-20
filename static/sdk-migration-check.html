@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Bluesky SDK ESM migration check</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 48rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.6; }
+    code { overflow-wrap: anywhere; }
+    button { padding: .65rem 1rem; font: inherit; cursor: pointer; }
+    pre { padding: 1rem; border-radius: .75rem; background: color-mix(in srgb, CanvasText 8%, Canvas); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .muted { opacity: .7; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "@atproto/lex": "https://esm.sh/@atproto/lex@0.3.6",
+        "@bsky/sdk": "https://esm.sh/@bsky/sdk@1.5.0?external=@atproto/lex",
+        "@bsky/sdk/lexicons": "https://esm.sh/@bsky/sdk@1.5.0/lexicons?external=@atproto/lex"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main>
+    <h1>Bluesky SDK ESM migration check</h1>
+    <p>本番の <code>bsky-client.js</code> には触れず、CDN経由のESM読み込みとClient初期化だけを検証するページ。</p>
+    <p class="muted">Pinned versions: <code>@bsky/sdk@1.5.0</code> / <code>@atproto/lex@0.3.6</code></p>
+    <p id="status" role="status">SDKを読み込み中…</p>
+    <pre id="details">Waiting…</pre>
+    <button id="request" type="button" disabled>公開プロフィール取得テスト</button>
+    <pre id="result">未実行</pre>
+  </main>
+
+  <script type="module">
+    const status = document.querySelector('#status');
+    const details = document.querySelector('#details');
+    const requestButton = document.querySelector('#request');
+    const result = document.querySelector('#result');
+
+    try {
+      const [lex, sdk, lexicons] = await Promise.all([
+        import('@atproto/lex'),
+        import('@bsky/sdk'),
+        import('@bsky/sdk/lexicons')
+      ]);
+
+      if (typeof lex.Client !== 'function') {
+        throw new Error('@atproto/lex から Client を取得できませんでした');
+      }
+      if (!sdk.api?.app?.urlPublic) {
+        throw new Error('@bsky/sdk から api.app.urlPublic を取得できませんでした');
+      }
+      if (!lexicons.app?.bsky?.actor?.getProfile) {
+        throw new Error('@bsky/sdk/lexicons から app.bsky.actor.getProfile を取得できませんでした');
+      }
+
+      const client = new lex.Client(sdk.api.app.urlPublic);
+      if (typeof client.call !== 'function') {
+        throw new Error('Client.call が見つかりません');
+      }
+
+      status.textContent = '成功：ESM読み込み・サブパス読み込み・Client初期化 OK';
+      details.textContent = [
+        'Client: ' + lex.Client.name,
+        'Public API: ' + sdk.api.app.urlPublic,
+        'Lexicon: app.bsky.actor.getProfile',
+        'Client.call: ' + typeof client.call,
+        '認証: なし（公開APIのみ）'
+      ].join('\n');
+      requestButton.disabled = false;
+
+      requestButton.addEventListener('click', async () => {
+        requestButton.disabled = true;
+        result.textContent = '公開プロフィールを取得中…';
+        try {
+          const profile = await client.call(
+            lexicons.app.bsky.actor.getProfile,
+            { actor: 'bsky.app' }
+          );
+          result.textContent = JSON.stringify({
+            did: profile.did,
+            handle: profile.handle,
+            displayName: profile.displayName ?? null
+          }, null, 2);
+        } catch (error) {
+          result.textContent = '公開API呼び出し失敗: ' + (error?.stack || error);
+        } finally {
+          requestButton.disabled = false;
+        }
+      });
+    } catch (error) {
+      status.textContent = '失敗：SDKの読み込みまたは初期化に失敗しました';
+      details.textContent = error?.stack || String(error);
+    }
+  </script>
+</body>
+</html>
