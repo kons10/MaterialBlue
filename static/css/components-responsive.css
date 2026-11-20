@@ -680,34 +680,48 @@ mb-post {
   min-width: 0;
 }
 
-/* mb-post action buttons - X style: md-icon-button with inline count */
+/* mb-post action buttons: Material Web owns its internal focus ring and ripple. */
 .mb-post-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 4px;
   margin-top: 8px;
-  padding: 0 4px;
+  padding: 0 2px;
   width: 100%;
   box-sizing: border-box;
 }
 
+.mb-post-actions md-text-button,
 .mb-post-actions md-icon-button {
+  --md-text-button-container-color: transparent;
+  --md-text-button-hover-state-layer-color: var(--md-sys-color-on-surface-variant);
+  --md-text-button-pressed-state-layer-color: var(--md-sys-color-on-surface-variant);
   --md-icon-button-container-color: transparent;
   --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: var(--catalog-shape-xl);
+  flex: 0 1 auto;
   min-width: 0;
 }
 
+.mb-post-actions md-text-button {
+  --md-text-button-label-text-color: var(--md-sys-color-on-surface-variant);
+  --md-text-button-icon-color: var(--md-sys-color-on-surface-variant);
+  padding-inline: 4px;
+}
+
+.mb-post-actions md-icon-button {
+  --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+}
+
+.mb-post-actions md-text-button:hover,
 .mb-post-actions md-icon-button:hover {
+  --md-text-button-container-color: var(--md-sys-color-surface-container-high);
   --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
 }
 
+.mb-post-actions md-text-button:focus-visible,
 .mb-post-actions md-icon-button:focus-visible {
-  --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
+  outline: none;
 }
 
 .mb-post-actions md-icon {
@@ -736,8 +750,17 @@ md-menu-item md-icon[slot="start"] {
 
 /* Container query: narrow width adjustments */
 @container (max-width: 400px) {
+  .mb-post-actions {
+    gap: 0;
+  }
+
+  .mb-post-actions md-text-button {
+    padding-inline: 0;
+  }
+
   .mb-post-actions md-icon-button {
-    padding: 6px 8px;
+    --md-icon-button-container-width: 36px;
+    --md-icon-button-container-height: 36px;
   }
   
   .mb-post-action-count {
