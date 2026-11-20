@@ -87,62 +87,68 @@ function createAuthorLine(author, isRepost = false) {
 }
 
 /**
- * Create a properly labeled action button with ARIA support
+ * Create action button using @material/web components
+ * Returns { btn, update } where btn is md-icon-button or md-filled-tonal-button
  */
-function createAccessibleActionButton(icon, labelKey, count, options = {}) {
-  const btn = document.createElement('button');
-  btn.className = 'mb-post-action-btn';
-  btn.type = 'button';
-  
+function createActionButton(iconKey, labelKey, count, options = {}) {
   const filled = options.filled || false;
-  const iconName = filled ? ICONS[`${options.iconKey}Filled`] : ICONS[options.iconKey];
+  const hasCount = count && count > 0;
   const label = t(labelKey);
-  const countStr = formatCount(count);
-  
-  btn.setAttribute('aria-label', countStr ? `${label}, ${countStr}` : label);
+  const countStr = hasCount ? formatCount(count) : '';
+  const ariaLabel = hasCount ? `${label}, ${countStr}` : label;
+
+  // アイコンボタン（カウントなし）または フィルドトーナルボタン（カウントあり）
+  let btn;
+  if (hasCount) {
+    btn = document.createElement('md-filled-tonal-button');
+    btn.innerHTML = `
+      <md-icon slot="icon" class="${filled ? 'is-filled' : ''}">${ICONS[filled ? `${iconKey}Filled` : iconKey]}</md-icon>
+      <span class="mb-post-action-count">${countStr}</span>
+    `;
+  } else {
+    btn = document.createElement('md-icon-button');
+    btn.innerHTML = `<md-icon class="${filled ? 'is-filled' : ''}">${ICONS[filled ? `${iconKey}Filled` : iconKey]}</md-icon>`;
+  }
+
+  btn.setAttribute('aria-label', ariaLabel);
   btn.setAttribute('aria-pressed', String(filled));
   
-  btn.innerHTML = `
-    <md-icon class="mb-post-action-icon${filled ? ' is-filled' : ''}" style="font-size:20px;" aria-hidden="true">${iconName}</md-icon>
-    ${countStr ? `<span class="mb-post-action-count" aria-hidden="true">${countStr}</span>` : ''}
-  `;
-  
+  // MD3標準のスタイル調整
   btn.style.cssText = `
-    display:inline-flex;align-items:center;gap:4px;padding:8px 12px;
-    border:none;background:transparent;color:var(--md-sys-color-on-surface-variant);
-    font:inherit;border-radius:var(--catalog-shape-xl);cursor:pointer;
-    transition:background-color 0.2s;
+    --md-icon-button-container-color: transparent;
+    --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
   `;
 
-  btn.addEventListener('mouseenter', () => {
-    btn.style.backgroundColor = 'var(--md-sys-color-surface-container-high)';
-  });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.backgroundColor = 'transparent';
-  });
-
-  return { 
-    btn, 
+  return {
+    btn,
     update: (newFilled, newCount) => {
-      const iconEl = btn.querySelector('.mb-post-action-icon');
-      const countEl = btn.querySelector('.mb-post-action-count');
-      const newCountStr = formatCount(newCount);
-      if (newFilled) {
-        iconEl.classList.add('is-filled');
-        iconEl.textContent = ICONS[`${options.iconKey}Filled`];
-      } else {
-        iconEl.classList.remove('is-filled');
-        iconEl.textContent = ICONS[options.iconKey];
-      }
+      const newHasCount = newCount && newCount > 0;
+      const newCountStr = newHasCount ? formatCount(newCount) : '';
+      const newAriaLabel = newHasCount ? `${label}, ${newCountStr}` : label;
+      
       btn.setAttribute('aria-pressed', String(newFilled));
-      btn.setAttribute('aria-label', newCountStr ? `${label}, ${newCountStr}` : label);
-      if (countEl) countEl.textContent = newCountStr;
-      else if (newCountStr) {
-        const newCountEl = document.createElement('span');
-        newCountEl.className = 'mb-post-action-count';
-        newCountEl.setAttribute('aria-hidden', 'true');
-        newCountEl.textContent = newCountStr;
-        btn.appendChild(newCountEl);
+      btn.setAttribute('aria-label', newAriaLabel);
+      
+      // カウントあり/なしでボタンタイプ切り替えが必要な場合は再構築が必要だが、
+      // 通常はカウント0→1や1→0の遷移のみなので、innerHTML書き換えで対応
+      const iconEl = btn.querySelector('md-icon');
+      if (iconEl) {
+        iconEl.textContent = ICONS[newFilled ? `${iconKey}Filled` : iconKey];
+        iconEl.classList.toggle('is-filled', newFilled);
+      }
+      
+      const countEl = btn.querySelector('.mb-post-action-count');
+      if (newHasCount) {
+        if (countEl) {
+          countEl.textContent = newCountStr;
+        } else if (btn.tagName === 'MD-FILLED-TONAL-BUTTON') {
+          const newCountEl = document.createElement('span');
+          newCountEl.className = 'mb-post-action-count';
+          newCountEl.textContent = newCountStr;
+          btn.appendChild(newCountEl);
+        }
+      } else if (countEl) {
+        countEl.remove();
       }
     }
   };
@@ -405,22 +411,21 @@ function createEmbed(embed, record) {
 }
 
 /**
- * Create action buttons row (reply, repost, like, bookmark, share)
+ * Create action buttons row (reply, repost, like, share, bookmark)
+ * Material Design 3 / Bluesky標準順序
  */
 function createActions(post, client) {
   const actionRow = document.createElement('div');
   actionRow.className = 'mb-post-actions';
-  actionRow.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;';
+  actionRow.style.cssText = 'display:flex;gap:4px;align-items:center;margin-top:8px;flex-wrap:wrap;';
   actionRow.setAttribute('role', 'group');
   actionRow.setAttribute('aria-label', t('post.actionsLabel'));
 
   const viewer = post.viewer || {};
 
-  // Reply button
+  // 1. Reply (常にカウント表示)
   const replyCount = post.replyCount ?? 0;
-  const { btn: replyBtn, update: updateReplyBtn } = createAccessibleActionButton(
-    ICONS.reply, 'post.reply', replyCount, { iconKey: 'reply' }
-  );
+  const { btn: replyBtn } = createActionButton('reply', 'post.reply', replyCount);
   replyBtn.addEventListener('click', async () => {
     const text = window.prompt(t('post.replyPrompt'));
     if (!text || !text.trim()) return;
@@ -428,7 +433,6 @@ function createActions(post, client) {
     try {
       const record = post.record || {};
       await client.reply(post.uri, post.cid, text.trim(), record.reply);
-      // Dispatch event for parent to handle timeline refresh
       document.dispatchEvent(new CustomEvent('mb-post:reply', { detail: { postUri: post.uri } }));
     } catch (e) {
       console.error('Reply failed:', e);
@@ -438,18 +442,12 @@ function createActions(post, client) {
   });
   actionRow.appendChild(replyBtn);
 
-  // Repost button with menu
+  // 2. Repost (メニュー付き: Repost / Quote)
   const repostCount = post.repostCount ?? 0;
   let reposted = Boolean(viewer.repost);
   let repostRecordUri = viewer.repost || null;
-  const { btn: repostBtn, update: updateRepostBtn } = createAccessibleActionButton(
-    reposted ? ICONS.repostFilled : ICONS.repost,
-    'post.repost',
-    repostCount,
-    { iconKey: 'repost', filled: reposted }
-  );
+  const { btn: repostBtn, update: updateRepostBtn } = createActionButton('repost', 'post.repost', repostCount, { filled: reposted });
 
-  // Create repost menu
   const repostMenu = document.createElement('md-menu');
   repostMenu.anchorElement = repostBtn;
   repostMenu.menuCorner = 'start-start';
@@ -521,21 +519,15 @@ function createActions(post, client) {
     if (action === 'quote') await handleQuote();
   });
 
-  // Append menu to body to avoid overflow issues
   document.body.appendChild(repostMenu);
   actionRow.appendChild(repostBtn);
 
-  // Like button
+  // 3. Like
   const likeCount = post.likeCount ?? 0;
   let liked = Boolean(viewer.like);
   let likeRecordUri = viewer.like || null;
   let currentLikeCount = likeCount;
-  const { btn: likeBtn, update: updateLikeBtn } = createAccessibleActionButton(
-    liked ? ICONS.likeFilled : ICONS.like,
-    'post.like',
-    likeCount,
-    { iconKey: 'like', filled: liked }
-  );
+  const { btn: likeBtn, update: updateLikeBtn } = createActionButton('like', 'post.like', likeCount, { filled: liked });
   likeBtn.addEventListener('click', async () => {
     likeBtn.disabled = true;
     try {
@@ -561,14 +553,29 @@ function createActions(post, client) {
   });
   actionRow.appendChild(likeBtn);
 
-  // Bookmark/Save button
+  // 4. Share
+  const { btn: shareBtn } = createActionButton('share', 'post.share', null);
+  shareBtn.addEventListener('click', async () => {
+    const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: t('post.shareTitle', { handle: post.author.handle }),
+          text: post.record?.text,
+          url: postUrl,
+        });
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error('Share failed:', e);
+      }
+    } else {
+      await navigator.clipboard.writeText(postUrl);
+    }
+  });
+  actionRow.appendChild(shareBtn);
+
+  // 5. Bookmark (保存数は非公開なのでカウントなし)
   let saved = client.isSaved?.(post.uri) || false;
-  const { btn: saveBtn, update: updateSaveBtn } = createAccessibleActionButton(
-    saved ? ICONS.bookmarkFilled : ICONS.bookmark,
-    'post.save',
-    null,
-    { iconKey: 'bookmark', filled: saved }
-  );
+  const { btn: saveBtn, update: updateSaveBtn } = createActionButton('bookmark', 'post.save', null, { filled: saved });
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     try {
@@ -589,28 +596,6 @@ function createActions(post, client) {
     }
   });
   actionRow.appendChild(saveBtn);
-
-  // Share button
-  const { btn: shareBtn } = createAccessibleActionButton(ICONS.share, 'post.share', null, { iconKey: 'share' });
-  shareBtn.addEventListener('click', async () => {
-    const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t('post.shareTitle', { handle: post.author.handle }),
-          text: post.record?.text,
-          url: postUrl,
-        });
-      } catch (e) {
-        if (e.name !== 'AbortError') console.error('Share failed:', e);
-      }
-    } else {
-      // Fallback: copy to clipboard
-      await navigator.clipboard.writeText(postUrl);
-      // TODO: Show toast/snackbar
-    }
-  });
-  actionRow.appendChild(shareBtn);
 
   return actionRow;
 }

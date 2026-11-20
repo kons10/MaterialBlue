@@ -680,33 +680,49 @@ mb-post {
   min-width: 0;
 }
 
-.mb-post-action-btn {
-  display: inline-flex;
-  align-items: center;
+/* mb-post action buttons using @material/web components */
+.mb-post-actions {
+  display: flex;
   gap: 4px;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  font: inherit;
-  border-radius: var(--catalog-shape-xl);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.mb-post-action-btn:hover,
-.mb-post-action-btn:focus-visible {
-  background-color: var(--md-sys-color-surface-container-high);
+.mb-post-actions md-icon-button,
+.mb-post-actions md-filled-tonal-button {
+  --md-icon-button-container-color: transparent;
+  --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
+  --md-filled-tonal-button-container-color: transparent;
+  --md-filled-tonal-button-state-layer-color: var(--md-sys-color-on-surface-variant);
 }
 
-.mb-post-action-icon {
+.mb-post-actions md-icon-button:hover,
+.mb-post-actions md-filled-tonal-button:hover {
+  --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
+  --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-high);
+}
+
+.mb-post-actions md-icon-button:focus-visible,
+.mb-post-actions md-filled-tonal-button:focus-visible {
+  --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
+  --md-filled-tonal-button-container-color: var(--md-sys-color-surface-container-high);
+}
+
+.mb-post-actions md-icon {
   font-variation-settings: 'FILL' 0;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-.mb-post-action-icon.is-filled {
+.mb-post-actions md-icon.is-filled {
   font-variation-settings: 'FILL' 1;
   color: var(--md-sys-color-primary);
+}
+
+.mb-post-actions md-filled-tonal-button {
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: var(--catalog-shape-xl);
+  min-height: 40px;
 }
 
 .mb-post-action-count {
@@ -720,8 +736,12 @@ mb-post {
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
-  margin-left: 4px;
   line-height: 1;
+}
+
+/* Repost menu items */
+md-menu-item md-icon[slot="start"] {
+  font-size: 20px;
 }
 
 .mb-post-meta {
