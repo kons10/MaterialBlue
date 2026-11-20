@@ -239,7 +239,7 @@ function createEmbed(embed, record) {
   const embedContainer = document.createElement('div');
   embedContainer.className = 'mb-post-embed';
 
-  switch (embed.$type) {
+  switch (embed.$type?.replace(/#view$/, '')) {
     case 'app.bsky.embed.images': {
       const images = embed.images || record?.embed?.images || [];
       if (images.length > 0) {
@@ -583,7 +583,8 @@ function createActions(post, client) {
     if (action === 'quote') await handleQuote();
   });
 
-  document.body.appendChild(repostMenu);
+  // Keep the menu inside the component so rerendering/removing a post cannot leak it into document.body.
+  actionRow.appendChild(repostMenu);
   actionRow.appendChild(repostBtn);
 
   // 3. Like
@@ -771,7 +772,7 @@ export class MbPost extends HTMLElement {
     const post = this._post;
     const record = post.record || {};
     const author = post.author || {};
-    const isRepost = post.reason?.pyType === 'app.bsky.feed.defs#reasonRepost';
+    const isRepost = (post.reason?.$type || post.reason?.pyType) === 'app.bsky.feed.defs#reasonRepost';
 
     // Clear and rebuild
     this.innerHTML = '';
@@ -843,7 +844,7 @@ export class MbPost extends HTMLElement {
     }
 
     // Embed
-    const embed = createEmbed(post.embed, record);
+    const embed = createEmbed(post.embed || record.embed, record);
     if (embed) {
       contentCol.appendChild(embed);
     }
