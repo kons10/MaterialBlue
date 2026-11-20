@@ -13,7 +13,20 @@
  * Stylus, browser extensions, and theme customization.
  */
 
-import { t, formatRelativeTime, formatCompactNumber } from '../i18n.js';
+// Standalone renderer: all application services are injected by the host.
+const fallbackT = (key, params = {}) => String(key).replace(/\{(\w+)\}/g, (m, k) => params[k] ?? m);
+const fallbackRelativeTime = (value, t = fallbackT) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return t('datetime.justNow');
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return t('datetime.minutesAgo', { count: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t('datetime.hoursAgo', { count: hours });
+  return t('datetime.daysAgo', { count: Math.floor(hours / 24) });
+};
+const fallbackCompactNumber = value => new Intl.NumberFormat(undefined, { notation: 'compact' }).format(value);
 
 // Material Symbols used by this component
 const ICONS = {
@@ -43,9 +56,9 @@ const ICONS = {
 /**
  * Format count for display (uses formatCompactNumber from i18n)
  */
-function formatCount(count) {
+function formatCount(count, formatter = fallbackCompactNumber) {
   if (count === null || count === undefined || count <= 0) return '';
-  return formatCompactNumber(count);
+  return formatter(count);
 }
 
 /**
@@ -66,7 +79,7 @@ function createAvatar(author) {
 /**
  * Create author line with display name and handle
  */
-function createAuthorLine(author, isRepost = false) {
+function createAuthorLine(author, isRepost = false, t = fallbackT) {
   const authorLine = document.createElement('div');
   authorLine.className = 'mb-post-author-line';
 
@@ -99,7 +112,7 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
   const iconOnly = Boolean(options.iconOnly);
   const toggle = Boolean(options.toggle);
   const selected = Boolean(options.filled);
-  const label = t(labelKey);
+  const label = (options.t || fallbackT)(labelKey);
   const btn = document.createElement(iconOnly ? 'md-icon-button' : 'md-text-button');
   btn.type = 'button';
 
@@ -152,7 +165,7 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
         icon.classList.toggle('is-filled', isSelected);
       }
     }
-    const countText = formatCount(newCount);
+    const countText = formatCount(newCount, options.formatCompactNumber);
     if (iconOnly) {
       const accessibleLabel = countText ? label + ', ' + countText : label;
       btn.setAttribute('aria-label', accessibleLabel);
@@ -168,7 +181,7 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
 /**
  * Create reply thread context (parent/root posts)
  */
-function createReplyThread(reply) {
+function createReplyThread(reply, t = fallbackT) {
   if (!reply) return null;
 
   const posts = [];
@@ -240,7 +253,7 @@ function createPostText(record) {
 /**
  * Create embed content (images, video, external, record, recordWithMedia)
  */
-function createEmbed(embed, record) {
+function createEmbed(embed, record, t = fallbackT) {
   if (!embed) return null;
 
   const embedContainer = document.createElement('div');
@@ -422,215 +435,106 @@ function createEmbed(embed, record) {
  * Order: Reply → Repost → Like → Analytics → Bookmark → Share
  * Labeled actions use md-text-button; bookmark/share remain icon-only.
  */
-function createActions(post, client) {
-  const actionRow = document.createElement('div');
-  actionRow.className = 'mb-post-actions';
-
-  actionRow.setAttribute('role', 'group');
-  actionRow.setAttribute('aria-label', t('post.actionsLabel'));
-
+function createActions(post, actions = {}, t = fallbackT, formatCompactNumber = fallbackCompactNumber, host) {
+  const row = document.createElement('div');
+  row.className = 'mb-post-actions';
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', t('post.actionsLabel'));
+  const emit = (action, detail = {}) => host.dispatchEvent(new CustomEvent('mb-post-action', {
+    bubbles: true, composed: true, detail: { action, post, ...detail },
+  }));
+  const run = (name, detail = {}) => typeof actions[name] === 'function'
+    ? actions[name]({ post, ...detail }) : emit(name, detail);
+  const requestText = async kind => {
+    if (typeof actions.requestText === 'function') return actions.requestText({ post, kind });
+    emit('request-text', { kind }); return null;
+  };
+  const make = (icon, key, count, opts = {}) => createActionButton(icon, key, count, {
+    ...opts, t, formatCompactNumber,
+    iconOnly: ['bookmark', 'share'].includes(icon),
+    toggle: ['repost', 'like', 'bookmark'].includes(icon),
+  });
   const viewer = post.viewer || {};
 
-  // Use text buttons for labeled actions and icon buttons for bookmark/share.
-  const createIconButton = (iconKey, labelKey, count, options = {}) =>
-    createActionButton(iconKey, labelKey, count, {
-      ...options,
-      iconOnly: ['bookmark', 'share'].includes(iconKey),
-      toggle: ['repost', 'like', 'bookmark'].includes(iconKey),
-    });
-
-  // 1. Reply
-  const replyCount = post.replyCount ?? 0;
-  const { btn: replyBtn, container: replyAction } = createIconButton('reply', 'post.reply', replyCount);
-  replyBtn.addEventListener('click', async () => {
-    const text = window.prompt(t('post.replyPrompt'));
-    if (!text || !text.trim()) return;
-    replyBtn.disabled = true;
-    try {
-      const record = post.record || {};
-      await client.reply(post.uri, post.cid, text.trim(), record.reply);
-      document.dispatchEvent(new CustomEvent('mb-post:reply', { detail: { postUri: post.uri } }));
-    } catch (e) {
-      console.error('Reply failed:', e);
-    } finally {
-      replyBtn.disabled = false;
-    }
+  const reply = make('reply', 'post.reply', post.replyCount ?? 0);
+  reply.btn.addEventListener('click', async () => {
+    const text = await requestText('reply');
+    if (typeof text === 'string' && text.trim()) await run('reply', { text: text.trim(), reply: post.record?.reply });
   });
-  actionRow.appendChild(replyAction);
+  row.append(reply.container);
 
-  // 2. Repost (メニュー付き)
-  const repostCount = post.repostCount ?? 0;
-  let reposted = Boolean(viewer.repost);
-  let repostRecordUri = viewer.repost || null;
-  const { btn: repostBtn, container: repostAction, update: updateRepostBtn } = createIconButton('repost', 'post.repost', repostCount, { filled: reposted });
-
-  const repostMenu = document.createElement('md-menu');
-  repostMenu.anchorElement = repostBtn;
-  repostMenu.menuCorner = 'start-start';
-  repostMenu.anchorCorner = 'end-start';
-  repostMenu.positioning = 'fixed';
-
-  const doRepostItem = document.createElement('md-menu-item');
-  doRepostItem.dataset.action = 'repost';
-  doRepostItem.innerHTML = `
-    <md-icon slot="start">repeat</md-icon>
-    <div slot="headline">${t('post.repost')}</div>
-  `;
-
-  const quoteItem = document.createElement('md-menu-item');
-  quoteItem.dataset.action = 'quote';
-  quoteItem.innerHTML = `
-    <md-icon slot="start">format_quote</md-icon>
-    <div slot="headline">${t('post.quote')}</div>
-  `;
-
-  repostMenu.appendChild(doRepostItem);
-  repostMenu.appendChild(quoteItem);
-
-  repostBtn.addEventListener('click', (e) => {
-    // メニュー開閉のみ、クリックイベント伝播防止
-    e.stopPropagation();
-    repostMenu.open = !repostMenu.open;
-  });
-
-  const handleRepost = async () => {
-    doRepostItem.disabled = true;
-    try {
-      if (reposted) {
-        await client.unrepost(repostRecordUri);
-        reposted = false;
-        repostRecordUri = null;
-        updateRepostBtn(false, repostCount);
-      } else {
-        const res = await client.repost(post.uri, post.cid);
-        reposted = true;
-        repostRecordUri = res?.uri || null;
-        updateRepostBtn(true, (repostCount ?? 0) + 1);
-      }
-      repostMenu.open = false;
-      document.dispatchEvent(new CustomEvent('mb-post:repost', { detail: { postUri: post.uri, reposted } }));
-    } catch (e) {
-      console.error('Repost failed:', e);
-    } finally {
-      doRepostItem.disabled = false;
-    }
+  let reposted = Boolean(viewer.repost), repostUri = viewer.repost || null, repostCount = post.repostCount ?? 0;
+  const repost = make('repost', 'post.repost', repostCount, { filled: reposted });
+  const menu = document.createElement('md-menu');
+  menu.anchorElement = repost.btn; menu.menuCorner = 'start-start'; menu.anchorCorner = 'end-start'; menu.positioning = 'fixed';
+  const item = (action, glyph, label) => {
+    const el = document.createElement('md-menu-item'); el.dataset.action = action;
+    const icon = document.createElement('md-icon'); icon.slot = 'start'; icon.textContent = glyph;
+    const headline = document.createElement('div'); headline.slot = 'headline'; headline.textContent = label;
+    el.append(icon, headline); menu.append(el); return el;
   };
-
-  const handleQuote = async () => {
-    const text = window.prompt(t('post.quotePrompt'));
-    if (!text || !text.trim()) return;
-    quoteItem.disabled = true;
+  const repostItem = item('repost', ICONS.repost, t('post.repost'));
+  const quoteItem = item('quote', ICONS.quote, t('post.quote'));
+  repost.btn.addEventListener('click', e => { e.stopPropagation(); menu.open = !menu.open; });
+  menu.addEventListener('close-menu', async e => {
+    const action = e.detail?.itemPath?.[0]?.dataset?.action;
     try {
-      await client.quote(post.uri, post.cid, text.trim());
-      repostMenu.open = false;
-      document.dispatchEvent(new CustomEvent('mb-post:quote', { detail: { postUri: post.uri } }));
-    } catch (e) {
-      console.error('Quote failed:', e);
-    } finally {
-      quoteItem.disabled = false;
-    }
-  };
-
-  repostMenu.addEventListener('close-menu', async (event) => {
-    const action = event.detail?.itemPath?.[0]?.dataset?.action;
-    if (action === 'repost') await handleRepost();
-    if (action === 'quote') await handleQuote();
+      if (action === 'repost') {
+        repostItem.disabled = true;
+        if (reposted) { await run('unrepost', { repostUri }); reposted = false; repostUri = null; repostCount = Math.max(0, repostCount - 1); }
+        else { const result = await run('repost'); reposted = true; repostUri = result?.uri || null; repostCount += 1; }
+        repost.update(reposted, repostCount); menu.open = false;
+      } else if (action === 'quote') {
+        const text = await requestText('quote');
+        if (typeof text === 'string' && text.trim()) { quoteItem.disabled = true; await run('quote', { text: text.trim() }); menu.open = false; }
+      }
+    } catch (error) {
+      host.dispatchEvent(new CustomEvent('mb-post-error', { bubbles: true, composed: true, detail: { action, error, post } }));
+    } finally { repostItem.disabled = false; quoteItem.disabled = false; }
   });
+  row.append(menu, repost.container);
 
-  // Keep the menu inside the component so rerendering/removing a post cannot leak it into document.body.
-  actionRow.appendChild(repostMenu);
-  actionRow.appendChild(repostAction);
-
-  // 3. Like
-  const likeCount = post.likeCount ?? 0;
-  let liked = Boolean(viewer.like);
-  let likeRecordUri = viewer.like || null;
-  let currentLikeCount = likeCount;
-  const { btn: likeBtn, container: likeAction, update: updateLikeBtn } = createIconButton('like', 'post.like', likeCount, { filled: liked });
-  likeBtn.addEventListener('click', async () => {
-    likeBtn.disabled = true;
+  let liked = Boolean(viewer.like), likeUri = viewer.like || null, likeCount = post.likeCount ?? 0;
+  const like = make('like', 'post.like', likeCount, { filled: liked });
+  like.btn.addEventListener('click', async () => {
+    like.btn.disabled = true;
     try {
-      if (liked) {
-        await client.unlike(likeRecordUri);
-        liked = false;
-        likeRecordUri = null;
-        currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
-        updateLikeBtn(false, currentLikeCount);
-      } else {
-        const res = await client.like(post.uri, post.cid);
-        liked = true;
-        likeRecordUri = res?.uri || null;
-        currentLikeCount = (currentLikeCount ?? 0) + 1;
-        updateLikeBtn(true, currentLikeCount);
-      }
-      document.dispatchEvent(new CustomEvent('mb-post:like', { detail: { postUri: post.uri, liked } }));
-    } catch (e) {
-      console.error('Like failed:', e);
-    } finally {
-      likeBtn.disabled = false;
-    }
+      if (liked) { await run('unlike', { likeUri }); liked = false; likeUri = null; likeCount = Math.max(0, likeCount - 1); }
+      else { const result = await run('like'); liked = true; likeUri = result?.uri || null; likeCount += 1; }
+      like.update(liked, likeCount);
+    } catch (error) { host.dispatchEvent(new CustomEvent('mb-post-error', { bubbles: true, composed: true, detail: { action: liked ? 'unlike' : 'like', error, post } })); }
+    finally { like.btn.disabled = false; }
   });
-  actionRow.appendChild(likeAction);
+  row.append(like.container);
 
-  // 4. Analytics (表示数) - post.viewCount または viewer?.viewCount
-  const viewCount = post.viewCount ?? post.viewer?.viewCount ?? 0;
-  const { btn: analyticsBtn, container: analyticsAction } = createIconButton('analytics', 'post.analytics', viewCount);
-  analyticsBtn.addEventListener('click', () => {
-    // TODO: 詳細統計モーダル表示
+  const analytics = make('analytics', 'post.analytics', post.viewCount ?? viewer.viewCount ?? 0);
+  analytics.btn.addEventListener('click', () => run('analytics'));
+  row.append(analytics.container);
+
+  let saved = Boolean(viewer.bookmarked);
+  const save = make('bookmark', 'post.save', null, { filled: saved });
+  save.btn.addEventListener('click', async () => {
+    save.btn.disabled = true;
+    try { if (saved) { await run('unsave'); saved = false; } else { await run('save'); saved = true; } save.update(saved); }
+    catch (error) { host.dispatchEvent(new CustomEvent('mb-post-error', { bubbles: true, composed: true, detail: { action: saved ? 'unsave' : 'save', error, post } })); }
+    finally { save.btn.disabled = false; }
   });
-  actionRow.appendChild(analyticsAction);
+  row.append(save.container);
 
-  // 5. Bookmark
-  let saved = client.isSaved?.(post.uri) || false;
-  const { btn: saveBtn, container: saveAction, update: updateSaveBtn } = createIconButton('bookmark', 'post.save', null, { filled: saved });
-  saveBtn.addEventListener('click', async () => {
-    saveBtn.disabled = true;
-    try {
-      if (saved) {
-        await client.unsave(post.uri, post.cid);
-        saved = false;
-        updateSaveBtn(false);
-      } else {
-        await client.save(post.uri, post.cid);
-        saved = true;
-        updateSaveBtn(true);
-      }
-      document.dispatchEvent(new CustomEvent('mb-post:save', { detail: { postUri: post.uri, saved } }));
-    } catch (e) {
-      console.error('Save failed:', e);
-    } finally {
-      saveBtn.disabled = false;
-    }
+  const share = make('share', 'post.share', null);
+  share.btn.addEventListener('click', () => {
+    const handle = post.author?.handle, rkey = post.uri?.split('/').pop();
+    const url = handle && rkey ? `https://bsky.app/profile/${handle}/post/${rkey}` : '';
+    run('share', { url });
   });
-  actionRow.appendChild(saveAction);
-
-  // 6. Share
-  const { btn: shareBtn, container: shareAction } = createIconButton('share', 'post.share', null);
-  shareBtn.addEventListener('click', async () => {
-    const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t('post.shareTitle', { handle: post.author.handle }),
-          text: post.record?.text,
-          url: postUrl,
-        });
-      } catch (e) {
-        if (e.name !== 'AbortError') console.error('Share failed:', e);
-      }
-    } else {
-      await navigator.clipboard.writeText(postUrl);
-    }
-  });
-  actionRow.appendChild(shareAction);
-
-  return actionRow;
+  row.append(share.container);
+  return row;
 }
 
 /**
  * Create post metadata (time, client, etc.)
  */
-function createPostMeta(post) {
+function createPostMeta(post, formatRelativeTime = fallbackRelativeTime) {
   const meta = document.createElement('div');
   meta.className = 'mb-post-meta';
 
@@ -660,6 +564,19 @@ function addResponsiveStyles() {
   // This function is a placeholder for any dynamic responsive logic needed
 }
 
+function createClientAdapter(client) {
+  return {
+    reply: ({ post, text, reply }) => client.reply(post.uri, post.cid, text, reply),
+    repost: ({ post }) => client.repost(post.uri, post.cid),
+    unrepost: ({ repostUri }) => client.unrepost(repostUri),
+    quote: ({ post, text }) => client.quote(post.uri, post.cid, text),
+    like: ({ post }) => client.like(post.uri, post.cid),
+    unlike: ({ likeUri }) => client.unlike(likeUri),
+    save: ({ post }) => client.save(post.uri, post.cid),
+    unsave: ({ post }) => client.unsave(post.uri, post.cid),
+  };
+}
+
 /**
  * Main mb-post Web Component class
  */
@@ -672,6 +589,9 @@ export class MbPost extends HTMLElement {
     super();
     this._post = null;
     this._client = null;
+    this._actions = null;
+    this._translator = fallbackT;
+    this._formatters = {};
     this._rendered = false;
   }
 
@@ -696,6 +616,24 @@ export class MbPost extends HTMLElement {
   get client() {
     return this._client;
   }
+
+  set actions(value) {
+    this._actions = value && typeof value === 'object' ? value : null;
+    if (this._rendered) this.render();
+  }
+  get actions() { return this._actions; }
+
+  set translator(value) {
+    this._translator = typeof value === 'function' ? value : fallbackT;
+    if (this._rendered) this.render();
+  }
+  get translator() { return this._translator; }
+
+  set formatters(value) {
+    this._formatters = value && typeof value === 'object' ? value : {};
+    if (this._rendered) this.render();
+  }
+  get formatters() { return this._formatters; }
 
   connectedCallback() {
     this._rendered = true;
@@ -740,7 +678,7 @@ export class MbPost extends HTMLElement {
       repostIndicator.appendChild(icon);
       
       const label = document.createElement('span');
-      label.textContent = t('post.repostedBy', { name: post.reason.by.displayName || `@${post.reason.by.handle}` });
+      label.textContent = this._translator('post.repostedBy', { name: post.reason.by.displayName || `@${post.reason.by.handle}` });
       repostIndicator.appendChild(label);
       
       this.appendChild(repostIndicator);
@@ -764,12 +702,12 @@ export class MbPost extends HTMLElement {
     contentCol.className = 'mb-post-content-column';
 
     // Author line
-    const authorLine = createAuthorLine(author);
+    const authorLine = createAuthorLine(author, false, this._translator);
 
     contentCol.appendChild(authorLine);
 
     // Reply thread context
-    const replyThread = createReplyThread(post.reply);
+    const replyThread = createReplyThread(post.reply, this._translator);
     if (replyThread) {
       contentCol.appendChild(replyThread);
     }
@@ -781,19 +719,19 @@ export class MbPost extends HTMLElement {
     }
 
     // Embed
-    const embed = createEmbed(post.embed || record.embed, record);
+    const embed = createEmbed(post.embed || record.embed, record, this._translator);
     if (embed) {
       contentCol.appendChild(embed);
     }
 
     // Actions (only if client is available)
     if (this._client) {
-      const actions = createActions(post, this._client);
-      contentCol.appendChild(actions);
+      const handlers = this._actions || createClientAdapter(this._client);
+      contentCol.appendChild(createActions(post, handlers, this._translator, this._formatters.formatCompactNumber || fallbackCompactNumber, this));
     }
 
     // Meta (time, etc.)
-    const meta = createPostMeta(post);
+    const meta = createPostMeta(post, this._formatters.formatRelativeTime || ((value) => fallbackRelativeTime(value, this._translator)));
     contentCol.appendChild(meta);
 
     article.appendChild(contentCol);
