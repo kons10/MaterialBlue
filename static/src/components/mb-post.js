@@ -825,11 +825,6 @@ export class MbPost extends HTMLElement {
     contentCol.className = 'mb-post-content-column';
     contentCol.style.cssText = 'flex:1;min-width:0;';
 
-    // Content column
-    const contentCol = document.createElement('div');
-    contentCol.className = 'mb-post-content-column';
-    contentCol.style.cssText = 'flex:1;min-width:0;';
-
     // Author line
     const authorLine = createAuthorLine(author);
     authorLine.style.cssText = 'display:flex;align-items:baseline;gap:6px;margin-bottom:4px;';
