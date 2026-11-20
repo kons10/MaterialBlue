@@ -11,7 +11,7 @@
  *   element.groupedNotifications = groupedNotifications;
  */
 
-import { t, formatRelativeTime } from '../i18n.js';
+import { t, formatRelativeTime, formatCompactNumber } from '../i18n.js';
 import './mb-post.js';
 
 const REASONS = {
@@ -136,6 +136,8 @@ export class MbNotification extends HTMLElement {
       const post = document.createElement('mb-post');
       post.className = 'mb-notification-post';
       post.post = this._post;
+      post.translator = t;
+      post.formatters = { formatRelativeTime, formatCompactNumber };
       if (this._client) post.client = this._client;
       article.appendChild(post);
     }
