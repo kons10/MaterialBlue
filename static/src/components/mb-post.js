@@ -253,7 +253,8 @@ function createPostText(record) {
 /**
  * Create embed content (images, video, external, record, recordWithMedia)
  */
-function createEmbed(embed, record, t = fallbackT) {
+function createEmbed(embed, record, context = {}) {
+  const t = context.translator || fallbackT;
   if (!embed) return null;
 
   const embedContainer = document.createElement('div');
@@ -371,6 +372,7 @@ function createEmbed(embed, record, t = fallbackT) {
             indexedAt: recordEmbed.indexedAt || recordEmbed.value?.createdAt,
           };
           miniPost.translator = t;
+          miniPost.formatters = context.formatters || {};
           miniPost.post = postView;
           card.appendChild(miniPost);
         } else {
@@ -419,6 +421,7 @@ function createEmbed(embed, record, t = fallbackT) {
         const mediaPost = document.createElement('mb-post');
         mediaPost.classList.add('mb-post-nested');
         mediaPost.translator = t;
+        mediaPost.formatters = context.formatters || {};
         mediaPost.post = { embed: media, record: { text: '' } };
         mediaEmbed.appendChild(mediaPost);
         card.appendChild(mediaEmbed);
@@ -584,6 +587,7 @@ function createClientAdapter(client) {
     quote: ({ post, text }) => client.quote(post.uri, post.cid, text),
     like: ({ post }) => client.like(post.uri, post.cid),
     unlike: ({ likeUri }) => client.unlike(likeUri),
+    isSaved: ({ post }) => client.isSaved?.(post.uri) || false,
     save: ({ post }) => client.save(post.uri, post.cid),
     unsave: ({ post }) => client.unsave(post.uri, post.cid),
   };
@@ -731,7 +735,7 @@ export class MbPost extends HTMLElement {
     }
 
     // Embed
-    const embed = createEmbed(post.embed || record.embed, record, this._translator);
+    const embed = createEmbed(post.embed || record.embed, record, { translator: this._translator, formatters: this._formatters });
     if (embed) {
       contentCol.appendChild(embed);
     }
