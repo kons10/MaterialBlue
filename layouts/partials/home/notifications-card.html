@@ -8,10 +8,10 @@
     </md-icon-button>
   </div>
 
-  <div class="notifications-tabs" role="tablist" aria-label="通知の種類">
-    <button class="notifications-tab is-active" type="button" role="tab" aria-selected="true" data-notification-tab="all">全部</button>
-    <button class="notifications-tab" type="button" role="tab" aria-selected="false" data-notification-tab="mentions">提及</button>
-  </div>
+  <md-tabs id="notificationsTabs" aria-label="通知の種類" active-tab-index="0">
+    <md-primary-tab id="notificationsTabAll" data-notification-tab="all">全部</md-primary-tab>
+    <md-primary-tab id="notificationsTabMentions" data-notification-tab="mentions">提及</md-primary-tab>
+  </md-tabs>
 
   <div id="notificationsActions" class="action-row notifications-actions" hidden>
     <md-filled-tonal-button id="notificationsRefreshBtn">
