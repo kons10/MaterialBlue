@@ -445,8 +445,18 @@ function createActions(post, actions = {}, t = fallbackT, formatCompactNumber = 
   const emit = (action, detail = {}) => host.dispatchEvent(new CustomEvent('mb-post-action', {
     bubbles: true, composed: true, detail: { action, post, ...detail },
   }));
-  const run = (name, detail = {}) => typeof actions[name] === 'function'
-    ? actions[name]({ post, ...detail }) : emit(name, detail);
+  const run = async (name, detail = {}) => {
+    if (typeof actions[name] !== 'function') return emit(name, detail);
+    const result = await actions[name]({ post, ...detail });
+    const legacyName = ({ unrepost: 'repost', unlike: 'like', unsave: 'save' })[name] || name;
+    const state = ({ repost: { reposted: true }, unrepost: { reposted: false },
+      like: { liked: true }, unlike: { liked: false },
+      save: { saved: true }, unsave: { saved: false } })[name] || {};
+    host.dispatchEvent(new CustomEvent('mb-post:' + legacyName, {
+      bubbles: true, composed: true, detail: { postUri: post.uri, ...state, ...detail },
+    }));
+    return result;
+  };
   const requestText = async kind => {
     if (typeof actions.requestText === 'function') return actions.requestText({ post, kind });
     emit('request-text', { kind }); return null;
@@ -513,7 +523,7 @@ function createActions(post, actions = {}, t = fallbackT, formatCompactNumber = 
   analytics.btn.addEventListener('click', () => run('analytics'));
   row.append(analytics.container);
 
-  let saved = Boolean(viewer.bookmarked);
+  let saved = Boolean(viewer.bookmarked || actions.isSaved?.({ post }));
   const save = make('bookmark', 'post.save', null, { filled: saved });
   save.btn.addEventListener('click', async () => {
     save.btn.disabled = true;
