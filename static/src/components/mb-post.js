@@ -386,8 +386,8 @@ function createEmbed(embed, record) {
         const miniPost = document.createElement('mb-post');
         miniPost.style.cssText = 'margin:0;border-radius:0;border:none;background:transparent;';
         const postView = {
-          uri: record.uri || '',
-          cid: record.cid || '',
+          uri: recordView.uri || '',
+          cid: recordView.cid || '',
           author: recordView.author,
           record: recordView.value || {},
           embed: recordView.embeds?.[0] || recordView.embed,
