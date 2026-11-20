@@ -410,6 +410,8 @@ function createEmbed(embed, record, context = {}) {
           embed: recordView.embeds?.[0] || recordView.embed,
           indexedAt: recordView.indexedAt || recordView.value?.createdAt,
         };
+        miniPost.translator = t;
+        miniPost.formatters = context.formatters || {};
         miniPost.post = postView;
         card.appendChild(miniPost);
       }
