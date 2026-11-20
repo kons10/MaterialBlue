@@ -113,7 +113,7 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
   let selectedIcon = null;
   if (toggle) {
     selectedIcon = document.createElement('md-icon');
-    if (!iconOnly) selectedIcon.slot = 'icon';
+    if (iconOnly) selectedIcon.slot = 'selected';
     selectedIcon.className = 'is-filled';
     selectedIcon.textContent = ICONS[iconKey + 'Filled'];
     selectedIcon.hidden = !selected;
@@ -124,8 +124,6 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
   if (iconOnly) {
     btn.setAttribute('aria-label', label);
     btn.style.setProperty('--md-icon-button-icon-color', 'var(--md-sys-color-on-surface-variant)');
-  } else {
-    btn.appendChild(document.createTextNode(''));
   }
 
   const container = document.createElement('span');
@@ -143,8 +141,12 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
     if (toggle) {
       const isSelected = Boolean(newSelected);
       btn.setAttribute('aria-pressed', String(isSelected));
-      if (selectedIcon) selectedIcon.hidden = !isSelected;
-      icon.hidden = isSelected;
+      if (selectedIcon && iconOnly) {
+        selectedIcon.hidden = !isSelected;
+        icon.hidden = isSelected;
+      } else if (selectedIcon) {
+        icon.textContent = isSelected ? selectedIcon.textContent : ICONS[iconKey];
+      }
     }
     const countText = formatCount(newCount);
     if (iconOnly) {
@@ -436,7 +438,7 @@ function createActions(post, client) {
     createActionButton(iconKey, labelKey, count, {
       ...options,
       iconOnly: ['bookmark', 'share'].includes(iconKey),
-      toggle: ['repost', 'like'].includes(iconKey),
+      toggle: ['repost', 'like', 'bookmark'].includes(iconKey),
     });
 
   // 1. Reply
