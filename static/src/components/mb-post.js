@@ -274,7 +274,7 @@ function createEmbed(embed, record, t = fallbackT) {
           imgElement.loading = 'lazy';
 
           imgElement.addEventListener('click', () => {
-            window.open(img.fullsize || img.thumbnail, '_blank');
+            embedContainer.dispatchEvent(new CustomEvent('mb-post-open-url', { bubbles: true, composed: true, detail: { url: img.fullsize || img.thumbnail } }));
           });
 
           imageContainer.appendChild(imgElement);
@@ -340,7 +340,7 @@ function createEmbed(embed, record, t = fallbackT) {
         card.appendChild(content);
         card.classList.add('mb-post-external-card-link');
         card.addEventListener('click', () => {
-          window.open(external.uri, '_blank');
+          embedContainer.dispatchEvent(new CustomEvent('mb-post-open-url', { bubbles: true, composed: true, detail: { url: external.uri } }));
         });
 
         embedContainer.appendChild(card);
@@ -370,6 +370,7 @@ function createEmbed(embed, record, t = fallbackT) {
             embed: recordEmbed.embeds?.[0] || recordEmbed.embed,
             indexedAt: recordEmbed.indexedAt || recordEmbed.value?.createdAt,
           };
+          miniPost.translator = t;
           miniPost.post = postView;
           card.appendChild(miniPost);
         } else {
@@ -417,6 +418,7 @@ function createEmbed(embed, record, t = fallbackT) {
 
         const mediaPost = document.createElement('mb-post');
         mediaPost.classList.add('mb-post-nested');
+        mediaPost.translator = t;
         mediaPost.post = { embed: media, record: { text: '' } };
         mediaEmbed.appendChild(mediaPost);
         card.appendChild(mediaEmbed);
@@ -724,8 +726,8 @@ export class MbPost extends HTMLElement {
       contentCol.appendChild(embed);
     }
 
-    // Actions (only if client is available)
-    if (this._client) {
+    // Actions are optional and supplied by the host application.
+    if (this._actions || this._client) {
       const handlers = this._actions || createClientAdapter(this._client);
       contentCol.appendChild(createActions(post, handlers, this._translator, this._formatters.formatCompactNumber || fallbackCompactNumber, this));
     }
