@@ -114,13 +114,13 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
   if (toggle) {
     const selectedIcon = document.createElement('md-icon');
     selectedIcon.slot = 'selected';
+    selectedIcon.className = 'is-filled';
     selectedIcon.textContent = ICONS[`${iconKey}Filled`];
     btn.appendChild(selectedIcon);
   }
 
   btn.style.cssText = `
     --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
-    --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
   `;
 
   // Counts are adjacent to the icon button, not slotted into its icon-only content.
@@ -145,7 +145,9 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
       countEl.remove();
       countEl = null;
     }
-    btn.setAttribute('aria-label', countText ? `${label}, ${countText}` : label);
+    const accessibleLabel = countText ? `${label}, ${countText}` : label;
+    btn.setAttribute('aria-label', accessibleLabel);
+    if (toggle) btn.setAttribute('aria-label-selected', accessibleLabel);
   };
 
   update(selected, count);
