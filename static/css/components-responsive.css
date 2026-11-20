@@ -369,35 +369,10 @@
 .notifications-topbar md-icon-button {
   flex: 0 0 auto;
 }
-.notifications-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 48px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
-}
-.notifications-tab {
-  position: relative;
-  border: 0;
-  background: transparent;
-  color: var(--md-sys-color-on-surface-variant);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.notifications-tab.is-active {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 700;
-}
-.notifications-tab.is-active::after {
-  position: absolute;
-  right: 30%;
-  bottom: 0;
-  left: 30%;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: var(--md-sys-color-primary);
-  content: "";
+#notificationsTabs {
+  display: block;
+  width: 100%;
+  --md-primary-tab-container-color: transparent;
 }
 .notifications-actions {
   margin: 0;
