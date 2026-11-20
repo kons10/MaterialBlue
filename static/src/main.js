@@ -2,6 +2,9 @@
 import { createBskyClient } from '/src/bsky-client.js';
 import { initI18n, t, formatDate, formatRelativeTime, formatCompactNumber, setLocale, getCurrentLocale } from '/src/i18n.js';
 
+// mb-post コンポーネントを登録
+import '/src/components/mb-post.js';
+
 // ============================================================================
 // 定数・設定
 // ============================================================================
@@ -737,7 +740,7 @@ async function loadTimeline(force = false, append = false) {
     if (!container) return;
 
     const existingPostUris = new Set(
-      Array.from(container.querySelectorAll('md-list-item[data-post-uri]'))
+      Array.from(container.querySelectorAll('mb-post[data-post-uri]'))
         .map((item) => item.dataset.postUri)
     );
 
@@ -746,311 +749,29 @@ async function loadTimeline(force = false, append = false) {
       return;
     }
 
-    // リストアイテムを生成
+    // mb-post 要素を生成
     const fragment = document.createDocumentFragment();
-    const menuFragment = document.createDocumentFragment();
 
-    // 🔹 md-menu用のオーバーレイコンテナの準備・クリーンアップ
-    let menuContainer = document.getElementById('menu-overlay-container');
-    if (!menuContainer) {
-      menuContainer = document.createElement('div');
-      menuContainer.id = 'menu-overlay-container';
-      document.body.appendChild(menuContainer);
-    }
     feed.forEach(item => {
       const post = item.post;
       if (!post?.uri || existingPostUris.has(post.uri)) return;
       existingPostUris.add(post.uri);
-      const record = post.record || {};
       const reason = item.reason;
       const isRepost = reason?.$type === 'app.bsky.feed.defs#reasonRepost';
-      const reposterHandle = reason?.by?.handle;
-      const reposterName = reason?.by?.displayName || (reposterHandle ? `@${reposterHandle}` : null);
-      
-      // メインのリストアイテム作成
-      const listItem = document.createElement('md-list-item');
-      listItem.type = 'link';
-      listItem.dataset.postUri = post.uri;
 
-      // 「〇〇による拡散」表示
-      if (isRepost && reposterName) {
-        const overline = document.createElement('div');
-        overline.slot = 'overline';
-        overline.className = 'md-typescale-body-small';
-        overline.style.display = 'flex';
-        overline.style.alignItems = 'center';
-        overline.style.gap = '4px';
-
-        const repostIcon = document.createElement('md-icon');
-        repostIcon.textContent = 'repeat';
-        repostIcon.style.fontSize = '16px';
-
-        const repostLabel = document.createElement('span');
-        repostLabel.textContent = t('post.repostedBy', { name: reposterName });
-
-        overline.appendChild(repostIcon);
-        overline.appendChild(repostLabel);
-        listItem.appendChild(overline);
-      }
-      
-      // アイコンスロット
-      const avatarIcon = document.createElement('md-icon');
-      avatarIcon.slot = 'start';
-      avatarIcon.textContent = 'account_circle';
-      
-      // ヘッドライン
-      const headline = createAuthorLine(post.author);
-      headline.slot = 'headline';
-      
-      // サポーティングテキスト
-      const supporting = document.createElement('div');
-      supporting.slot = 'supporting-text';
-      supporting.className = 'md-typescale-body-medium';
-
-      appendReplyThread(supporting, item.reply);
-
-      const bodyText = document.createElement('div');
-      bodyText.style.whiteSpace = 'pre-wrap';
-      bodyText.textContent = record.text;
-      supporting.appendChild(bodyText);
-
-      const actionRow = document.createElement('div');
-      actionRow.style.display = 'flex';
-      actionRow.style.gap = '8px';
-      actionRow.style.alignItems = 'center';
-      actionRow.style.marginTop = '8px';
-      actionRow.style.flexWrap = 'wrap';
-
-      const formatCountBadge = (count) => {
-        if (count === null || count === undefined || count <= 0) return '';
-        const formattedCount = formatCompactNumber(count);
-        return `<span class="action-count">${formattedCount}</span>`;
-      };
-
-      const createActionButton = (icon, iconClass = '', count = null) => {
-        const btn = document.createElement('md-text-button');
-        const countStr = formatCountBadge(count);
-        btn.innerHTML = `<md-icon class="${iconClass}" slot="icon">${icon}</md-icon>${countStr}`;
-        return btn;
-      };
-
-      const replyCount = post.replyCount ?? null;
-      const replyBtn = createActionButton('reply', '', replyCount);
-      replyBtn.addEventListener('click', async () => {
-        const text = window.prompt(t('post.replyPrompt'));
-        if (!text || !text.trim()) return;
-        replyBtn.disabled = true;
-        try {
-          await client.reply(post.uri, post.cid, text.trim(), record.reply);
-          showSuccess('post.replied');
-          await loadTimeline(true);
-        } catch (e) {
-          showError('errors.replyFailed');
-        } finally {
-          replyBtn.disabled = false;
-        }
-      });
-
-      const viewer = post.viewer || {};
-
-      const repostWrap = document.createElement('div');
-      repostWrap.style.position = 'relative';
-      let reposted = Boolean(viewer.repost);
-      let repostRecordUri = viewer.repost || null;
-      const repostCount = post.repostCount ?? null;
-      const repostBtn = createActionButton('repeat', 'repost-icon', repostCount);
-      if (reposted) {
-        const repostIcon = repostBtn.querySelector('.repost-icon');
-        if (repostIcon) repostIcon.classList.add('is-filled');
-        repostIcon.textContent = 'repeat_on';
+      // repost情報をpostに付与（mb-post側で表示するため）
+      if (isRepost) {
+        post.reason = reason;
       }
 
-      // 🔹 リポスト用メニューの作成 (Body直下のオーバーレイコンテナに置くことで、見切れを防ぐよ！)
-      const repostMenu = document.createElement('md-menu');
-      repostMenu.anchorElement = repostBtn; // MWCに直接ボタンの要素を教える！
-      repostMenu.menuCorner = 'start-start';
-      repostMenu.anchorCorner = 'end-start'; // ボタンの左下にメニューを出す設定
-      repostMenu.positioning = 'fixed'; // これが超重要！親の制約を無視して画面基準で配置してくれるよ
+      const postEl = document.createElement('mb-post');
+      postEl.post = post;
+      postEl.client = client;  // アクションボタンを有効化
+      postEl.dataset.postUri = post.uri;
 
-      const doRepostItem = document.createElement('md-menu-item');
-      doRepostItem.dataset.action = 'repost';
-      doRepostItem.innerHTML = `
-        <md-icon slot="start">repeat</md-icon>
-        <div slot="headline">拡散</div>
-      `;
+      fragment.appendChild(postEl);
 
-      const quoteItem = document.createElement('md-menu-item');
-      quoteItem.dataset.action = 'quote';
-      quoteItem.innerHTML = `
-        <md-icon slot="start">format_quote</md-icon>
-        <div slot="headline">引用</div>
-      `;
-
-      repostBtn.addEventListener('click', () => {
-        // 座標計算はMWCに丸投げ！開閉するだけでOK
-        repostMenu.open = !repostMenu.open;
-      });
-
-      async function handleRepost() {
-        doRepostItem.disabled = true;
-        try {
-          if (reposted) {
-            await client.unrepost(repostRecordUri);
-            reposted = false;
-            repostRecordUri = null;
-            const countStr = formatCountBadge(repostCount);
-            repostBtn.innerHTML = `<md-icon class="repost-icon" slot="icon">repeat</md-icon>${countStr}`;
-            showError('post.repostRemoved');
-          } else {
-            const res = await client.repost(post.uri, post.cid);
-            reposted = true;
-            repostRecordUri = res?.uri || null;
-            const newCount = (repostCount ?? 0) + 1;
-            const countStr = formatCountBadge(newCount);
-            repostBtn.innerHTML = `<md-icon class="repost-icon is-filled" slot="icon">repeat_on</md-icon>${countStr}`;
-            showError('post.reposted');
-          }
-          repostMenu.open = false;
-          await loadTimeline(true);
-        } catch (e) {
-          showError('errors.repostFailed');
-        } finally {
-          doRepostItem.disabled = false;
-        }
-      }
-
-      async function handleQuote() {
-        const text = window.prompt(t('post.quotePrompt'));
-        if (!text || !text.trim()) return;
-        quoteItem.disabled = true;
-        try {
-          await client.quote(post.uri, post.cid, text.trim());
-          repostMenu.open = false;
-          showError('post.quoted');
-          await loadTimeline(true);
-        } catch (e) {
-          showError('errors.quoteFailed');
-        } finally {
-          quoteItem.disabled = false;
-        }
-      }
-      repostMenu.addEventListener('close-menu', async (event) => {
-        const action = event.detail?.itemPath?.[0]?.dataset?.action;
-        if (action === 'repost') await handleRepost();
-        if (action === 'quote') await handleQuote();
-      });
-
-      repostMenu.appendChild(doRepostItem);
-      repostMenu.appendChild(quoteItem);
-      
-      // ボタンだけをタイムラインの中に配置
-      repostWrap.appendChild(repostBtn);
-      // メニュー本体はオーバーフローで切られないようにBodyのオーバーレイコンテナに流し込むよ
-      menuFragment.appendChild(repostMenu);
-
-      let liked = Boolean(viewer.like);
-      let likeRecordUri = viewer.like || null;
-      const likeCount = post.likeCount ?? null;
-      const likeBtn = createActionButton('favorite', 'favorite-icon', likeCount);
-      if (liked) {
-        const likeIcon = likeBtn.querySelector('.favorite-icon');
-        if (likeIcon) likeIcon.classList.add('is-filled');
-      }
-      let currentLikeCount = likeCount;
-      likeBtn.addEventListener('click', async () => {
-        likeBtn.disabled = true;
-        try {
-          if (liked) {
-            await client.unlike(likeRecordUri);
-            liked = false;
-            likeRecordUri = null;
-            currentLikeCount = Math.max(0, (currentLikeCount ?? 1) - 1);
-            const countStr = formatCountBadge(currentLikeCount);
-            likeBtn.innerHTML = `<md-icon class="favorite-icon" slot="icon">favorite</md-icon>${countStr}`;
-            showError('post.likeRemoved');
-          } else {
-            const res = await client.like(post.uri, post.cid);
-            liked = true;
-            likeRecordUri = res?.uri || null;
-            currentLikeCount = (currentLikeCount ?? 0) + 1;
-            const countStr = formatCountBadge(currentLikeCount);
-            likeBtn.innerHTML = `<md-icon class="favorite-icon is-filled" slot="icon">favorite</md-icon>${countStr}`;
-            showError('post.liked');
-          }
-        } catch (e) {
-          showError('errors.likeFailed');
-        } finally {
-          likeBtn.disabled = false;
-        }
-      });
-
-      let saved = client.isSaved(post.uri);
-      const saveCount = null; // Bluesky APIでは保存数は非公開
-      const saveBtn = createActionButton('bookmark', 'save-icon', saveCount);
-      if (saved) {
-        const saveIcon = saveBtn.querySelector('.save-icon');
-        if (saveIcon) saveIcon.classList.add('is-filled');
-      }
-      saveBtn.addEventListener('click', async () => {
-        saveBtn.disabled = true;
-        try {
-          if (saved) {
-            await client.unsave(post.uri, post.cid);
-            saved = false;
-            saveBtn.innerHTML = '<md-icon class="save-icon" slot="icon">bookmark</md-icon>';
-            showError('post.saved');
-          } else {
-            await client.save(post.uri, post.cid);
-            saved = true;
-            saveBtn.innerHTML = '<md-icon class="save-icon is-filled" slot="icon">bookmark</md-icon>';
-            showError('post.saved');
-          }
-        } catch (e) {
-          showError('errors.saveFailed');
-        } finally {
-          saveBtn.disabled = false;
-        }
-      });
-
-      actionRow.appendChild(replyBtn);
-      actionRow.appendChild(repostWrap);
-      actionRow.appendChild(likeBtn);
-      actionRow.appendChild(saveBtn);
-      supporting.appendChild(actionRow);
-
-      // 画像がある場合は表示
-      const images = post.embed?.images || record.embed?.images || [];
-      if (images.length > 0) {
-        const imageContainer = document.createElement('div');
-        imageContainer.style.display = 'flex';
-        imageContainer.style.gap = '8px';
-        imageContainer.style.flexWrap = 'wrap';
-        imageContainer.style.marginTop = '8px';
-        
-        images.forEach(img => {
-          const imgElement = document.createElement('img');
-          imgElement.src = img.fullsize || img.thumbnail;
-          imgElement.style.width = '120px';
-          imgElement.style.height = '120px';
-          imgElement.style.objectFit = 'cover';
-          imgElement.style.borderRadius = '8px';
-          imgElement.style.cursor = 'pointer';
-          
-          imgElement.addEventListener('click', () => {
-            window.open(img.fullsize || img.thumbnail, '_blank');
-          });
-          
-          imageContainer.appendChild(imgElement);
-        });
-        
-        supporting.appendChild(imageContainer);
-      }
-
-      listItem.appendChild(avatarIcon);
-      listItem.appendChild(headline);
-      listItem.appendChild(supporting);
-      fragment.appendChild(listItem);
-
+      // 区切り線
       const divider = document.createElement('md-divider');
       fragment.appendChild(divider);
     });
@@ -1065,7 +786,9 @@ async function loadTimeline(force = false, append = false) {
     } else {
       container.insertBefore(fragment, container.firstChild);
     }
-    menuContainer.appendChild(menuFragment);
+
+    // mb-post からのイベントをリッスンしてタイムライン更新
+    setupMbPostListeners();
   } catch (e) {
     console.error('Timeline load error:', e);
     showError('errors.fetchFailed');
@@ -1074,6 +797,33 @@ async function loadTimeline(force = false, append = false) {
     timelineLoading = false;
     updateSeeMoreButton(false);
   }
+}
+
+function setupMbPostListeners() {
+  // 重複登録防止
+  if (window.__mbPostListenersSetup) return;
+  window.__mbPostListenersSetup = true;
+
+  document.addEventListener('mb-post:like', () => {
+    // 必要ならローカル状態更新、またはタイムライン再読み込み
+  });
+
+  document.addEventListener('mb-post:repost', () => {
+    // リポスト後はタイムライン再読み込みが安全
+    loadTimeline(true);
+  });
+
+  document.addEventListener('mb-post:reply', () => {
+    loadTimeline(true);
+  });
+
+  document.addEventListener('mb-post:quote', () => {
+    loadTimeline(true);
+  });
+
+  document.addEventListener('mb-post:save', () => {
+    // ブックマークは即時反映されるので再読み込み不要
+  });
 }
 
 
