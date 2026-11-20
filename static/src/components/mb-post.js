@@ -127,12 +127,12 @@ function createActionButton(iconKey, labelKey, count, options = {}) {
 
   if (iconOnly) {
     btn.setAttribute('aria-label', label);
-    btn.style.setProperty('--md-icon-button-icon-color', 'var(--md-sys-color-on-surface-variant)');
+    btn.classList.add('mb-post-action-icon-button');
   }
 
   const container = document.createElement('span');
   container.className = 'mb-post-action';
-  container.style.cssText = 'display:inline-flex;align-items:center;gap:4px;min-width:0;';
+  
   container.appendChild(btn);
 
   let textNode = null;
@@ -189,7 +189,7 @@ function createReplyThread(reply) {
   posts.forEach((replyPost, index) => {
     const card = document.createElement('div');
     card.className = 'mb-post-reply-card';
-    card.style.cssText = 'padding:8px;border-radius:12px;background:var(--md-sys-color-surface-container-high);margin-bottom:6px;';
+    card.className = 'mb-post-reply-card';
 
     const author = createAuthorLine(replyPost.author, false);
     author.classList.add('mb-post-reply-author');
@@ -197,19 +197,19 @@ function createReplyThread(reply) {
       const badge = document.createElement('span');
       badge.className = 'mb-post-reply-badge md-typescale-label-small';
       badge.textContent = t('post.replyRoot');
-      badge.style.cssText = 'background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);padding:2px 6px;border-radius:4px;font-size:0.65rem;margin-left:8px;';
+      badge.dataset.kind = 'root';
       author.appendChild(badge);
     } else if (replyPost._isParent) {
       const badge = document.createElement('span');
       badge.className = 'mb-post-reply-badge md-typescale-label-small';
       badge.textContent = t('post.replyParent');
-      badge.style.cssText = 'background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);padding:2px 6px;border-radius:4px;font-size:0.65rem;margin-left:8px;';
+      badge.dataset.kind = 'parent';
       author.appendChild(badge);
     }
 
     const text = document.createElement('div');
     text.className = 'mb-post-reply-text md-typescale-body-small';
-    text.style.whiteSpace = 'pre-wrap';
+    
     text.textContent = replyPost.record?.text || '';
 
     card.appendChild(author);
@@ -228,7 +228,7 @@ function createPostText(record) {
 
   const textContainer = document.createElement('div');
   textContainer.className = 'mb-post-text md-typescale-body-large';
-  textContainer.style.whiteSpace = 'pre-wrap';
+  
   textContainer.textContent = record.text;
 
   // TODO: Implement facet rendering (links, mentions, hashtags)
@@ -252,7 +252,6 @@ function createEmbed(embed, record) {
       if (images.length > 0) {
         const imageContainer = document.createElement('div');
         imageContainer.className = 'mb-post-images';
-        imageContainer.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;';
 
         images.forEach((img) => {
           const imgElement = document.createElement('img');
@@ -260,7 +259,6 @@ function createEmbed(embed, record) {
           imgElement.src = img.fullsize || img.thumbnail;
           imgElement.alt = img.alt || '';
           imgElement.loading = 'lazy';
-          imgElement.style.cssText = 'width:120px;height:120px;object-fit:cover;border-radius:8px;cursor:pointer;';
 
           imgElement.addEventListener('click', () => {
             window.open(img.fullsize || img.thumbnail, '_blank');
@@ -278,10 +276,10 @@ function createEmbed(embed, record) {
       // Video embed - placeholder for now
       const videoContainer = document.createElement('div');
       videoContainer.className = 'mb-post-video';
-      videoContainer.style.cssText = 'background:var(--md-sys-color-surface-container-high);border-radius:12px;padding:16px;text-align:center;';
+
       videoContainer.innerHTML = `
-        <md-icon style="font-size:48px;color:var(--md-sys-color-on-surface-variant);">${ICONS.video}</md-icon>
-        <div class="md-typescale-body-medium" style="margin-top:8px;">${t('post.videoEmbed')}</div>
+        <md-icon class="mb-post-video-icon">${ICONS.video}</md-icon>
+        <div class="md-typescale-body-medium mb-post-video-label">${t('post.videoEmbed')}</div>
       `;
       embedContainer.appendChild(videoContainer);
       break;
@@ -292,24 +290,22 @@ function createEmbed(embed, record) {
       if (external) {
         const card = document.createElement('div');
         card.className = 'mb-post-external-card';
-        card.style.cssText = 'border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;overflow:hidden;background:var(--md-sys-color-surface);margin-top:8px;';
 
         if (external.thumb) {
           const thumb = document.createElement('img');
           thumb.src = external.thumb;
           thumb.alt = '';
           thumb.loading = 'lazy';
-          thumb.style.cssText = 'width:100%;height:160px;object-fit:cover;';
+
           card.appendChild(thumb);
         }
 
         const content = document.createElement('div');
-        content.style.cssText = 'padding:12px;';
 
         if (external.title) {
           const title = document.createElement('div');
           title.className = 'md-typescale-title-medium';
-          title.style.cssText = 'font-weight:600;margin-bottom:4px;';
+
           title.textContent = external.title;
           content.appendChild(title);
         }
@@ -317,19 +313,19 @@ function createEmbed(embed, record) {
         if (external.description) {
           const desc = document.createElement('div');
           desc.className = 'md-typescale-body-small';
-          desc.style.cssText = 'color:var(--md-sys-color-on-surface-variant);margin-bottom:8px;';
+
           desc.textContent = external.description;
           content.appendChild(desc);
         }
 
         const uri = document.createElement('div');
         uri.className = 'md-typescale-label-small';
-        uri.style.cssText = 'color:var(--md-sys-color-primary);';
+
         uri.textContent = external.uri;
         content.appendChild(uri);
 
         card.appendChild(content);
-        card.style.cursor = 'pointer';
+        card.classList.add('mb-post-external-card-link');
         card.addEventListener('click', () => {
           window.open(external.uri, '_blank');
         });
@@ -346,13 +342,12 @@ function createEmbed(embed, record) {
       if (recordEmbed) {
         const card = document.createElement('div');
         card.className = 'mb-post-record-embed';
-        card.style.cssText = 'border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;background:var(--md-sys-color-surface);margin-top:8px;overflow:hidden;';
 
         // If it's a post record, render it as a nested post
         if (recordEmbed.$type === 'app.bsky.feed.post' || recordEmbed.author) {
           // Create a mini post view
           const miniPost = document.createElement('mb-post');
-          miniPost.style.cssText = 'margin:0;border-radius:0;border:none;background:transparent;';
+          miniPost.classList.add('mb-post-nested');
           // We need to convert recordEmbed to a PostView-like object
           const postView = {
             uri: recordEmbed.uri || '',
@@ -367,9 +362,9 @@ function createEmbed(embed, record) {
         } else {
           // Generic record display
           const content = document.createElement('div');
-          content.style.cssText = 'padding:12px;';
+
           content.innerHTML = `
-            <md-icon style="color:var(--md-sys-color-on-surface-variant);">${ICONS.link}</md-icon>
+            <md-icon class="mb-post-generic-record-icon">${ICONS.link}</md-icon>
             <span class="md-typescale-body-small">${t('post.recordEmbed')}</span>
           `;
           card.appendChild(content);
@@ -386,12 +381,11 @@ function createEmbed(embed, record) {
       const recordView = embed.record?.record || embed.record;
       const card = document.createElement('div');
       card.className = 'mb-post-record-with-media';
-      card.style.cssText = 'border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;background:var(--md-sys-color-surface);margin-top:8px;overflow:hidden;';
 
       // Render the record part
       if (recordView) {
         const miniPost = document.createElement('mb-post');
-        miniPost.style.cssText = 'margin:0;border-radius:0;border:none;background:transparent;';
+        miniPost.classList.add('mb-post-nested');
         const postView = {
           uri: recordView.uri || '',
           cid: recordView.cid || '',
@@ -407,9 +401,9 @@ function createEmbed(embed, record) {
       // Render the media part
       if (media) {
         const mediaEmbed = document.createElement('div');
-        mediaEmbed.style.cssText = 'border-top:1px solid var(--md-sys-color-outline-variant);';
+
         const mediaPost = document.createElement('mb-post');
-        mediaPost.style.cssText = 'margin:0;border-radius:0;border:none;background:transparent;';
+        mediaPost.classList.add('mb-post-nested');
         mediaPost.post = { embed: media, record: { text: '' } };
         mediaEmbed.appendChild(mediaPost);
         card.appendChild(mediaEmbed);
@@ -431,7 +425,7 @@ function createEmbed(embed, record) {
 function createActions(post, client) {
   const actionRow = document.createElement('div');
   actionRow.className = 'mb-post-actions';
-  actionRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:0 4px;';
+
   actionRow.setAttribute('role', 'group');
   actionRow.setAttribute('aria-label', t('post.actionsLabel'));
 
@@ -639,7 +633,6 @@ function createActions(post, client) {
 function createPostMeta(post) {
   const meta = document.createElement('div');
   meta.className = 'mb-post-meta';
-  meta.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.75rem;color:var(--md-sys-color-on-surface-variant);';
 
   // Use the record timestamp when a nested or partial PostView has no indexedAt.
   const timestamp = post.indexedAt || post.record?.createdAt;
@@ -735,28 +728,15 @@ export class MbPost extends HTMLElement {
     // Clear and rebuild
     this.innerHTML = '';
     this.className = 'mb-post';
-    this.style.cssText = `
-      display:block;
-      padding:12px 16px;
-      border-radius:12px;
-      background:var(--md-sys-color-surface-container-low);
-      border:1px solid var(--md-sys-color-outline-variant);
-      margin:8px 0;
-      min-width:0;
-      max-width:100%;
-      width:100%;
-      box-sizing:border-box;
-    `;
 
     // Repost indicator
     if (isRepost && post.reason?.by) {
       const repostIndicator = document.createElement('div');
       repostIndicator.className = 'mb-post-repost-indicator';
-      repostIndicator.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:8px;font-size:0.75rem;color:var(--md-sys-color-on-surface-variant);';
-      
+
       const icon = document.createElement('md-icon');
       icon.textContent = ICONS.repost;
-      icon.style.fontSize = '16px';
+
       repostIndicator.appendChild(icon);
       
       const label = document.createElement('span');
@@ -769,25 +749,23 @@ export class MbPost extends HTMLElement {
     // Main post content
     const article = document.createElement('article');
     article.className = 'mb-post-article';
-    article.style.cssText = 'display:flex;gap:12px;min-width:0;';
 
     // Avatar column
     const avatarCol = document.createElement('div');
     avatarCol.className = 'mb-post-avatar-column';
-    avatarCol.style.cssText = 'flex:0 0 40px;';
+
     const avatar = createAvatar(author);
-    avatar.style.cssText = 'width:40px;height:40px;border-radius:50%;object-fit:cover;';
+
     avatarCol.appendChild(avatar);
     article.appendChild(avatarCol);
 
     // Content column
     const contentCol = document.createElement('div');
     contentCol.className = 'mb-post-content-column';
-    contentCol.style.cssText = 'flex:1;min-width:0;';
 
     // Author line
     const authorLine = createAuthorLine(author);
-    authorLine.style.cssText = 'display:flex;align-items:baseline;gap:6px;margin-bottom:4px;';
+
     contentCol.appendChild(authorLine);
 
     // Reply thread context
@@ -822,7 +800,7 @@ export class MbPost extends HTMLElement {
     this.appendChild(article);
 
     // Set up container query for responsive behavior
-    this.style.containerType = 'inline-size';
+    
   }
 }
 
