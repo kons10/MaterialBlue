@@ -103,9 +103,22 @@
 }
 
 .timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   min-width: 0;
   margin-top: 16px;
   border-top: 1px solid var(--md-sys-color-outline);
+  padding-top: 16px;
+}
+
+.timeline-list > mb-post {
+  flex-shrink: 0;
+}
+
+.timeline-list > md-divider {
+  margin: 0;
+  width: 100%;
 }
 
 .timeline-more {
@@ -503,3 +516,460 @@
     padding-left: 36px;
   }
 }
+
+/* ============================================================================
+   mb-post Component Responsive Styles
+   ============================================================================ */
+
+mb-post {
+  min-width: 0;
+  max-width: 100%;
+  container-type: inline-size;
+  box-sizing: border-box;
+}
+
+.mb-post-article {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mb-post-avatar-column {
+  flex: 0 0 40px;
+}
+
+.mb-post-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mb-post-content-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.mb-post-author-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+  min-width: 0;
+}
+
+.mb-post-author-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.mb-post-author-handle {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.mb-post-reply-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-left: 3px solid var(--md-sys-color-outline);
+}
+
+.mb-post-reply-card {
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.mb-post-reply-author {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.mb-post-reply-badge {
+  flex: 0 0 auto;
+}
+
+.mb-post-reply-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mb-post-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.mb-post-embed {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mb-post-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.mb-post-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.mb-post-video {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mb-post-external-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-surface);
+  margin-top: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mb-post-external-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.mb-post-record-embed,
+.mb-post-record-with-media {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  margin-top: 8px;
+  overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mb-post-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* mb-post action buttons: Material Web owns its internal focus ring and ripple. */
+.mb-post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 0 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mb-post-actions md-text-button,
+.mb-post-actions md-icon-button {
+  --md-text-button-container-color: transparent;
+  --md-text-button-hover-state-layer-color: var(--md-sys-color-on-surface-variant);
+  --md-text-button-pressed-state-layer-color: var(--md-sys-color-on-surface-variant);
+  --md-icon-button-container-color: transparent;
+  --md-icon-button-state-layer-color: var(--md-sys-color-on-surface-variant);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.mb-post-actions md-text-button {
+  --md-text-button-label-text-color: var(--md-sys-color-on-surface-variant);
+  --md-text-button-icon-color: var(--md-sys-color-on-surface-variant);
+  padding-inline: 4px;
+}
+
+.mb-post-actions md-icon-button {
+  --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+}
+
+.mb-post-actions md-text-button:hover,
+.mb-post-actions md-icon-button:hover {
+  --md-text-button-container-color: var(--md-sys-color-surface-container-high);
+  --md-icon-button-container-color: var(--md-sys-color-surface-container-high);
+}
+
+.mb-post-actions md-text-button:focus-visible,
+.mb-post-actions md-icon-button:focus-visible {
+  outline: none;
+}
+
+.mb-post-actions md-icon {
+  font-variation-settings: 'FILL' 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 20px;
+}
+
+.mb-post-actions md-icon.is-filled {
+  font-variation-settings: 'FILL' 1;
+  color: var(--md-sys-color-primary);
+}
+
+.mb-post-action-count {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Repost menu items */
+md-menu-item md-icon[slot="start"] {
+  font-size: 20px;
+}
+
+/* Container query: narrow width adjustments */
+@container (max-width: 400px) {
+  .mb-post-actions {
+    gap: 0;
+  }
+
+  .mb-post-actions md-text-button {
+    padding-inline: 0;
+  }
+
+  .mb-post-actions md-icon-button {
+    --md-icon-button-container-width: 36px;
+    --md-icon-button-container-height: 36px;
+  }
+  
+  .mb-post-action-count {
+    font-size: 0.75rem;
+  }
+}
+
+.mb-post-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.mb-post-repost-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  min-width: 0;
+}
+
+.mb-post-repost-indicator md-icon {
+  font-size: 16px;
+}
+
+/* Container query responsive behavior for mb-post */
+@container (max-width: 480px) {
+  .mb-post-article {
+    gap: 8px;
+  }
+  
+  .mb-post-avatar-column {
+    flex: 0 0 36px;
+  }
+  
+  .mb-post-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .mb-post-action-btn {
+    padding: 6px 8px;
+  }
+  
+  .mb-post-action-count {
+    min-width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+  }
+  
+  .mb-post-image {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@container (max-width: 360px) {
+  .mb-post {
+    padding: 10px 12px;
+  }
+  
+  .mb-post-article {
+    gap: 6px;
+  }
+  
+  .mb-post-avatar-column {
+    flex: 0 0 28px;
+  }
+  
+  .mb-post-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .mb-post-image {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+/* Media queries as fallback for browsers without container query support */
+@media (max-width: 599px) {
+  .mb-post-image {
+    max-width: calc((100% - 8px) / 2);
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
+
+@media (max-width: 400px) {
+  .mb-post-image {
+    max-width: calc((100% - 16px) / 3);
+  }
+}
+
+
+/* mb-notification: notification metadata with post rendering delegated to mb-post */
+mb-notification {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+.mb-notification-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+}
+.mb-notification-activity {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 8px;
+  min-width: 0;
+}
+.mb-notification-activity-icon {
+  margin-top: 2px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 22px;
+}
+.mb-notification-like { color: #ec1680; }
+.mb-notification-repost { color: #00b878; }
+.mb-notification-actors {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.mb-notification-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--md-sys-color-surface-container-high);
+}
+.mb-notification-description {
+  grid-column: 2;
+  min-width: 0;
+  margin-top: 1px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.mb-notification-names {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+}
+.mb-notification-time { white-space: nowrap; }
+.mb-notification-own-text {
+  margin-left: 36px;
+  color: var(--md-sys-color-on-surface);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+mb-notification > .mb-notification-item > mb-post {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+@media (max-width: 599px) {
+  .mb-notification-item { padding: 11px 12px; }
+}
+
+
+/* mb-post component styling: presentation lives in CSS, not renderer JS. */
+mb-post { display:block; padding:12px 16px; border:1px solid var(--md-sys-color-outline-variant); border-radius:12px; margin:8px 0; background:var(--md-sys-color-surface-container-low); min-width:0; max-width:100%; width:100%; box-sizing:border-box; container-type:inline-size; }
+.mb-post-action { display:inline-flex; align-items:center; gap:4px; min-width:0; }
+.mb-post-action-icon-button { --md-icon-button-icon-color:var(--md-sys-color-on-surface-variant); }
+.mb-post-reply-card { padding:8px; border-radius:12px; background:var(--md-sys-color-surface-container-high); margin-bottom:6px; }
+.mb-post-reply-badge { padding:2px 6px; border-radius:4px; font-size:.65rem; margin-left:8px; }
+.mb-post-reply-badge[data-kind="root"] { background:var(--md-sys-color-primary-container); color:var(--md-sys-color-on-primary-container); }
+.mb-post-reply-badge[data-kind="parent"] { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+.mb-post-reply-text, .mb-post-text { white-space:pre-wrap; }
+.mb-post-images { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.mb-post-image { width:120px; height:120px; object-fit:cover; border-radius:8px; cursor:pointer; }
+.mb-post-video { background:var(--md-sys-color-surface-container-high); border-radius:12px; padding:16px; text-align:center; }
+.mb-post-video-icon { font-size:48px; color:var(--md-sys-color-on-surface-variant); }
+.mb-post-video-label { margin-top:8px; }
+.mb-post-external-card { border:1px solid var(--md-sys-color-outline-variant); border-radius:12px; overflow:hidden; background:var(--md-sys-color-surface); margin-top:8px; }
+.mb-post-external-card-link { cursor:pointer; }
+.mb-post-external-card img { width:100%; height:160px; object-fit:cover; }
+.mb-post-external-card > div { padding:12px; }
+.mb-post-external-card .md-typescale-title-medium { font-weight:600; margin-bottom:4px; }
+.mb-post-external-card .md-typescale-body-small { color:var(--md-sys-color-on-surface-variant); margin-bottom:8px; }
+.mb-post-external-card .md-typescale-label-small { color:var(--md-sys-color-primary); }
+.mb-post-record-embed, .mb-post-record-with-media { border:1px solid var(--md-sys-color-outline-variant); border-radius:12px; background:var(--md-sys-color-surface); margin-top:8px; overflow:hidden; }
+.mb-post-nested { margin:0; border:0; border-radius:0; background:transparent; }
+.mb-post-generic-record-icon { color:var(--md-sys-color-on-surface-variant); }
+.mb-post-record-with-media > div { border-top:1px solid var(--md-sys-color-outline-variant); }
+.mb-post-actions { display:flex; justify-content:space-between; align-items:center; gap:4px; margin-top:8px; padding:0 2px; width:100%; box-sizing:border-box; }
+.mb-post-meta { display:flex; align-items:center; gap:8px; margin-top:8px; font-size:.75rem; color:var(--md-sys-color-on-surface-variant); }
+.mb-post-repost-indicator { display:flex; align-items:center; gap:4px; margin-bottom:8px; font-size:.75rem; color:var(--md-sys-color-on-surface-variant); }
+.mb-post-repost-indicator md-icon { font-size:16px; }
+.mb-post-author-line { display:flex; align-items:baseline; gap:6px; margin-bottom:4px; }
+@container (max-width:360px) { mb-post { padding:10px 12px; } }
