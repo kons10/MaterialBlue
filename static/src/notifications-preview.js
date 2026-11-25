@@ -1,175 +1,29 @@
-import { t, getCurrentLocale } from '/src/i18n.js';
+import { t, formatRelativeTime, formatCompactNumber } from '/src/i18n.js';
+import '/src/components/mb-notification.js';
+
+// 通知欄のレンダリングは mb-notification（Web Components）が担当する。
+// このモジュール（ホスト側）の責務:
+// - 通知データの整形（グループ化・アクター抽出）
+// - translator / formatters の注入
+// - API通信・既読化などのアプリケーション処理（main.js 側で実施）
+// 投稿本文の再実装は行わない（返信系は mb-notification 経由で mb-post を再利用）。
 
 let rendering = false;
 let activeTab = 'all';
 let currentNotifications = [];
 
-const reasonKeys = {
-  like: 'notification.reason.like',
-  repost: 'notification.reason.repost',
-  reply: 'notification.reason.reply',
-  quote: 'notification.reason.quote',
-  mention: 'notification.reason.mention',
-  follow: 'notification.reason.follow',
+const formatters = {
+  relativeTime: (value) => {
+    try {
+      return formatRelativeTime(value);
+    } catch {
+      return value || '';
+    }
+  },
+  compactNumber: formatCompactNumber,
 };
 
-function avatar(src, alt = '') {
-  const img = document.createElement('img');
-  img.className = 'notification-avatar';
-  img.alt = alt;
-  img.loading = 'lazy';
-  if (src) img.src = src;
-  img.addEventListener('error', () => img.removeAttribute('src'), { once: true });
-  return img;
-}
-
-function relativeTime(value) {
-  if (!value) return '';
-  const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
-  const units = [
-    ['年', 31536000], ['か月', 2592000], ['週間', 604800],
-    ['日', 86400], ['時間', 3600], ['分', 60],
-  ];
-  for (const [label, size] of units) {
-    if (seconds >= size) return Math.floor(seconds / size) + label;
-  }
-  return 'たった今';
-}
-
-function makeIconButton(iconName, label, count = null) {
-  const button = document.createElement('span');
-  button.className = 'notification-action';
-  button.title = label;
-  button.setAttribute('aria-label', label);
-  const icon = document.createElement('md-icon');
-  icon.textContent = iconName;
-  button.appendChild(icon);
-  if (count !== null && count !== undefined) {
-    const value = document.createElement('span');
-    value.textContent = String(count);
-    button.appendChild(value);
-  }
-  return button;
-}
-
-function createPostActions(post) {
-  const actions = document.createElement('div');
-  actions.className = 'notification-post-actions';
-  actions.append(
-    makeIconButton('chat_bubble_outline', '返信', post?.replyCount ?? 0),
-    makeIconButton('repeat', 'リポスト'),
-    makeIconButton('favorite_border', 'いいね', post?.likeCount ?? 0),
-    makeIconButton('bar_chart', '閲覧数', post?.viewCount ?? 0),
-    makeIconButton('bookmark_border', 'ブックマーク'),
-    makeIconButton('ios_share', '共有'),
-  );
-  return actions;
-}
-
-function createPostContent(post) {
-  const content = document.createElement('div');
-  content.className = 'notification-post-content';
-  const text = post?.record?.text || '';
-  if (text) {
-    const body = document.createElement('div');
-    body.className = 'notification-post-text';
-    body.textContent = text;
-    content.appendChild(body);
-  }
-
-  const images = post?.embed?.images || post?.record?.embed?.images || [];
-  if (images.length) {
-    const grid = document.createElement('div');
-    grid.className = 'notification-post-images';
-    images.slice(0, 4).forEach((image) => {
-      const img = document.createElement('img');
-      img.className = 'notification-post-image';
-      img.loading = 'lazy';
-      img.alt = image.alt || '';
-      img.src = image.thumbnail || image.fullsize || '';
-      grid.appendChild(img);
-    });
-    content.appendChild(grid);
-  }
-  return content;
-}
-
-function createActorRow(notification, post, grouped = []) {
-  const item = document.createElement('article');
-  item.className = 'notification-preview-item';
-
-  const actors = grouped.length ? grouped : [notification];
-  const reason = notification.reason;
-  const isReaction = reason === 'like' || reason === 'repost';
-  const activity = document.createElement('div');
-  activity.className = 'notification-activity';
-
-  const icon = document.createElement('md-icon');
-  const activityIcons = {
-    like: 'favorite',
-    repost: 'repeat',
-    reply: 'chat_bubble',
-    quote: 'format_quote',
-    mention: 'alternate_email',
-    follow: 'person_add',
-  };
-  icon.className = 'notification-activity-icon notification-activity-' + reason;
-  icon.textContent = activityIcons[reason] || 'notifications';
-  icon.setAttribute('aria-hidden', 'true');
-  activity.appendChild(icon);
-
-  const avatars = document.createElement('div');
-  avatars.className = 'notification-actor-avatars';
-  actors.slice(0, 7).forEach((actor) => {
-    avatars.appendChild(avatar(actor.author?.avatar, actor.author?.handle || ''));
-  });
-  activity.appendChild(avatars);
-
-  const description = document.createElement('div');
-  description.className = 'notification-activity-description';
-  const names = actors.slice(0, 2).map((actor) =>
-    actor.author?.displayName || actor.author?.handle || t('notification.sourceFallback')
-  );
-  const label = document.createElement('span');
-  label.className = 'notification-activity-names';
-  label.textContent = names.join('、') + (actors.length > 2 ? ' ほか' + (actors.length - 2) + '人' : '');
-  description.appendChild(label);
-
-  const action = document.createElement('span');
-  action.textContent = reasonKeys[reason] ? t(reasonKeys[reason]) : t('notification.reason.unknown', { action: reason || '通知' });
-  description.appendChild(action);
-
-  const time = document.createElement('span');
-  time.className = 'notification-time';
-  time.textContent = ' · ' + relativeTime(notification.indexedAt);
-  description.appendChild(time);
-  activity.appendChild(description);
-  item.appendChild(activity);
-
-  const ownText = notification.record?.text?.trim();
-  const targetText = post?.record?.text?.trim();
-  if (ownText && ownText !== targetText) {
-    const reply = document.createElement('div');
-    reply.className = 'notification-own-text';
-    reply.textContent = ownText;
-    item.appendChild(reply);
-  }
-
-  if (post) {
-    const postBlock = document.createElement('div');
-    postBlock.className = 'notification-target-post';
-    postBlock.appendChild(createPostContent(post));
-    if (!isReaction) postBlock.appendChild(createPostActions(post));
-    item.appendChild(postBlock);
-  } else if (ownText && ownText === targetText) {
-    const reply = document.createElement('div');
-    reply.className = 'notification-own-text';
-    reply.textContent = ownText;
-    item.appendChild(reply);
-  }
-  return item;
-}
-
+/** ホスト側で通知をまとめた項目（entry）を作る。複数人の集約表示もここで整形する。 */
 function buildEntries(notifications) {
   const entries = [];
   const reactionGroups = new Map();
@@ -182,16 +36,27 @@ function buildEntries(notifications) {
 
     if (key) {
       if (!reactionGroups.has(key)) {
-        const entry = { notification, post: notification.post || null, grouped: [] };
+        const entry = { notification, post: notification.post || null, actors: [] };
         reactionGroups.set(key, entry);
         entries.push(entry);
       }
-      reactionGroups.get(key).grouped.push(notification);
+      reactionGroups.get(key).actors.push(notification);
     } else {
-      entries.push({ notification, post: notification.post || null, grouped: [] });
+      entries.push({ notification, post: notification.post || null, actors: [notification] });
     }
   });
   return entries;
+}
+
+/** 1件の通知項目を mb-notification として生成する（投稿UIの組み立ては委譲）。 */
+function createNotificationItem(entry) {
+  const item = document.createElement('mb-notification');
+  item.translator = t;
+  item.formatters = formatters;
+  item.actors = entry.actors;
+  item.notification = entry.notification; // isRead から unread 属性を反映する
+  item.post = entry.post;
+  return item;
 }
 
 function renderNotifications(notifications = currentNotifications) {
@@ -202,7 +67,8 @@ function renderNotifications(notifications = currentNotifications) {
 
   try {
     const list = document.createElement('div');
-    list.className = 'notification-preview-list';
+    list.className = 'notification-preview-list mb-notification-list';
+    list.setAttribute('role', 'list');
     const filtered = activeTab === 'mentions'
       ? notifications.filter((item) => ['mention', 'reply', 'quote'].includes(item.reason))
       : notifications;
@@ -213,8 +79,8 @@ function renderNotifications(notifications = currentNotifications) {
       empty.textContent = t('notification.empty');
       list.appendChild(empty);
     } else {
-      buildEntries(filtered).forEach(({ notification, post, grouped }) => {
-        list.appendChild(createActorRow(notification, post, grouped));
+      buildEntries(filtered).forEach((entry) => {
+        list.appendChild(createNotificationItem(entry));
       });
     }
     container.replaceChildren(list);

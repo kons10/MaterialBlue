@@ -1,0 +1,238 @@
+/* mb-post — 投稿の共通表示コンポーネント用スタイル
+   設計方針: .docs/post-notification-components.md
+   - Material Design 3 の既存トークンとタイポグラフィを利用する。
+   - 長い表示名・ハンドル・本文・URL・画像での横方向のはみ出しを防ぐ。
+   - コンテナ幅に応じて縮小できるよう、Container Queries を検討する。 */
+
+mb-post {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  container-type: inline-size;
+}
+
+mb-post *,
+mb-post *::before,
+mb-post *::after {
+  box-sizing: border-box;
+}
+
+.mb-post-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mb-space-2, 8px);
+  min-width: 0;
+}
+
+/* リポスト表示（投稿に付随する表示情報） */
+.mb-post-repost-label {
+  display: flex;
+  align-items: center;
+  gap: var(--mb-space-1, 4px);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mb-post-repost-label md-icon {
+  font-size: 16px;
+  flex: 0 0 auto;
+}
+
+/* 返信スレッド文脈 */
+.mb-post-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 3px solid var(--md-sys-color-outline);
+  min-width: 0;
+}
+
+.mb-post-thread-card {
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-high);
+  min-width: 0;
+}
+
+.mb-post-thread-author {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mb-post-thread-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.8rem;
+}
+
+/* 作者行 */
+.mb-post-author-line {
+  display: flex;
+  align-items: center;
+  gap: var(--mb-space-2, 8px);
+  min-width: 0;
+}
+
+.mb-post-avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.mb-post:not([compact]) .mb-post-avatar {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
+}
+
+.mb-post-author-names {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mb-space-2, 8px);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.mb-post-author-name {
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mb-post-author-handle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.85rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 日時 */
+.mb-post-time {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+}
+
+/* 本文 */
+.mb-post-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* 画像埋め込み */
+.mb-post-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mb-space-2, 8px);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.mb-post-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--md-sys-color-surface-container-high);
+}
+
+/* 外部リンク埋め込み */
+.mb-post-external {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.mb-post-external-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mb-post-external-meta {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 引用投稿（mb-post の再利用） */
+.mb-post-quote {
+  min-width: 0;
+}
+
+.mb-post-quote > mb-post {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low, transparent);
+}
+
+.mb-post-unavailable {
+  padding: 12px 14px;
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px dashed var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+}
+
+/* アクションUI（show-actions を付けたときのみ表示） */
+.mb-post-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--mb-space-2, 8px);
+  flex-wrap: wrap;
+  margin-top: var(--mb-space-1, 4px);
+  min-width: 0;
+}
+
+.mb-post-action.is-active md-icon {
+  color: var(--md-sys-color-primary);
+}
+
+/* コンパクト表示（引用・通知内など、利用可能幅が狭い場所） */
+mb-post[compact] .mb-post-body {
+  gap: 4px;
+}
+
+mb-post[compact] .mb-post-text {
+  font-size: 0.9rem;
+}
+
+/* Container Queries: 利用可能幅が狭い場所では密度を下げる
+   （画面幅ではなくコンポーネントの利用可能幅に依存した調整）*/
+@container (max-width: 420px) {
+  .mb-post-author-line .mb-post-avatar {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .mb-post-actions {
+    gap: 2px;
+  }
+}

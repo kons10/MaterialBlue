@@ -1,0 +1,174 @@
+/* mb-notification — 通知一覧の1項目を表示するコンポーネント用スタイル
+   設計方針: .docs/post-notification-components.md
+   - 通知の外枠、通知理由アイコン、アクター表示、未読状態はここに集約する。
+   - 通知内の mb-post はコンテナ幅に応じて自然に縮小できるようにする。 */
+
+mb-notification {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  container-type: inline-size;
+}
+
+mb-notification *,
+mb-notification *::before,
+mb-notification *::after {
+  box-sizing: border-box;
+}
+
+/* 未読状態の視覚表現 */
+mb-notification[unread] {
+  background: var(--md-sys-color-secondary-container, rgba(103, 80, 164, 0.08));
+  border-inline-start: 3px solid var(--md-sys-color-primary);
+  padding-inline-start: 11px;
+}
+
+/* 通知ヘッダー: アイコン / アバター群 / 通知文 */
+.mb-notification-header {
+  display: grid;
+  grid-template-columns: 28px auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: 8px;
+  min-width: 0;
+}
+
+.mb-notification-reason-icon {
+  margin-top: 2px;
+  font-size: 22px;
+  color: var(--md-sys-color-primary);
+}
+
+.mb-notification-reason-like.mb-notification-reason-icon {
+  color: #ec1680;
+}
+
+.mb-notification-reason-repost.mb-notification-reason-icon {
+  color: var(--md-sys-color-tertiary, #00897b);
+}
+
+.mb-notification-avatars {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.mb-notification-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--md-sys-color-surface-container-high);
+}
+
+.mb-notification-summary {
+  grid-column: 2 / span 2;
+  min-width: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.mb-notification-names {
+  color: var(--md-sys-color-on-surface);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mb-notification-time {
+  white-space: nowrap;
+}
+
+/* 通知自身のテキスト（返信・引用など） */
+.mb-notification-own-text {
+  margin-left: 36px;
+  min-width: 0;
+  color: var(--md-sys-color-on-surface);
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* いいね・リポスト通知用の簡易プレビュー（アクションボタンなし） */
+.mb-notification-preview {
+  margin-left: 36px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low, var(--md-sys-color-surface));
+  color: var(--md-sys-color-on-surface);
+}
+
+.mb-notification-preview-text {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.mb-notification-preview-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.mb-notification-preview-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1.5;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--md-sys-color-surface-container-high);
+}
+
+/* 返信通知などの対象投稿: mb-post を再利用。コンテナ幅に応じて縮小する */
+.mb-notification-target {
+  margin-left: 36px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mb-notification-target > mb-post {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, var(--md-sys-color-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low, var(--md-sys-color-surface));
+}
+
+/* 利用可能幅が狭い場合（Container Queries） */
+@container (max-width: 420px) {
+  mb-notification[unread] {
+    padding-inline-start: 10px;
+  }
+
+  .mb-notification-own-text,
+  .mb-notification-preview,
+  .mb-notification-target {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 599px) {
+  mb-notification {
+    padding: 11px 12px;
+  }
+}
